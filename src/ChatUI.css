@@ -1,65 +1,112 @@
 .chat-container {
-  background-color: #0e1016;
-  padding: 16px;
-  height: calc(100vh - 100px);
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column-reverse;
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column; /* correct */
+    justify-content: flex-end; /* makes initial view scroll to bottom */
+    padding: 16px 16px 100px 16px;
+    box-sizing: border-box;
 }
 
+/* Message bubbles */
 .message {
-  max-width: 70%;
-  padding: 10px 14px;
-  margin: 6px 0;
-  border-radius: 18px;
-  font-size: 15px;
-  line-height: 1.4;
-  word-break: break-word;
+    max-width: 70%;
+    padding: 10px 14px;
+    margin: 8px 0;
+    border-radius: 16px;
+    font-size: 15px;
+    line-height: 1.4;
+    word-break: break-word;
 }
 
 .user-message {
-  background-color: #a855f7;
-  color: white;
-  align-self: flex-end;
-  border-bottom-right-radius: 5px;
+    background-color: #6a47f5;
+    color: white;
+    align-self: flex-end;
+    border-bottom-right-radius: 5px;
 }
 
 .allie-message {
-  background-color: #2f3640;
-  color: white;
-  align-self: flex-start;
-  border-bottom-left-radius: 5px;
+    background-color: #2e3c4f;
+    color: white;
+    align-self: flex-start;
+    border-bottom-left-radius: 5px;
 }
 
+/* Header */
 .header {
-  display: flex;
-  align-items: center;
-  background-color: #121826;
-  padding: 10px 16px;
-  border-bottom: 1px solid #2a2f3a;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    align-items: center;
+    background-color: #1f2b38;
+    padding: 10px 16px;
+    border-bottom: 1px solid #2a3f4a;
+    z-index: 10;
 }
 
 .profile-pic {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  margin-right: 12px;
-  position: relative;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    margin-right: 12px;
+    position: relative;
 }
 
 .live-dot {
-  position: absolute;
-  bottom: 2px;
-  right: 2px;
-  width: 10px;
-  height: 10px;
-  background-color: #22c55e;
-  border-radius: 50%;
-  border: 2px solid #0e1016;
+    position: absolute;
+    bottom: 2px;
+    right: 2px;
+    width: 10px;
+    height: 10px;
+    background-color: #22c55e;
+    border-radius: 50%;
+    border: 2px solid #121b24;
 }
 
 .username {
-  font-size: 17px;
-  font-weight: bold;
-  color: white;
+    font-size: 17px;
+    font-weight: bold;
+    color: white;
+}
+
+/* Footer */
+.footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: #1f2b38;
+    border-top: 1px solid #2a3f4a;
+    display: flex;
+    align-items: center;
+    padding: 12px 16px;
+    gap: 10px;
+    z-index: 10;
+}
+
+.footer input {
+    flex: 1;
+    padding: 10px 14px;
+    border-radius: 20px;
+    background-color: #2e3c4f;
+    color: white;
+    border: none;
+    outline: none;
+}
+
+.footer button {
+    background-color: #6a47f5;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
 }
