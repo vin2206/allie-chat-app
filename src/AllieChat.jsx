@@ -25,7 +25,9 @@ function AllieChat() {
       const response = await fetch('https://allie-chat-proxy-production.up.railway.app/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: inputValue, history: formattedHistory })
+        body: JSON.stringify({
+  messages: formattedHistory
+})
       });
 
       const data = await response.json();
