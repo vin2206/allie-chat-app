@@ -25,8 +25,8 @@ function AllieChat() {
     });
 
     const data = await response.json();
-    const reply = data.reply || "Hmm... Allie didn’t respond.";
-    setMessages((prev) => [...prev, { text: reply, sender: 'allie' }]);
+const reply = data.reply?.content || 'Hmm... Allie didn’t respond.';
+setMessages((prev) => [...prev, { text: reply, sender: 'allie' }]);
   } catch (error) {
     console.error('Error calling Allie proxy:', error);
     setMessages((prev) => [...prev, { text: 'Oops! Allie is quiet right now.', sender: 'allie' }]);
