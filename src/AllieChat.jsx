@@ -10,34 +10,35 @@ function AllieChat() {
   const chatContainerRef = useRef(null);
 
   const handleSend = async () => {
-    if (inputValue.trim() === '') return;
+  if (inputValue.trim() === '') return;
 
-    const newMessage = { text: inputValue, sender: 'user' };
-    setMessages((prevMessages) => [...prevMessages, newMessage]);
-    setInputValue('');
+  const newMessage = { text: inputValue, sender: 'user' };
+  const updatedMessages = [...messages, newMessage];
+  setMessages(updatedMessages);
+  setInputValue('');
 
-    try {
-      const formattedHistory = [...messages, newMessage].map((msg) => ({
-        role: msg.sender === 'user' ? 'user' : 'assistant',
-        content: msg.text
-      }));
+  try {
+    const formattedHistory = updatedMessages.map((msg) => ({
+      role: msg.sender === 'user' ? 'user' : 'assistant',
+      content: msg.text
+    }));
 
-      const response = await fetch('https://allie-chat-proxy-production.up.railway.app/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-  messages: formattedHistory
-})
-      });
+    const response = await fetch('https://allie-chat-proxy-production.up.railway.app/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        messages: formattedHistory
+      })
+    });
 
-      const data = await response.json();
-      const reply = data.choices?.[0]?.message?.content || "Hmm... Allie didn’t respond.";
-      setMessages((prev) => [...prev, { text: reply, sender: 'allie' }]);
-    } catch (error) {
-      console.error('Error calling Allie proxy:', error);
-      setMessages((prev) => [...prev, { text: 'Oops! Allie is quiet right now.', sender: 'allie' }]);
-    }
-  };
+    const data = await response.json();
+    const reply = data.choices?.[0]?.message?.content || "Hmm... Allie didn’t respond.";
+    setMessages((prev) => [...prev, { text: reply, sender: 'allie' }]);
+  } catch (error) {
+    console.error('Error calling Allie proxy:', error);
+    setMessages((prev) => [...prev, { text: 'Oops! Allie is quiet right now.', sender: 'allie' }]);
+  }
+};
 
   useEffect(() => {
     if (chatContainerRef.current) {
