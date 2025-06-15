@@ -9,12 +9,29 @@ function AllieChat() {
 
   const chatContainerRef = useRef(null);
 
-  const handleSend = () => {
-    if (inputValue.trim() === '') return;
-    const newMessage = { text: inputValue, sender: 'user' };
-    setMessages((prevMessages) => [...prevMessages, newMessage]);
-    setInputValue('');
-  };
+  const handleSend = async () => {
+  if (inputValue.trim() === '') return;
+  const newMessage = { text: inputValue, sender: 'user' };
+  setMessages((prevMessages) => [...prevMessages, newMessage]);
+  setInputValue('');
+
+  try {
+    const response = await fetch('https://allie-chat-proxy-production.up.railway.app/chat', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ message: inputValue, history: messages })
+    });
+
+    const data = await response.json();
+const reply = data.choices?.[0]?.message?.content || "Hmm... Allie didn’t respond.";
+setMessages((prev) => [...prev, { text: reply, sender: 'allie' }]);
+  } catch (error) {
+    console.error('Error calling Allie proxy:', error);
+    setMessages((prev) => [...prev, { text: 'Oops! Allie is quiet right now.', sender: 'allie' }]);
+  }
+}; 
 
   // Auto scroll to bottom when messages change
   useEffect(() => {

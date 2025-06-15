@@ -4,6 +4,6 @@ html, body, #root, .App {
     flex-direction: column;
     margin: 0;
     background-position: center;
-    opacity: 0.6;
+    opacity: 1;
     font-family: 'Roboto', sans-serif;
 }
