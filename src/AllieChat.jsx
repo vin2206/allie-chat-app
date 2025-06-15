@@ -25,7 +25,7 @@ function AllieChat() {
     });
 
     const data = await response.json();
-const reply = data.reply?.content || 'Hmm... Allie didn’t respond.';
+const reply = data.choices?.[0]?.message?.content || "Hmm... Allie didn’t respond.";
 setMessages((prev) => [...prev, { text: reply, sender: 'allie' }]);
   } catch (error) {
     console.error('Error calling Allie proxy:', error);
