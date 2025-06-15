@@ -13,25 +13,28 @@ function AllieChat() {
   if (inputValue.trim() === '') return;
 
   const newMessage = { text: inputValue, sender: 'user' };
-  setMessages((prevMessages) => [...prevMessages, newMessage]);
+  setMessages(prev => [...prev, newMessage]);
   setInputValue('');
 
   try {
-    const response = await fetch("https://allie-chat-proxy-production.up.railway.app/chat", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ message: inputValue })
+    const response = await fetch('https://your-main-link/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: newMessage.text })
     });
 
     const data = await response.json();
-const reply = data.choices?.[0]?.message?.content || "Hmm... Allie didn't respond.";
-setMessages((prev) => [...prev, { text: reply, sender: 'allie' }]);
+    console.log('API response data:', data); // <— add this log!
 
-  } catch (error) {
-    console.error("Error calling Allie proxy:", error);
-    setMessages((prev) => [...prev, { text: "Oops! Allie is sleeping right now.", sender: 'allie' }]);
+    const reply = data.choices?.[0]?.message?.content
+      || 'Hmm… Allie didn’t respond.';
+    setMessages(prev => [...prev, { text: reply, sender: 'allie' }]);
+  } catch (err) {
+    console.error('API error:', err);
+    setMessages(prev => [...prev, {
+      text: 'Oops! Allie is quiet right now.',
+      sender: 'allie'
+    }]);
   }
 };
 
