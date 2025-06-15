@@ -31,7 +31,7 @@ setMessages((prev) => [...prev, { text: reply, sender: 'allie' }]);
     console.error('Error calling Allie proxy:', error);
     setMessages((prev) => [...prev, { text: 'Oops! Allie is quiet right now.', sender: 'allie' }]);
   }
-};
+}; 
 
   // Auto scroll to bottom when messages change
   useEffect(() => {
