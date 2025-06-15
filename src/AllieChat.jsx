@@ -21,7 +21,7 @@ function AllieChat() {
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ message: inputValue })
+      body: JSON.stringify({ message: inputValue, history: messages })
     });
 
     const data = await response.json();
