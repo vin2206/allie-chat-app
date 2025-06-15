@@ -4,7 +4,6 @@ html, body, #root, .App {
     flex-direction: column;
     margin: 0;
     background-position: center;
-    /* Remove opacity to restore visibility */
-opacity: 1;
+    opacity: 1;
     font-family: 'Roboto', sans-serif;
 }
