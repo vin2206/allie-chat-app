@@ -17,27 +17,36 @@ function AllieChat() {
   setMessages(updatedMessages);
   setInputValue('');
 
-  try {
-    const formattedHistory = updatedMessages.map((msg) => ({
-      role: msg.sender === 'user' ? 'user' : 'assistant',
-      content: msg.text
-    }));
+  // Show "typing..." immediately
+  setMessages((prev) => [...prev, { text: 'typing...', sender: 'allie' }]);
 
-    const response = await fetch('https://allie-chat-proxy-production.up.railway.app/chat', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        messages: formattedHistory
-      })
-    });
+  // Delay for realism
+  setTimeout(async () => {
+    try {
+      const formattedHistory = [...updatedMessages, { role: 'user', content: inputValue }];
 
-    const data = await response.json();
-    const reply = data.reply || "Hmm... Allie didn’t respond.";
-    setMessages((prev) => [...prev, { text: reply, sender: 'allie' }]);
-  } catch (error) {
-    console.error('Error calling Allie proxy:', error);
-    setMessages((prev) => [...prev, { text: 'Oops! Allie is quiet right now.', sender: 'allie' }]);
-  }
+      const response = await fetch('https://allie-chat-proxy-production.up.railway.app/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messages: formattedHistory })
+      });
+
+      const data = await response.json();
+      const reply = data.choices?.[0]?.message?.content || "Hmm... Allie didn’t respond.";
+
+      // Replace typing... with actual reply
+      setMessages((prev) => [
+        ...prev.slice(0, -1),
+        { text: reply, sender: 'allie' }
+      ]);
+    } catch (error) {
+      console.error('Error calling Allie proxy:', error);
+      setMessages((prev) => [
+        ...prev.slice(0, -1),
+        { text: 'Oops! Allie is quiet right now.', sender: 'allie' }
+      ]);
+    }
+  }, 1500); // Simulate 1.5s typing delay
 };
 
   useEffect(() => {
@@ -52,10 +61,16 @@ function AllieChat() {
       <div className="header">
         <div className="profile-pic">
           <img
-            src="https://via.placeholder.com/40"
-            alt="Allie"
-            style={{ width: '100%', height: '100%', borderRadius: '50%' }}
-          />
+  src="https://i.imgur.com/1X3e1zV.png"  // Replace with any real photo URL later
+  alt="Allie"
+  style={{
+    width: '100%',
+    height: '100%',
+    borderRadius: '50%',
+    objectFit: 'cover',
+    backgroundColor: '#222'
+  }}
+/>
           <div className="live-dot"></div>
         </div>
         <div className="username">Allie</div>
