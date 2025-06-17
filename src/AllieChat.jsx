@@ -77,7 +77,12 @@ function AllieChat() {
 />
           <div className="live-dot"></div>
         </div>
-        <div className="username">Allie</div>
+        <div className="username-container">
+  <div className="username">Allie</div>
+  {messages[messages.length - 1]?.text === 'typing...' && (
+    <div className="typing-indicator">typing...</div>
+  )}
+</div>
       </div>
 
       {/* CHAT AREA */}
