@@ -38,7 +38,9 @@ function AllieChat() {
 
   useEffect(() => {
   if (bottomRef.current) {
-    bottomRef.current.scrollIntoView({ behavior: 'smooth' });
+    setTimeout(() => {
+      bottomRef.current.scrollIntoView({ behavior: 'smooth' });
+    }, 50); // small delay allows DOM to fully render before scroll
   }
 }, [messages]);
 
