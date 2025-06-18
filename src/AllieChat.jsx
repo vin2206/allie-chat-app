@@ -54,7 +54,7 @@ function AllieChat() {
         </div>
       </div>
 
-      <div className="chat-container"
+      <div className="chat-container">
   {messages.map((msg, index) => {
     if (msg.text === 'typing...' && msg.sender === 'allie') return null;
     return (
