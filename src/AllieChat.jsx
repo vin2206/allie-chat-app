@@ -55,15 +55,15 @@ function AllieChat() {
       </div>
 
       <div className="chat-container" ref={chatContainerRef}>
-        {messages.filter(msg => msg.text !== 'typing...').map((msg, index) => (
-          <div key={index} className={`message ${msg.sender === 'user' ? 'user-message' : 'allie-message'}`}>
-            {msg.text}
-          </div>
-        ))}
-        {messages[messages.length - 1]?.text === 'typing...' && (
-          <div className="message allie-message">typing...</div>
-        )}
+  {messages.map((msg, index) => {
+    if (msg.text === 'typing...' && msg.sender === 'allie') return null;
+    return (
+      <div key={index} className={`message ${msg.sender === 'user' ? 'user-message' : 'allie-message'}`}>
+        {msg.text}
       </div>
+    );
+  })}
+</div>
 
       <div className="footer">
         <input
