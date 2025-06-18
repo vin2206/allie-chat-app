@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './ChatUI.css';
-const bottomRef = useRef(null);
 
 function AllieChat() {
   const [messages, setMessages] = useState([
     { text: 'Hi baby, how are you? Did you miss me?', sender: 'allie' },
   ]);
   const [inputValue, setInputValue] = useState('');
+  const bottomRef = useRef(null);
 
   const handleSend = async () => {
     if (inputValue.trim() === '') return;
