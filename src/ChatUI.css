@@ -79,8 +79,8 @@ html, body, #root, .App {
   overflow-y: auto;
   padding: 20px 15px;
   display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
+  flex-direction: column-reverse;
+justify-content: flex-end;
 }
 
 /* Message bubble layout */
@@ -90,7 +90,7 @@ html, body, #root, .App {
   border-radius: 25px;
   font-size: 15px;
   word-break: break-word;
-  margin-bottom: 15px;
+  margin-bottom: 10px;
   box-shadow: 0 4px 10px rgba(0,0,0,0.3);
   animation: fadeIn 0.4s ease;
 }
