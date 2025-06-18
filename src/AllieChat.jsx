@@ -7,7 +7,6 @@ function AllieChat() {
     { text: 'Hi baby, how are you? Did you miss me?', sender: 'allie' },
   ]);
   const [inputValue, setInputValue] = useState('');
-  const chatContainerRef = useRef(null);
 
   const handleSend = async () => {
     if (inputValue.trim() === '') return;
@@ -55,7 +54,7 @@ function AllieChat() {
         </div>
       </div>
 
-      <div className="chat-container" ref={chatContainerRef}>
+      <div className="chat-container"
   {messages.map((msg, index) => {
     if (msg.text === 'typing...' && msg.sender === 'allie') return null;
     return (
