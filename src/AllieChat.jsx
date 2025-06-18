@@ -37,10 +37,16 @@ function AllieChat() {
   };
 
   useEffect(() => {
+  const scrollToBottom = () => {
     if (chatContainerRef.current) {
       chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
     }
-  }, [messages]);
+  };
+
+  scrollToBottom(); // Scroll every time messages update
+  setTimeout(scrollToBottom, 100); // Also scroll after short delay (on initial load)
+
+}, [messages]);
 
   return (
     <div className="App">
