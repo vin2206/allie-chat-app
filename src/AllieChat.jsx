@@ -49,20 +49,22 @@ function AllieChat() {
   return (
     <div className="App">
       <div className="header">
-        <div className="profile-pic">
-          <img src="https://i.imgur.com/1X3e1zV.png" alt="Allie" />
-          <div className="live-dot"></div>
-        </div>
-        <div className="username-container">
-          <div className="username">Allie</div>
-          {messages[messages.length - 1]?.text === 'typing...' && (
-            <div className="typing-indicator">typing...</div>
-          )}
+        <div className="profile-section">
+          <div className="profile-pic">
+            <img src="https://i.imgur.com/1X3e1zV.png" alt="Allie" />
+            <div className="live-dot"></div>
+          </div>
+          <div className="username-container">
+            <div className="username">Allie</div>
+            {messages[messages.length - 1]?.text === 'typing...' && (
+              <div className="typing-indicator">typing...</div>
+            )}
+          </div>
         </div>
       </div>
 
       <div className="chat-container" ref={chatContainerRef}>
-        {messages.map((msg, index) => (
+        {messages.filter(msg => msg.text !== 'typing...').map((msg, index) => (
           <div key={index} className={`message-row ${msg.sender === 'user' ? 'user' : 'allie'}`}>
             {msg.sender === 'allie' && (
               <div className="avatar">
@@ -72,6 +74,14 @@ function AllieChat() {
             <div className={`message-bubble ${msg.sender}`}>{msg.text}</div>
           </div>
         ))}
+        {messages[messages.length - 1]?.text === 'typing...' && (
+          <div className="message-row allie">
+            <div className="avatar">
+              <img src="https://i.imgur.com/1X3e1zV.png" alt="Allie" />
+            </div>
+            <div className="message-bubble typing-bubble">typing...</div>
+          </div>
+        )}
       </div>
 
       <div className="footer">
