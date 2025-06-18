@@ -52,7 +52,6 @@ function AllieChat() {
         <div className="profile-section">
           <div className="profile-pic">
             <img src="https://i.imgur.com/1X3e1zV.png" alt="Allie" />
-            <div className="live-dot"></div>
           </div>
           <div className="username-container">
             <div className="username">Allie</div>
