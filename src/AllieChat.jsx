@@ -1,4 +1,4 @@
-React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import './ChatUI.css';
 
 function AllieChat() {
@@ -10,26 +10,22 @@ function AllieChat() {
 
   const handleSend = async () => {
     if (inputValue.trim() === '') return;
-
     const newMessage = { text: inputValue, sender: 'user' };
     const updatedMessages = [...messages, newMessage];
     setMessages(updatedMessages);
     setInputValue('');
     setMessages((prev) => [...prev, { text: 'typing...', sender: 'allie' }]);
-
     setTimeout(async () => {
       try {
         const formattedHistory = updatedMessages.map((msg) => ({
           role: msg.sender === 'user' ? 'user' : 'assistant',
           content: msg.text
         }));
-
         const response = await fetch('https://allie-chat-proxy-production.up.railway.app/chat', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ messages: formattedHistory })
         });
-
         const data = await response.json();
         const reply = data.reply || 'Hmm... Allie didn’t respond.';
         setMessages((prev) => [...prev.slice(0, -1), { text: reply, sender: 'allie' }]);
@@ -49,37 +45,23 @@ function AllieChat() {
   return (
     <div className="App">
       <div className="header">
-        <div className="profile-section">
-          <div className="profile-pic">
-            <img src="https://i.imgur.com/1X3e1zV.png" alt="Allie" />
-          </div>
-          <div className="username-container">
-            <div className="username">Allie</div>
-            {messages[messages.length - 1]?.text === 'typing...' && (
-              <div className="typing-indicator">typing...</div>
-            )}
-          </div>
+        <div className="profile-pic">
+          <img src="https://i.imgur.com/1X3e1zV.png" alt="Allie" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
+        </div>
+        <div className="username-container">
+          <div className="username">Allie</div>
+          {messages[messages.length - 1]?.text === 'typing...' && <div className="typing-indicator">typing...</div>}
         </div>
       </div>
 
       <div className="chat-container" ref={chatContainerRef}>
         {messages.filter(msg => msg.text !== 'typing...').map((msg, index) => (
-          <div key={index} className={`message-row ${msg.sender === 'user' ? 'user' : 'allie'}`}>
-            {msg.sender === 'allie' && (
-              <div className="avatar">
-                <img src="https://i.imgur.com/1X3e1zV.png" alt="Allie" />
-              </div>
-            )}
-            <div className={`message-bubble ${msg.sender}`}>{msg.text}</div>
+          <div key={index} className={`message ${msg.sender === 'user' ? 'user-message' : 'allie-message'}`}>
+            {msg.text}
           </div>
         ))}
         {messages[messages.length - 1]?.text === 'typing...' && (
-          <div className="message-row allie">
-            <div className="avatar">
-              <img src="https://i.imgur.com/1X3e1zV.png" alt="Allie" />
-            </div>
-            <div className="message-bubble typing-bubble">typing...</div>
-          </div>
+          <div className="message allie-message">typing...</div>
         )}
       </div>
 
