@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './ChatUI.css';
+const bottomRef = useRef(null);
 
 function AllieChat() {
   const [messages, setMessages] = useState([
@@ -37,15 +38,9 @@ function AllieChat() {
   };
 
   useEffect(() => {
-  const scrollToBottom = () => {
-    if (chatContainerRef.current) {
-      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
-    }
-  };
-
-  scrollToBottom(); // Scroll every time messages update
-  setTimeout(scrollToBottom, 100); // Also scroll after short delay (on initial load)
-
+  if (bottomRef.current) {
+    bottomRef.current.scrollIntoView({ behavior: 'smooth' });
+  }
 }, [messages]);
 
   return (
@@ -69,6 +64,7 @@ function AllieChat() {
       </div>
     );
   })}
+  <div ref={bottomRef}></div>      
 </div>
 
       <div className="footer">
