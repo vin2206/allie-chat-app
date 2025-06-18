@@ -1,9 +1,8 @@
 html, body, #root, .App {
   height: 100%;
   margin: 0;
-  padding: 0;
   display: flex;
   flex-direction: column;
-  font-family: 'Poppins', sans-serif;
-  background-color: #121212;
+  font-family: 'Roboto', sans-serif;
+  background: #000; /* fallback before gradient loads */
 }
