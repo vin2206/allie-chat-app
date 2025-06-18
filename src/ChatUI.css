@@ -79,8 +79,8 @@ html, body, #root, .App {
   overflow-y: auto;
   padding: 20px 15px;
   display: flex;
-  flex-direction: column-reverse;
-justify-content: flex-end;
+  flex-direction: column;  /* <-- CHANGE HERE */
+  justify-content: flex-start; /* <-- CHANGE HERE */
 }
 
 /* Message bubble layout */
