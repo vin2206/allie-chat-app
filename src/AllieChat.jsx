@@ -68,11 +68,8 @@ const newMessage = { text: inputValue, sender: 'user', time: currentTime, seen: 
       <div key={index} className={`message ${msg.sender === 'user' ? 'user-message' : 'allie-message'}`}>
   <div>{msg.text}</div>
   <div className="meta-info">
-    <span>{msg.time}</span>
-    {msg.sender === 'user' && (
-  msg.seen ? <span className="double-tick"></span> : <span className="single-tick"></span>
-)}
-  </div>
+  <span>{msg.time}</span>
+</div>
 </div>
     );
   })}
