@@ -62,7 +62,7 @@ const newMessage = { text: inputValue, sender: 'user', time: currentTime, seen: 
       </div>
 
       <div className="chat-container">
-  {messages.map((msg, index) => {
+  {messages.slice().reverse().map((msg, index) => {
     if (msg.text === 'typing...' && msg.sender === 'allie') return null;
     return (
       <div key={index} className={`message ${msg.sender === 'user' ? 'user-message' : 'allie-message'}`}>
