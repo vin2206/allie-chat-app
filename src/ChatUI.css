@@ -109,12 +109,12 @@ html, body, #root, .App {
 }
 
 .single-tick::before {
-  content: url('data:image/svg+xml;utf8,<svg fill="%23aaa" height="16" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>');
+  content: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' fill='%23aaa' viewBox='0 0 24 24' width='16' height='16'><path d='M9 16.17L4.83 12l-1.42 1.41L9 19l12-12-1.41-1.41z'/></svg>");
   margin-left: 5px;
 }
 
 .double-tick::before {
-  content: url('data:image/svg+xml;utf8,<svg fill="%23007AFF" height="16" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg"><path d="M1 13l2-2 6 6L21 5l2 2L9 21z"/><path d="M5 13l-2-2 6-6 1.41 1.41L5 13z"/></svg>');
+  content: url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' fill='%23007AFF' viewBox='0 0 24 24' width='16' height='16'><path d='M1 13l2-2 6 6L21 5l2 2L9 21z'/><path d='M5 13l-2-2 6-6 1.41 1.41L5 13z'/></svg>\");
   margin-left: 5px;
 }
 
