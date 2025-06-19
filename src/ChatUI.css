@@ -114,7 +114,7 @@ html, body, #root, .App {
 }
 
 .double-tick::before {
-  content: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' width='16' height='16' fill='%23007AFF'><path d='M1 13l2-2 6 6L21 5l2 2L9 21z'/><path d='M5 13l-2-2 6-6 1.41 1.41L5 13z'/></svg>");
+  content: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' width='16' height='16'><path fill='%23007AFF' d='M1.5 13l1.5-1.5 5.5 5.5L20.5 4.5 22 6l-14 14-7-7z'/><path fill='%23007AFF' d='M5 13l-1.5-1.5 5.5-5.5 1.5 1.5L5 13z'/></svg>");
   margin-left: 5px;
 }
 
