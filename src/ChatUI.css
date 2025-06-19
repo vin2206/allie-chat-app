@@ -113,9 +113,22 @@ html, body, #root, .App {
   margin-left: 5px;
 }
 
-.double-tick::before {
-  content: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24'><path fill='%23007AFF' d='M1.5 13l2-2 6 6L21 5l2 2L9.5 21z'/><path fill='%23007AFF' d='M5.5 13l-2-2 6-6 1.41 1.41L5.5 13z'/></svg>");
+.double-tick {
+  position: relative;
+  display: inline-block;
   margin-left: 5px;
+}
+
+.double-tick::before {
+  content: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' width='16' height='16' fill='%23aaa'><path d='M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z'/></svg>");
+  position: relative;
+}
+
+.double-tick::after {
+  content: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' width='14' height='14' fill='%23007AFF'><path d='M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z'/></svg>");
+  position: absolute;
+  top: -3px;
+  left: 8px;
 }
 
 @keyframes fadeIn {
