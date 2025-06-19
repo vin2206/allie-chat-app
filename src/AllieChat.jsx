@@ -10,7 +10,8 @@ function AllieChat() {
 
   const handleSend = async () => {
     if (inputValue.trim() === '') return;
-    const newMessage = { text: inputValue, sender: 'user' };
+    const currentTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+const newMessage = { text: inputValue, sender: 'user', time: currentTime, seen: false };
     const updatedMessages = [...messages, newMessage];
     setMessages(updatedMessages);
     setInputValue('');
@@ -28,7 +29,11 @@ function AllieChat() {
         });
         const data = await response.json();
         const reply = data.reply || 'Hmm... Allie didn’t respond.';
-        setMessages((prev) => [...prev.slice(0, -1), { text: reply, sender: 'allie' }]);
+        setMessages((prev) => {
+  const updatedPrev = [...prev.slice(0, -1)];
+  updatedPrev[updatedPrev.length - 1].seen = true; // Mark last user message as seen
+  return [...updatedPrev, { text: reply, sender: 'allie', time: currentTime }];
+});
       } catch (error) {
         console.error('Error calling Allie proxy:', error);
         setMessages((prev) => [...prev.slice(0, -1), { text: 'Oops! Allie is quiet right now.', sender: 'allie' }]);
@@ -61,8 +66,12 @@ function AllieChat() {
     if (msg.text === 'typing...' && msg.sender === 'allie') return null;
     return (
       <div key={index} className={`message ${msg.sender === 'user' ? 'user-message' : 'allie-message'}`}>
-        {msg.text}
-      </div>
+  <div>{msg.text}</div>
+  <div className="meta-info">
+    <span>{msg.time}</span>
+    {msg.sender === 'user' && (msg.seen ? ' ✅✅' : ' ✅')}
+  </div>
+</div>
     );
   })}
   <div ref={bottomRef}></div>      
