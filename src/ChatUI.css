@@ -4,7 +4,7 @@ html, body, #root, .App {
   padding: 0;
   height: 100%;
   font-family: 'Poppins', sans-serif;
-  background: linear-gradient(135deg, #2f1b47, #563d7c, #9061c2, #cba4e3);
+  background: linear-gradient(135deg, #ff6ec4, #7873f5);
   background-size: 400% 400%;
   animation: gradientShift 15s ease infinite;
   display: flex;
