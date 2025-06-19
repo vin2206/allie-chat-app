@@ -23,7 +23,7 @@ html, body, #root, .App {
   top: 0;
   left: 0;
   right: 0;
-  background: rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.07);
   backdrop-filter: blur(12px);
   display: flex;
   align-items: center;
@@ -137,7 +137,7 @@ animation-fill-mode: both;
   bottom: 0;
   left: 0;
   right: 0;
-  background: rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.07);
   backdrop-filter: blur(12px);
   display: flex;
   padding: 15px 20px;
