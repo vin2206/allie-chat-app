@@ -3,7 +3,7 @@ html, body, #root, .App {
   margin: 0;
   padding: 0;
   height: 100%;
-  font-family: 'Poppins', sans-serif;
+  font-family: 'Quicksand', 'Poppins', sans-serif;
   background: linear-gradient(135deg, #ffa8dc, #9c8fff);
   background-size: 400% 400%;
   animation: gradientShift 15s ease infinite;
