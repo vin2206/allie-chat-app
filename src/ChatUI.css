@@ -54,9 +54,9 @@ backdrop-filter: blur(10px);
 
 .username {
   font-weight: 700;
-  font-size: 20px;
+  font-size: 22px;
   color: #fff;
-  font-family: 'Pacifico', cursive;
+  font-family: 'Sacramento', cursive;
 }
 
 .typing-indicator {
@@ -87,7 +87,7 @@ backdrop-filter: blur(10px);
 .message {
   max-width: 75%;
 padding: 10px 14px;
-border-radius: 22px 22px 22px 12px;
+border-radius: 22px 22px 22px 22px;
   font-size: 16px;
   word-break: break-word;
   margin-bottom: 6px;
