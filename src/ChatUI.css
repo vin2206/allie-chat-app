@@ -54,9 +54,9 @@ backdrop-filter: blur(10px);
 
 .username {
   font-weight: 700;
-  font-size: 22px;
+  font-size: 24px;
   color: #fff;
-  font-family: 'Sacramento', cursive;
+  font-family: 'Dancing Script', cursive;
 }
 
 .typing-indicator {
