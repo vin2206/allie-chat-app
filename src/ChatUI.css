@@ -3,7 +3,7 @@ html, body, #root, .App {
   margin: 0;
   padding: 0;
   height: 100%;
-  font-family: 'Quicksand', 'Poppins', sans-serif;
+  font-family: 'Quicksand', 'Nunito', sans-serif;
   background: linear-gradient(135deg, #ffa8dc, #9c8fff);
   background-size: 400% 400%;
   animation: gradientShift 15s ease infinite;
@@ -56,6 +56,7 @@ backdrop-filter: blur(10px);
   font-weight: 700;
   font-size: 20px;
   color: #fff;
+  font-family: 'Pacifico', cursive;
 }
 
 .typing-indicator {
@@ -86,7 +87,7 @@ backdrop-filter: blur(10px);
 .message {
   max-width: 75%;
 padding: 10px 14px;
-border-radius: 16px;
+border-radius: 22px 22px 22px 12px;
   font-size: 16px;
   word-break: break-word;
   margin-bottom: 6px;
