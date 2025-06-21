@@ -4,12 +4,9 @@ html, body, #root, .App {
   padding: 0;
   height: 100%;
   font-family: 'Inter', sans-serif;
-  background: 
-  url("data:image/svg+xml;utf8,<svg viewBox='0 0 1440 320' xmlns='http://www.w3.org/2000/svg'><path fill='%23ffd5ec' d='M0,64L48,74.7C96,85,192,107,288,122.7C384,139,480,149,576,138.7C672,128,768,96,864,80C960,64,1056,64,1152,74.7C1248,85,1344,107,1392,117.3L1440,128L1440,0L1392,0C1344,0,1248,0,1152,0C1056,0,960,0,864,0C768,0,672,0,576,0C480,0,384,0,288,0C192,0,96,0,48,0L0,0Z'/></svg>"),
-  linear-gradient(to bottom, #ffd5ec, #d4b4f7, #a890f0);
-background-repeat: no-repeat;
-background-size: cover;
-background-attachment: fixed;
+  background: url("data:image/svg+xml,%3Csvg width='100%25' height='100%25' viewBox='0 0 1600 900' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath fill='%23ffd5ec' d='M0,0 C800,150 800,150 1600,0 L1600,900 L0,900 Z'/%3E%3Cpath fill='%23d4b4f7' d='M0,250 C800,400 800,400 1600,250 L1600,900 L0,900 Z'/%3E%3Cpath fill='%23a890f0' d='M0,500 C800,700 800,700 1600,500 L1600,900 L0,900 Z'/%3E%3C/svg%3E") no-repeat;
+  background-size: cover;
+  background-attachment: fixed;
   display: flex;
   flex-direction: column;
 }
