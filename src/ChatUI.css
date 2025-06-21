@@ -117,7 +117,7 @@ backdrop-filter: blur(10px);
   align-self: flex-end;
   background: linear-gradient(135deg, #b388eb, #8093f1, #95e8d7);
   color: #fff;
-  border-radius: 24px;
+  border-radius: 24px 24px 8px 24px;  /* <-- chat style tilt */
   box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
 }
 
@@ -125,7 +125,7 @@ backdrop-filter: blur(10px);
   align-self: flex-start;
   background: linear-gradient(135deg, #ffe3e3, #c2f0fc);
   color: #222;
-  border-radius: 24px;
+  border-radius: 24px 24px 24px 8px;  /* <-- chat style tilt */
   box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
 }
 
@@ -169,6 +169,7 @@ backdrop-filter: blur(10px);
   cursor: pointer;
   box-shadow: 0 8px 18px rgba(0,0,0,0.4);
   transition: transform 0.15s ease;
+  transform: translateY(-2px);
 }
 
 .footer button:active {
