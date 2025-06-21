@@ -53,7 +53,7 @@ const newMessage = { text: inputValue, sender: 'user', time: currentTime, seen: 
     <div className="App">
       <div className="header">
         <div className="profile-pic">
-          <img src="/1000119245%5B1%5D.png" alt="Allie" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
+          <img src="/1227230000.png" alt="Allie" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
         </div>
         <div className="username-container">
           <div className="username">Allie</div>
