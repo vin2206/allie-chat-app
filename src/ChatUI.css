@@ -38,10 +38,12 @@ backdrop-filter: blur(10px);
 }
 
 .profile-pic img {
-  width: 100%;
-  height: 100%;
+  width: 120%;
+  height: 120%;
+  object-fit: cover;
+  transform: scale(0.85);
+  transform-origin: center;
   border-radius: 50%;
-  object-fit: contain;
 }
 
 .username-container {
