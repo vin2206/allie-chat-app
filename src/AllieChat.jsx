@@ -42,12 +42,13 @@ const newMessage = { text: inputValue, sender: 'user', time: currentTime, seen: 
   };
 
   useEffect(() => {
-  if (bottomRef.current) {
-    setTimeout(() => {
-      bottomRef.current.scrollIntoView({ behavior: 'smooth' });
-    }, 50); // small delay allows DOM to fully render before scroll
+  const chatContainer = document.querySelector('.chat-container');
+  if (chatContainer) {
+    chatContainer.scrollTop = chatContainer.scrollHeight;
   }
 }, [messages]);
+
+  const displayedMessages = [...messages].reverse();
 
   return (
     <div className="App">
@@ -62,7 +63,7 @@ const newMessage = { text: inputValue, sender: 'user', time: currentTime, seen: 
       </div>
 
 <div className="chat-container">
-  {messages.map((msg, index) => {
+  {displayedMessages.map((msg, index) => {
     if (msg.text === 'typing...' && msg.sender === 'allie') return null;
     return (
       <div key={index} className={`message ${msg.sender === 'user' ? 'user-message' : 'allie-message'}`}>
