@@ -49,6 +49,8 @@ const newMessage = { text: inputValue, sender: 'user', time: currentTime, seen: 
   }
 }, [messages]);
 
+  const displayedMessages = [...messages].reverse();
+
   return (
     <div className="App">
       <div className="header">
@@ -60,8 +62,6 @@ const newMessage = { text: inputValue, sender: 'user', time: currentTime, seen: 
           {messages[messages.length - 1]?.text === 'typing...' && <div className="typing-indicator">typing...</div>}
         </div>
       </div>
-
-      const displayedMessages = [...messages].reverse();
 
 <div className="chat-container">
   {displayedMessages.map((msg, index) => {
