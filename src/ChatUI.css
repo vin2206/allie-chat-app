@@ -3,15 +3,15 @@ html, body, #root, .App {
   margin: 0;
   padding: 0;
   height: 100%;
-  font-family: 'Quicksand', 'Nunito', sans-serif;
-  background: linear-gradient(135deg, #ffa8dc, #9c8fff);
+  font-family: 'Inter', sans-serif;
+  background: linear-gradient(to bottom, #ffd5ec, #d4b4f7, #a890f0);
   background-size: 400% 400%;
-  animation: gradientShift 15s ease infinite;
+  animation: waveShift 15s ease infinite;
   display: flex;
   flex-direction: column;
 }
 
-@keyframes gradientShift {
+@keyframes waveShift {
   0% { background-position: 0% 50%; }
   50% { background-position: 100% 50%; }
   100% { background-position: 0% 50%; }
