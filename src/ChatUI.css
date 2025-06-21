@@ -3,8 +3,10 @@ html, body, #root, .App {
   margin: 0;
   padding: 0;
   height: 100%;
-  font-family: 'Inter', sans-serif;
-  background: url("data:image/svg+xml,%3Csvg width='100%25' height='100%25' viewBox='0 0 1600 900' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath fill='%23ffb6c1' d='M0,0 C800,350 800,350 1600,0 L1600,900 L0,900 Z'/%3E%3Cpath fill='%23da70d6' d='M0,450 C800,700 800,700 1600,450 L1600,900 L0,900 Z'/%3E%3Cpath fill='%238a2be2' d='M0,800 C800,900 800,900 1600,800 L1600,900 L0,900 Z'/%3E%3C/svg%3E") no-repeat;
+  background: 
+    linear-gradient(to bottom, #ff99cc, #cc66cc, #9966cc),
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 320'><path fill='%23ff99cc' fill-opacity='0.3' d='M0,64L60,80C120,96,240,128,360,138.7C480,149,600,139,720,133.3C840,128,960,128,1080,117.3C1200,107,1320,85,1380,74.7L1440,64L1440,320L1380,320C1320,320,1200,320,1080,320C960,320,840,320,720,320C600,320,480,320,360,320C240,320,120,320,60,320L0,320Z'></path></svg>");
+  background-repeat: no-repeat;
   background-size: cover;
   background-attachment: fixed;
   display: flex;
