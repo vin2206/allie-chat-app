@@ -42,6 +42,7 @@ backdrop-filter: blur(10px);
   height: 100%;
   border-radius: 50%;
   object-fit: contain;
+  transform: scale(1.1);
 }
 
 .username-container {
