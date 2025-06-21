@@ -84,16 +84,15 @@ backdrop-filter: blur(10px);
 /* Message bubble layout */
 .message {
   max-width: 75%;
-padding: 10px 14px;
-border-radius: 22px 22px 22px 22px;
+  padding: 12px 18px;
+  border-radius: 24px 24px 24px 8px;
   font-size: 16px;
   word-break: break-word;
-  margin-bottom: 6px;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.25);
+  margin-bottom: 12px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.25);
   animation: fadeIn 0.4s ease;
   transition: all 0.2s ease;
-  animation: fadeIn 0.4s ease;
-animation-fill-mode: both;
+  animation-fill-mode: both;
 }
 
 .meta-info {
@@ -118,7 +117,8 @@ animation-fill-mode: both;
   align-self: flex-end;
   background: linear-gradient(135deg, #b388eb, #8093f1, #95e8d7);
   color: #fff;
-  border-bottom-right-radius: 8px;
+  border-radius: 24px 24px 8px 24px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.25);
 }
 
 .allie-message {
