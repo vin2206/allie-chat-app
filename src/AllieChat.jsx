@@ -61,19 +61,21 @@ const newMessage = { text: inputValue, sender: 'user', time: currentTime, seen: 
         </div>
       </div>
 
-      <div className="chat-container">
-  {messages.slice().reverse().map((msg, index) => {
+      const displayedMessages = [...messages].reverse();
+
+<div className="chat-container">
+  {displayedMessages.map((msg, index) => {
     if (msg.text === 'typing...' && msg.sender === 'allie') return null;
     return (
       <div key={index} className={`message ${msg.sender === 'user' ? 'user-message' : 'allie-message'}`}>
-  <div>{msg.text}</div>
-  <div className="meta-info">
-  <span>{msg.time}</span>
-</div>
-</div>
+        <div>{msg.text}</div>
+        <div className="meta-info">
+          <span>{msg.time}</span>
+        </div>
+      </div>
     );
   })}
-  <div ref={bottomRef}></div>      
+  <div ref={bottomRef}></div>
 </div>
 
       <div className="footer">
