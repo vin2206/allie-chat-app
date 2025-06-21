@@ -49,8 +49,6 @@ const newMessage = { text: inputValue, sender: 'user', time: currentTime, seen: 
   }
 }, [messages]);
 
-  const displayedMessages = [...messages].reverse();
-
   return (
     <div className="App">
       <div className="header">
@@ -64,7 +62,7 @@ const newMessage = { text: inputValue, sender: 'user', time: currentTime, seen: 
       </div>
 
 <div className="chat-container">
-  {displayedMessages.map((msg, index) => {
+  {messages.map((msg, index) => {
     if (msg.text === 'typing...' && msg.sender === 'allie') return null;
     return (
       <div key={index} className={`message ${msg.sender === 'user' ? 'user-message' : 'allie-message'}`}>
