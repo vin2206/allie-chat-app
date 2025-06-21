@@ -4,7 +4,7 @@ html, body, #root, .App {
   padding: 0;
   height: 100%;
   font-family: 'Inter', sans-serif;
-  background: url("data:image/svg+xml,%3Csvg width='100%25' height='100%25' viewBox='0 0 1600 900' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath fill='%23ffd5ec' d='M0,0 C800,300 800,300 1600,0 L1600,900 L0,900 Z'/%3E%3Cpath fill='%23d4b4f7' d='M0,400 C800,600 800,600 1600,400 L1600,900 L0,900 Z'/%3E%3Cpath fill='%23a890f0' d='M0,700 C800,900 800,900 1600,700 L1600,900 L0,900 Z'/%3E%3C/svg%3E") no-repeat;
+  background: url("data:image/svg+xml,%3Csvg width='100%25' height='100%25' viewBox='0 0 1600 900' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath fill='%23ffb6c1' d='M0,0 C800,350 800,350 1600,0 L1600,900 L0,900 Z'/%3E%3Cpath fill='%23da70d6' d='M0,450 C800,700 800,700 1600,450 L1600,900 L0,900 Z'/%3E%3Cpath fill='%238a2be2' d='M0,800 C800,900 800,900 1600,800 L1600,900 L0,900 Z'/%3E%3C/svg%3E") no-repeat;
   background-size: cover;
   background-attachment: fixed;
   display: flex;
