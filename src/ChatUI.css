@@ -59,7 +59,7 @@ backdrop-filter: blur(10px);
 
 .typing-indicator {
   font-size: 14px;
-  color: #ff69b4;
+  color: #32cd32;
   font-style: italic;
   font-weight: 500;
   animation: blink 1s infinite;
