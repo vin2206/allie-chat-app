@@ -18,7 +18,7 @@ html, body, #root, .App {
   top: 0;
   left: 0;
   right: 0;
-  background: rgba(50, 20, 60, 0.12);
+  background: rgba(50, 20, 60, 0.15);
 backdrop-filter: blur(10px);
   display: flex;
   align-items: center;
@@ -117,7 +117,7 @@ backdrop-filter: blur(10px);
   background: linear-gradient(135deg, #ff99cc, #b388eb, #80d0f1);
   color: #fff;
   border-radius: 24px 24px 8px 24px;  /* <-- chat style tilt */
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.18);
 }
 
 .allie-message {
@@ -125,7 +125,7 @@ backdrop-filter: blur(10px);
   background: linear-gradient(135deg, #ffe3e3, #c2f0fc);
   color: #222;
   border-radius: 24px 24px 24px 8px;  /* <-- chat style tilt */
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.18);
 }
 
 /* Footer fixed input */
