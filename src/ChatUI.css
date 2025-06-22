@@ -2,13 +2,13 @@
 html, body, #root, .App {
   margin: 0;
   padding: 0;
-  height: 100%; 
-    background: 
-  linear-gradient(to bottom, #ff99cc, #cc66cc, #9966cc),
+  height: 100%;
+  background: 
+  linear-gradient(270deg, #ff99cc, #cc66cc, #9966cc, #cc66cc, #ff99cc),
   url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 320'><path fill='%23ff99cc' fill-opacity='0.3' d='M0,64L60,80C120,96,240,128,360,138.7C480,149,600,139,720,133.3C840,128,960,128,1080,117.3C1200,107,1320,85,1380,74.7L1440,64L1440,320L1380,320C1320,320,1200,320,1080,320C960,320,840,320,720,320C600,320,480,320,360,320C240,320,120,320,60,320L0,320Z'></path></svg>");
-animation: shine 10s infinite alternate;
+background-size: 400% 400%;
+animation: gradientMove 20s ease infinite;
   background-repeat: no-repeat;
-  background-size: cover;
   background-attachment: fixed;
   display: flex;
   flex-direction: column;
@@ -20,7 +20,7 @@ animation: shine 10s infinite alternate;
   top: 0;
   left: 0;
   right: 0;
-  background: rgba(50, 20, 60, 0.15);
+  background: rgba(50, 20, 60, 0.08);
 backdrop-filter: blur(10px);
   display: flex;
   align-items: center;
@@ -116,10 +116,10 @@ backdrop-filter: blur(10px);
 
 .user-message {
   align-self: flex-end;
-  background: linear-gradient(135deg, #ffb3c6, #ff99cc, #cba0f5);
+  background: linear-gradient(135deg, #ff99cc, #b388eb, #80d0f1);
   color: #fff;
   border-radius: 24px 24px 8px 24px;  /* <-- chat style tilt */
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
 }
 
 .allie-message {
@@ -127,7 +127,7 @@ backdrop-filter: blur(10px);
   background: linear-gradient(135deg, #ffe3e3, #c2f0fc);
   color: #222;
   border-radius: 24px 24px 24px 8px;  /* <-- chat style tilt */
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
 }
 
 /* Footer fixed input */
@@ -136,7 +136,7 @@ backdrop-filter: blur(10px);
   bottom: 0;
   left: 0;
   right: 0;
-  background: rgba(50, 20, 60, 0.15);
+  background: rgba(50, 20, 60, 0.08);
 backdrop-filter: blur(10px);
   display: flex;
   padding: 15px 20px;
@@ -183,7 +183,8 @@ backdrop-filter: blur(10px);
   100% { box-shadow: 0 0 8px rgba(255, 105, 180, 0.4); }
 }
 
-@keyframes shine {
-  0% { filter: brightness(1) saturate(1); }
-  100% { filter: brightness(1.1) saturate(1.15); }
+@keyframes gradientMove {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
 }
