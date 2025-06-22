@@ -182,13 +182,6 @@ backdrop-filter: blur(10px);
 }
 
 .heart {
-  margin-left: 5px;
-  font-size: 22px;
-  animation: pulseHeart 1.5s infinite;
-}
-
-@keyframes pulseHeart {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.15); }
-  100% { transform: scale(1); }
+  margin-left: 4px;
+  font-size: 18px;
 }
