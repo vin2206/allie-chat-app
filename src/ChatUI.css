@@ -88,7 +88,7 @@ backdrop-filter: blur(10px);
   font-size: 16px;
   word-break: break-word;
   margin-bottom: 10px;
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.18);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.17);
   animation: fadeIn 0.4s ease;
   transition: all 0.2s ease;
   animation-fill-mode: both;
@@ -117,7 +117,7 @@ backdrop-filter: blur(10px);
   background: linear-gradient(135deg, #ff99cc, #b388eb, #80d0f1);
   color: #fff;
   border-radius: 24px 24px 8px 24px;  /* <-- chat style tilt */
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.18);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.17);
 }
 
 .allie-message {
@@ -125,7 +125,7 @@ backdrop-filter: blur(10px);
   background: linear-gradient(135deg, #ffe3e3, #c2f0fc);
   color: #222;
   border-radius: 24px 24px 24px 8px;  /* <-- chat style tilt */
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.18);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.17);
 }
 
 /* Footer fixed input */
