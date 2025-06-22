@@ -57,7 +57,9 @@ const newMessage = { text: inputValue, sender: 'user', time: currentTime, seen: 
           <img src="/1227230000.png" alt="Allie" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
         </div>
         <div className="username-container">
-          <div className="username">Allie</div>
+          <div className="username">
+  Allie <span className="heart">❤️</span>
+</div>
           {messages[messages.length - 1]?.text === 'typing...' && <div className="typing-indicator">typing...</div>}
         </div>
       </div>
