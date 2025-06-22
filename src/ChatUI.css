@@ -3,7 +3,7 @@ html, body, #root, .App {
   margin: 0;
   padding: 0;
   height: 100%;
-  background: linear-gradient(to bottom, #e889b6, #b666cc, #9455cc);
+  background: linear-gradient(135deg, #e36da6, #9c59d1, #6531d4);
   background-repeat: no-repeat;
   background-size: cover;
   background-attachment: fixed;
@@ -17,13 +17,13 @@ html, body, #root, .App {
   top: 0;
   left: 0;
   right: 0;
-  background: rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(15px);
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
   padding: 12px 20px;
   z-index: 100;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.25);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .profile-pic {
@@ -113,20 +113,18 @@ html, body, #root, .App {
 
 .user-message {
   align-self: flex-end;
-  background: rgba(255, 182, 240, 0.3);
-  backdrop-filter: blur(12px);
+  background: linear-gradient(135deg, #fda0c6, #b888f8);
   color: #fff;
   border-radius: 24px 24px 8px 24px;
-  box-shadow: 0 6px 16px rgba(255, 105, 180, 0.3);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.2);
 }
 
 .allie-message {
   align-self: flex-start;
-  background: rgba(255, 255, 255, 0.2);
-  backdrop-filter: blur(12px);
+  background: linear-gradient(135deg, #ffe6f0, #ffe6ff);
   color: #222;
   border-radius: 24px 24px 24px 8px;
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.2);
 }
 
 /* Footer fixed input */
@@ -135,13 +133,13 @@ html, body, #root, .App {
   bottom: 0;
   left: 0;
   right: 0;
-  background: rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(15px);
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(8px);
   display: flex;
   padding: 15px 20px;
   gap: 12px;
   z-index: 100;
-  border-top: 1px solid rgba(255, 255, 255, 0.25);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .footer input {
