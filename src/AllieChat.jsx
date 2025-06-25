@@ -22,7 +22,7 @@ const newMessage = { text: inputValue, sender: 'user', time: currentTime, seen: 
           role: msg.sender === 'user' ? 'user' : 'assistant',
           content: msg.text
         }));
-        const response = await fetch('https://allie-chat-proxy-production.up.railway.app/chat', {
+        const response = await fetch('allie-chat-proxy-dev-production.up.railway.app', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ messages: formattedHistory })
