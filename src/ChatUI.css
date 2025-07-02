@@ -192,3 +192,9 @@ body {
   padding-top: env(safe-area-inset-top);
   padding-bottom: env(safe-area-inset-bottom);
 }
+
+@media (max-height: 700px) {
+  .footer {
+    position: static !important;
+  }
+}
