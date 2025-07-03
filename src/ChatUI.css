@@ -143,6 +143,11 @@ backdrop-filter: blur(10px);
   gap: 12px;
   z-index: 100;
   border-top: 1px solid rgba(255, 255, 255, 0.1);
+  transition: bottom 0.3s ease;
+}
+
+.footer.keyboard-visible {
+  bottom: 300px; /* estimated keyboard height, adjust if needed */
 }
 
 .footer input {
