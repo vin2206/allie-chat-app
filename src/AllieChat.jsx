@@ -48,6 +48,24 @@ const newMessage = { text: inputValue, sender: 'user', time: currentTime, seen: 
   }
 }, [messages]);
 
+  useEffect(() => {
+    const footer = document.querySelector('.footer');
+
+    const handleResize = () => {
+      const windowHeight = window.innerHeight;
+      const fullHeight = document.documentElement.clientHeight;
+
+      if (windowHeight < fullHeight - 150) {
+        footer?.classList.add('keyboard-visible');
+      } else {
+        footer?.classList.remove('keyboard-visible');
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   const displayedMessages = [...messages].reverse();
 
   return (
