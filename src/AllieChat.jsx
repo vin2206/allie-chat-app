@@ -3,8 +3,8 @@ import './ChatUI.css';
 
 function AllieChat() {
   const [messages, setMessages] = useState([
-    { text: 'Hi baby, how are you? Did you miss me?', sender: 'allie' },
-  ]);
+    { text: 'Hi… kaise ho aap? ☺️', sender: 'allie' },
+]);
   const [inputValue, setInputValue] = useState('');
   const bottomRef = useRef(null);
 
