@@ -29,9 +29,16 @@ const newMessage = { text: inputValue, sender: 'user', time: currentTime, seen: 
         });
         const data = await response.json();
         const reply = data.reply || 'Hmm... Allie didn’t respond.';
-        setMessages((prev) => {
+if (data.reset) {
+  // Reset conversation after 5 min
+  setTimeout(() => {
+    setMessages([{ text: 'Hi… kaise ho aap? ☺️', sender: 'allie' }]);
+  }, 5 * 60 * 1000);
+}
+
+setMessages((prev) => {
   const updatedPrev = [...prev.slice(0, -1)];
-  updatedPrev[updatedPrev.length - 1].seen = true; // Mark last user message as seen
+  updatedPrev[updatedPrev.length - 1].seen = true;
   return [...updatedPrev, { text: reply, sender: 'allie', time: currentTime }];
 });
       } catch (error) {
@@ -58,7 +65,7 @@ const newMessage = { text: inputValue, sender: 'user', time: currentTime, seen: 
         </div>
         <div className="username-container">
           <div className="username">
-  Allie <span className="heart">❤️</span>
+  Shraddha <span className="heart">❤️</span>
 </div>
           {messages[messages.length - 1]?.text === 'typing...' && <div className="typing-indicator">typing...</div>}
         </div>
