@@ -7,9 +7,10 @@ function AllieChat() {
 ]);
   const [inputValue, setInputValue] = useState('');
   const bottomRef = useRef(null);
+  const [isPaused, setIsPaused] = useState(false);
 
   const handleSend = async () => {
-    if (inputValue.trim() === '') return;
+  if (inputValue.trim() === '' || isPaused) return; // ✅ stops sending if paused
     const currentTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 const newMessage = { text: inputValue, sender: 'user', time: currentTime, seen: false };
     const updatedMessages = [...messages, newMessage];
@@ -28,7 +29,28 @@ const newMessage = { text: inputValue, sender: 'user', time: currentTime, seen: 
           body: JSON.stringify({ messages: formattedHistory })
         });
         const data = await response.json();
-        const reply = data.reply || 'Hmm... Allie didn’t respond.';
+
+// ✅ If pause triggered by backend
+if (data.pause) {
+  setIsPaused(true);
+  setMessages((prev) => [
+    ...prev,
+    { text: data.reply, sender: 'allie', time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }
+  ]);
+
+  // After 5 minutes, unpause & restart shy phase
+  setTimeout(() => {
+    setIsPaused(false);
+    setMessages((prev) => [
+      ...prev,
+      { text: 'Hi… wapas aa gayi hoon 😳 tum miss kar rahe the na?', sender: 'allie', time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }
+    ]);
+  }, 5 * 60 * 1000);
+
+  return; // ✅ stop further processing
+}
+
+const reply = data.reply || 'Hmm… Allie didn’t respond.';
 if (data.reset) {
   // Reset conversation after 5 min
   setTimeout(() => {
