@@ -17,21 +17,26 @@ const newMessage = { text: inputValue, sender: 'user', time: currentTime, seen: 
     const updatedMessages = [...messages, newMessage];
     setMessages(updatedMessages);
     setInputValue('');
-    if (!data?.locked) {
-  setMessages((prev) => [...prev, { text: 'typing...', sender: 'allie' }]);
-}
-    setTimeout(async () => {
-      try {
-        const formattedHistory = updatedMessages.map((msg) => ({
-          role: msg.sender === 'user' ? 'user' : 'assistant',
-          content: msg.text
-        }));
-        const response = await fetch("https://allie-chat-proxy-production.up.railway.app/chat", {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ messages: formattedHistory })
-        });
-        const data = await response.json();
+    
+   setTimeout(async () => {
+  try {
+    const formattedHistory = updatedMessages.map((msg) => ({
+      role: msg.sender === 'user' ? 'user' : 'assistant',
+      content: msg.text
+    }));
+
+    const response = await fetch("https://allie-chat-proxy-production.up.railway.app/chat", {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ messages: formattedHistory })
+    });
+
+    const data = await response.json();
+
+    // ✅ Show typing only if not locked
+    if (!data.locked) {
+      setMessages((prev) => [...prev, { text: 'typing...', sender: 'allie' }]);
+    }
 
 // If locked, show premium popup
 if (data.locked) {
