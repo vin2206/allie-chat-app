@@ -32,8 +32,16 @@ const newMessage = { text: inputValue, sender: 'user', time: currentTime, seen: 
 
 // If locked, show premium popup
 if (data.locked) {
-  alert("Shraddha wants to talk to you 😢 – Unlock Premium ₹199/week or Buy Tokens.");
-  return;
+  setMessages((prev) => [
+    ...prev,
+    { text: data.reply, sender: 'allie', time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }
+  ]);
+
+  setTimeout(() => {
+    alert("Shraddha wants to talk to you 😢 – Unlock Premium ₹199/week or Buy Tokens.");
+  }, 500); // show popup after her message
+
+  return; // stop further processing
 }
 
 const reply = data.reply || "Hmm… Shraddha didn’t respond.";
