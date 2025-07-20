@@ -17,7 +17,9 @@ const newMessage = { text: inputValue, sender: 'user', time: currentTime, seen: 
     const updatedMessages = [...messages, newMessage];
     setMessages(updatedMessages);
     setInputValue('');
-    setMessages((prev) => [...prev, { text: 'typing...', sender: 'allie' }]);
+    if (!data?.locked) {
+  setMessages((prev) => [...prev, { text: 'typing...', sender: 'allie' }]);
+}
     setTimeout(async () => {
       try {
         const formattedHistory = updatedMessages.map((msg) => ({
