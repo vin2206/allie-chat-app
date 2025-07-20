@@ -30,6 +30,13 @@ const newMessage = { text: inputValue, sender: 'user', time: currentTime, seen: 
         });
         const data = await response.json();
 
+// If locked, show premium popup
+if (data.locked) {
+  alert("Shraddha wants to talk to you 😢 – Unlock Premium ₹199/week or Buy Tokens.");
+  return;
+}
+
+const reply = data.reply || "Hmm… Shraddha didn’t respond.";
 // ✅ If pause triggered by backend
 if (data.pause) {
   setIsPaused(true);
