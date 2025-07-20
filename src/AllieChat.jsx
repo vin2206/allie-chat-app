@@ -16,9 +16,14 @@ function AllieChat() {
 const newMessage = { text: inputValue, sender: 'user', time: currentTime, seen: false };
     const updatedMessages = [...messages, newMessage];
     setMessages(updatedMessages);
-    setInputValue('');
-    
-   setTimeout(async () => {
+setInputValue('');
+
+// ✅ Show typing instantly, only if not paused (locked handled later)
+if (!isPaused) {
+  setMessages((prev) => [...prev, { text: 'typing...', sender: 'allie' }]);
+}
+
+setTimeout(async () => {
   try {
     const formattedHistory = updatedMessages.map((msg) => ({
       role: msg.sender === 'user' ? 'user' : 'assistant',
@@ -33,13 +38,10 @@ const newMessage = { text: inputValue, sender: 'user', time: currentTime, seen: 
 
     const data = await response.json();
 
-    // ✅ Show typing only if not locked
-    if (!data.locked) {
-      setMessages((prev) => [...prev, { text: 'typing...', sender: 'allie' }]);
-    }
-
 // If locked, show premium popup
 if (data.locked) {
+  setMessages((prev) => prev.filter((msg) => msg.text !== 'typing...')); // remove typing
+
   setMessages((prev) => [
     ...prev,
     { text: data.reply, sender: 'allie', time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }
@@ -49,7 +51,7 @@ if (data.locked) {
     setShowModal(true);
   }, 500);
 
-  return; // ✅ stop further processing
+  return;
 }
 
 const reply = data.reply || "Hmm… Shraddha didn’t respond.";
@@ -57,7 +59,7 @@ const reply = data.reply || "Hmm… Shraddha didn’t respond.";
 if (data.pause) {
   setIsPaused(true);
   setMessages((prev) => [
-    ...prev,
+    ...prev.filter((msg) => msg.text !== 'typing...'), // remove typing first
     { text: data.reply, sender: 'allie', time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }
   ]);
 
