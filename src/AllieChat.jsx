@@ -8,6 +8,7 @@ function AllieChat() {
   const [inputValue, setInputValue] = useState('');
   const bottomRef = useRef(null);
   const [isPaused, setIsPaused] = useState(false);
+  const [showModal, setShowModal] = useState(false);
 
   const handleSend = async () => {
   if (inputValue.trim() === '' || isPaused) return; // ✅ stops sending if paused
@@ -38,10 +39,10 @@ if (data.locked) {
   ]);
 
   setTimeout(() => {
-    alert("Shraddha wants to talk to you 😢 – Unlock Premium ₹199/week or Buy Tokens.");
-  }, 500); // show popup after her message
+    setShowModal(true);
+  }, 500);
 
-  return; // stop further processing
+  return; // ✅ stop further processing
 }
 
 const reply = data.reply || "Hmm… Shraddha didn’t respond.";
@@ -121,6 +122,24 @@ setMessages((prev) => {
   })}
   <div ref={bottomRef}></div>
 </div>
+
+      {showModal && (
+  <div className="premium-modal">
+    <div className="modal-content">
+      <h3>Shraddha wants to talk to you 😢</h3>
+      <p>Unlock to continue unlimited chat and hear her voice notes ❤️</p>
+      <button onClick={() => { setShowModal(false); alert("Weekly Unlock Coming Soon!"); }}>
+        Weekly Unlimited – ₹199
+      </button>
+      <button onClick={() => { setShowModal(false); alert("Daily Top-Up Coming Soon!"); }}>
+        Daily Top-Up – ₹49
+      </button>
+      <button onClick={() => setShowModal(false)} className="cancel-btn">
+        Maybe Later
+      </button>
+    </div>
+  </div>
+)}
 
       <div className="footer">
         <input
