@@ -57,7 +57,6 @@ if (data.pause) {
   return; // ✅ stop further processing
 }
 
-const reply = data.reply || 'Hmm… Allie didn’t respond.';
 if (data.reset) {
   // Reset conversation after 5 min
   setTimeout(() => {
