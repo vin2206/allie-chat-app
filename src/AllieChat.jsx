@@ -9,11 +9,25 @@ function AllieChat() {
   const bottomRef = useRef(null);
   const [isPaused, setIsPaused] = useState(false);
   const [showModal, setShowModal] = useState(false);
+  const [isOwner, setIsOwner] = useState(false);
 
   const handleSend = async () => {
-  if (inputValue.trim() === '' || isPaused) return; // ✅ stops sending if paused
-    const currentTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-const newMessage = { text: inputValue, sender: 'user', time: currentTime, seen: false };
+  if (inputValue.trim() === '' || isPaused) return;
+
+  // --- OWNER UNLOCK COMMAND ---
+  if (inputValue.trim() === '#unlockvinay1236') {
+    setIsOwner(true);
+    setInputValue('');
+    setMessages(prev => [
+      ...prev,
+      { text: "✅ Owner mode unlocked! Unlimited chat enabled.", sender: 'allie', time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }
+    ]);
+    return; // Stop here, do NOT send this message to backend
+  }
+
+  const currentTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  const newMessage = { text: inputValue, sender: 'user', time: currentTime, seen: false };
+  // ...rest of your code
     const updatedMessages = [...messages, newMessage];
     setMessages(updatedMessages);
 setInputValue('');
@@ -30,11 +44,14 @@ setTimeout(async () => {
       content: msg.text
     }));
 
-    const response = await fetch("https://allie-chat-proxy-production.up.railway.app/chat", {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ messages: formattedHistory })
-    });
+    const fetchBody = { messages: formattedHistory };
+if (isOwner) fetchBody.ownerKey = "unlockvinay1236";
+
+const response = await fetch("https://allie-chat-proxy-production.up.railway.app/chat", {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify(fetchBody)
+});
 
     const data = await response.json();
 
