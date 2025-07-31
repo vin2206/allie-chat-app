@@ -108,4 +108,75 @@ function AllieChat() {
   useEffect(() => {
     const chatContainer = document.querySelector('.chat-container');
     if (chatContainer) {
-      chatContainer.scrollTop = chatContain
+      chatContainer.scrollTop = chatContainer.scrollHeight;
+    }
+  }, [messages]);
+
+  const displayedMessages = [...messages].reverse();
+
+  return (
+    <div className="App">
+      <div className="header">
+        <div className="profile-pic">
+          <img src="/1227230000.png" alt="Allie" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
+        </div>
+        <div className="username-container">
+          <div className="username">
+            Shraddha <span className="heart">❤️</span>
+          </div>
+        </div>
+      </div>
+
+      <div className="chat-container">
+        {displayedMessages.map((msg, index) => (
+          <div key={index} className={`message ${msg.sender === 'user' ? 'user-message' : 'allie-message'}`}>
+            <div>{msg.text}</div>
+            <div className="meta-info">
+              <span>{msg.time}</span>
+            </div>
+          </div>
+        ))}
+        {/* Bouncing 3-dot typing indicator */}
+        {isTyping && (
+          <div className="typing-bounce">
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+        )}
+        <div ref={bottomRef}></div>
+      </div>
+
+      {showModal && (
+        <div className="premium-modal">
+          <div className="modal-content">
+            <h3>Shraddha wants to talk to you 😢</h3>
+            <p>Unlock to continue unlimited chat and hear her voice notes ❤️</p>
+            <button onClick={() => { setShowModal(false); alert("Weekly Unlock Coming Soon!"); }}>
+              Weekly Unlimited – ₹199
+            </button>
+            <button onClick={() => { setShowModal(false); alert("Daily Top-Up Coming Soon!"); }}>
+              Daily Top-Up – ₹49
+            </button>
+            <button onClick={() => setShowModal(false)} className="cancel-btn">
+              Maybe Later
+            </button>
+          </div>
+        </div>
+      )}
+
+      <div className="footer">
+        <input
+          type="text"
+          placeholder="Type a message..."
+          value={inputValue}
+          onChange={(e) => setInputValue(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+        />
+        <button onClick={handleSend}>➤</button>
+      </div>
+    </div>
+  );
+}
+
+export default AllieChat;
