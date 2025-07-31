@@ -92,11 +92,10 @@ function AllieChat() {
           }, 5 * 60 * 1000);
         }
 
-        setMessages((prev) => {
-          const updatedPrev = [...prev.slice(0, -1)];
-          updatedPrev[updatedPrev.length - 1].seen = true;
-          return [...updatedPrev, { text: reply, sender: 'allie', time: currentTime }];
-        });
+        setMessages((prev) => [
+  ...prev,
+  { text: reply, sender: 'allie', time: currentTime }
+]);
       } catch (error) {
         setIsTyping(false);
         console.error('Error calling Allie proxy:', error);
