@@ -136,12 +136,10 @@ function AllieChat() {
           </div>
         ))}
         {isTyping && (
-  <div className="message allie">
-    <div className="typing-bounce">
-      <span></span>
-      <span></span>
-      <span></span>
-    </div>
+  <div className="message allie typing-bounce">
+    <span></span>
+    <span></span>
+    <span></span>
   </div>
 )}
         <div ref={bottomRef}></div>
