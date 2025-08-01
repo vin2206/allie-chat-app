@@ -255,7 +255,10 @@ backdrop-filter: blur(10px);
   display: flex;
   align-items: center;
   margin: 10px 0 10px 10px;
-  height: 18px;
+  height: 28px;
+  width: auto !important;        /* <-- Force bubble to be only as wide as needed */
+  min-width: 0 !important;
+  max-width: fit-content;        /* <-- Just to be sure */
 }
 
 @keyframes bounce {
