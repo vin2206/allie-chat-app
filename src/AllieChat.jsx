@@ -129,11 +129,11 @@ function AllieChat() {
         <div className="chat-spacer"></div>
         {displayedMessages.map((msg, index) => (
           <div key={index} className={`message ${msg.sender === 'user' ? 'user-message' : 'allie-message'}`}>
-            <div>{msg.text}</div>
-            <div className="meta-info">
-              <span>{msg.time}</span>
-            </div>
-          </div>
+  <span className="bubble-content">
+    {msg.text}
+    <span className="msg-time">{msg.time}</span>
+  </span>
+</div>
         ))}
         {isTyping && (
   <div className="message allie typing-bounce">
