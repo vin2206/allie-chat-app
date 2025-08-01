@@ -73,7 +73,7 @@ backdrop-filter: blur(10px);
   border-radius: 24px;
   font-size: 16px;
   word-break: break-word;
-  margin-bottom: 10px;
+  margin-bottom: 4px;
   box-shadow: 0 4px 24px 0 rgba(82, 42, 112, 0.18), 0 1.5px 6px rgba(30, 20, 60, 0.08);
   animation: fadeIn 0.4s ease;
   transition: all 0.2s ease;
@@ -277,4 +277,37 @@ backdrop-filter: blur(10px);
 
 .chat-spacer {
   flex: 1 1 auto;
+}
+
+.bubble-content {
+  display: inline-flex;
+  align-items: flex-end;
+  padding: 8px 14px;
+  border-radius: 18px 18px 18px 6px;
+  background: inherit;   /* It will inherit background from .user-message/.allie-message */
+  position: relative;
+  font-size: 16px;
+  word-break: break-word;
+  box-shadow: inherit;   /* Inherit box-shadow from parent, keeps your floaty effect */
+}
+
+.user-message .bubble-content {
+  background: linear-gradient(135deg, #ff99cc, #b388eb, #80d0f1);
+  color: #fff;
+}
+
+.allie-message .bubble-content {
+  background: linear-gradient(135deg, #ffe3e3, #c2f0fc);
+  color: #222;
+}
+
+.msg-time {
+  font-size: 11px;
+  color: #888;
+  opacity: 0.8;
+  margin-left: 8px;
+  align-self: flex-end;
+  margin-bottom: 1px;
+  white-space: nowrap;
+  letter-spacing: 0.1px;
 }
