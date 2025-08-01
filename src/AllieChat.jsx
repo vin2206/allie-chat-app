@@ -105,11 +105,10 @@ function AllieChat() {
   };
 
   useEffect(() => {
-    const chatContainer = document.querySelector('.chat-container');
-    if (chatContainer) {
-      chatContainer.scrollTop = chatContainer.scrollHeight;
-    }
-  }, [messages]);
+  if (bottomRef.current) {
+    bottomRef.current.scrollIntoView({ behavior: 'smooth' });
+  }
+}, [messages, isTyping]);
 
   const displayedMessages = messages;
 
