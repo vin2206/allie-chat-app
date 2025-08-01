@@ -249,7 +249,7 @@ backdrop-filter: blur(10px);
 
 .message.allie.typing-bounce {
   background: linear-gradient(135deg, #ffe3e3, #c2f0fc);
-  padding: 8px 14px;
+  padding: 10px 8px;
   border-radius: 24px 24px 24px 8px;
   box-shadow: 0 6px 12px rgba(0, 0, 0, 0.17);
   display: flex;
