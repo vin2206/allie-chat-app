@@ -269,3 +269,7 @@ backdrop-filter: blur(10px);
   width: 10px;
   height: 10px;
 }
+
+.chat-spacer {
+  flex: 1 1 auto;
+}
