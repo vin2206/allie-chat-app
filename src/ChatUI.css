@@ -273,8 +273,8 @@ backdrop-filter: blur(10px);
 }
 
 .typing-bounce span {
-  width: 10px;
-  height: 10px;
+  width: 7px;
+  height: 7px;
 }
 
 .chat-spacer {
