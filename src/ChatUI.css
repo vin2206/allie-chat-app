@@ -258,13 +258,6 @@ backdrop-filter: blur(10px);
   }
 }
 
-.message.allie .typing-bounce {
-  background: linear-gradient(135deg, #ffe3e3, #c2f0fc);
-  padding: 12px 18px;
-  border-radius: 24px 24px 24px 8px;
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.17);
-}
-
 .typing-bounce span {
   width: 10px;
   height: 10px;
