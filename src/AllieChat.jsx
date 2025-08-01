@@ -126,6 +126,7 @@ function AllieChat() {
       </div>
 
       <div className="chat-container">
+        <div className="chat-spacer"></div>
         {displayedMessages.map((msg, index) => (
           <div key={index} className={`message ${msg.sender === 'user' ? 'user-message' : 'allie-message'}`}>
             <div>{msg.text}</div>
