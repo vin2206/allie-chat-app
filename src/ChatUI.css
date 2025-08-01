@@ -64,7 +64,7 @@ backdrop-filter: blur(10px);
   overflow-y: auto;
   padding: 20px 15px;
   display: flex;
-  flex-direction: column-reverse;
+  flex-direction: column;
 }
 
 /* Message bubble layout */
