@@ -111,7 +111,7 @@ function AllieChat() {
     }
   }, [messages]);
 
-  const displayedMessages = [...messages].reverse();
+  const displayedMessages = messages;
 
   return (
     <div className="App">
