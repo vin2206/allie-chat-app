@@ -69,12 +69,9 @@ backdrop-filter: blur(10px);
 /* Message bubble layout */
 .message {
   max-width: 75%;
-  padding: 10px 18px;
-  border-radius: 24px;
   font-size: 16px;
   word-break: break-word;
   margin-bottom: 4px;
-  box-shadow: 0 4px 24px 0 rgba(82, 42, 112, 0.18), 0 1.5px 6px rgba(30, 20, 60, 0.08);
   animation: fadeIn 0.4s ease;
   transition: all 0.2s ease;
   animation-fill-mode: both;
@@ -100,18 +97,10 @@ backdrop-filter: blur(10px);
 
 .user-message {
   align-self: flex-end;
-  background: linear-gradient(135deg, #ff99cc, #b388eb, #80d0f1);
-  color: #fff;
-  border-radius: 24px 24px 8px 24px;  /* <-- chat style tilt */
-  box-shadow: 0 4px 24px 0 rgba(95, 175, 255, 0.13), 0 1.5px 8px rgba(60, 20, 60, 0.10);
 }
 
 .allie-message {
   align-self: flex-start;
-  background: linear-gradient(135deg, #ffe3e3, #c2f0fc);
-  color: #222;
-  border-radius: 24px 24px 24px 8px;  /* <-- chat style tilt */
-  box-shadow: 0 5px 28px 0 rgba(255, 100, 180, 0.16), 0 2px 8px rgba(60, 20, 60, 0.11);
 }
 
 /* Footer fixed input */
@@ -282,23 +271,27 @@ backdrop-filter: blur(10px);
 .bubble-content {
   display: inline-flex;
   align-items: flex-end;
-  padding: 8px 14px;
-  border-radius: 18px 18px 18px 6px;
-  background: inherit;   /* It will inherit background from .user-message/.allie-message */
-  position: relative;
+  padding: 11px 16px 11px 16px;   /* WhatsApp-style padding */
+  border-radius: 20px 20px 20px 8px;
+  box-shadow: 0 4px 18px 0 rgba(112, 76, 255, 0.09), 0 1.5px 8px rgba(60, 20, 60, 0.08);
   font-size: 16px;
+  background: linear-gradient(135deg, #ffe3e3, #c2f0fc); /* Default for allie */
+  margin-bottom: 2px;
+  min-width: 0;     /* fixes small bubbles */
   word-break: break-word;
-  box-shadow: inherit;   /* Inherit box-shadow from parent, keeps your floaty effect */
+  position: relative;
 }
 
 .user-message .bubble-content {
   background: linear-gradient(135deg, #ff99cc, #b388eb, #80d0f1);
   color: #fff;
+  border-radius: 20px 20px 8px 20px;
 }
 
 .allie-message .bubble-content {
   background: linear-gradient(135deg, #ffe3e3, #c2f0fc);
   color: #222;
+  border-radius: 20px 20px 20px 8px;
 }
 
 .msg-time {
