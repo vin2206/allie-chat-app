@@ -101,7 +101,7 @@ function AllieChat() {
         console.error('Error calling Allie proxy:', error);
         setMessages((prev) => [...prev.slice(0, -1), { text: 'Oops! Allie is quiet right now.', sender: 'allie' }]);
       }
-    }, 1500);
+    }, 2500);
   };
 
   useEffect(() => {
