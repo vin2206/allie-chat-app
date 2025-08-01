@@ -247,6 +247,17 @@ backdrop-filter: blur(10px);
   animation-delay: 0.4s;
 }
 
+.message.allie.typing-bounce {
+  background: linear-gradient(135deg, #ffe3e3, #c2f0fc);
+  padding: 12px 18px;
+  border-radius: 24px 24px 24px 8px;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.17);
+  display: flex;
+  align-items: center;
+  margin: 10px 0 10px 10px;
+  height: 28px;
+}
+
 @keyframes bounce {
   0%, 80%, 100% {
     transform: scale(0.8);
