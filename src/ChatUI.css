@@ -98,14 +98,18 @@ backdrop-filter: blur(10px);
 
 .user-message {
   align-self: flex-end;
-  margin-left: 20%;
-  margin-right: 2px;
+  margin-left: 22%;   /* how much bubble moves in from left */
+  margin-right: 8px;  /* gap from right edge of screen */
+  margin-top: 3px;    /* vertical gap between bubbles */
+  margin-bottom: 3px;
 }
 
 .allie-message {
   align-self: flex-start;
-  margin-left: 2px;
-  margin-right: 20%;
+  margin-left: 8px;   /* gap from left edge of screen */
+  margin-right: 22%;  /* how much bubble moves in from right */
+  margin-top: 3px;
+  margin-bottom: 3px;
 }
 
 /* Footer fixed input */
@@ -304,8 +308,14 @@ backdrop-filter: blur(10px);
   color: #888;
   opacity: 0.8;
   margin-left: 8px;
-  align-self: flex-end;
   margin-bottom: 1px;
   white-space: nowrap;
   letter-spacing: 0.1px;
+  float: right;       /* Makes time float right in bubble */
+}
+.user-message .msg-time {
+  float: right;
+}
+.allie-message .msg-time {
+  float: left;
 }
