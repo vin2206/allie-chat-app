@@ -40,8 +40,11 @@ function AllieChat() {
           content: msg.text
         }));
 
-        const fetchBody = { messages: formattedHistory };
-        if (isOwner) fetchBody.ownerKey = "unlockvinay1236";
+        const fetchBody = {
+  messages: formattedHistory,
+  clientTime: new Date().toLocaleTimeString('en-US', { hour12: false }) // Example: "02:13:05"
+};
+if (isOwner) fetchBody.ownerKey = "unlockvinay1236";
 
         const response = await fetch("https://allie-chat-proxy-production.up.railway.app/chat", {
           method: 'POST',
