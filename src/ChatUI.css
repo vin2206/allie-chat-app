@@ -1,3 +1,4 @@
+* { box-sizing: border-box; }
 /* Fullscreen vibrant animated background */
 html, body, #root, .App {
   margin: 0;
@@ -273,33 +274,29 @@ backdrop-filter: blur(10px);
 }
 
 .bubble-content {
-  display: inline-flex;
-  align-items: flex-end;
-  padding: 8px 13px 8px 13px;   /* WhatsApp-style padding */
+  display: inline-block;      /* <- KEY! */
+  padding: 8px 13px 8px 13px;
   border-radius: 20px 20px 20px 8px;
   box-shadow: 0 4px 18px 0 rgba(112, 76, 255, 0.09), 0 1.5px 8px rgba(60, 20, 60, 0.08);
   font-size: 16px;
-  background: linear-gradient(135deg, #ffe3e3, #c2f0fc); /* Default for allie */
+  background: linear-gradient(135deg, #ffe3e3, #c2f0fc);
   margin-bottom: 2px;
-  min-width: 0;     /* fixes small bubbles */
+  min-width: 0;
   word-break: break-word;
   position: relative;
+  text-align: left;           /* <- Important! */
 }
 
 .user-message .bubble-content {
   background: linear-gradient(135deg, #ff99cc, #b388eb, #80d0f1);
   color: #fff;
   border-radius: 20px 20px 8px 20px;
-  justify-content: flex-end;  /* ensures right align inside the bubble */
-  text-align: right;
 }
 
 .allie-message .bubble-content {
   background: linear-gradient(135deg, #ffe3e3, #c2f0fc);
   color: #222;
   border-radius: 20px 20px 20px 8px;
-  justify-content: flex-end;  /* ensures right align inside the bubble */
-  text-align: right;
 }
 
 .msg-time {
