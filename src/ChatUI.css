@@ -71,7 +71,7 @@ backdrop-filter: blur(10px);
   max-width: 75%;
   font-size: 16px;
   word-break: break-word;
-  margin-bottom: 1px;
+  margin-bottom: 2px;
   margin-top: 0;
   animation: fadeIn 0.4s ease;
   transition: all 0.2s ease;
@@ -98,12 +98,14 @@ backdrop-filter: blur(10px);
 
 .user-message {
   align-self: flex-end;
+  margin-left: 6px;
+  margin-right: 10%;
 }
 
 .allie-message {
   align-self: flex-start;
-  margin-left: 4px;    /* Hug left edge more */
-  margin-right: 20%;
+  margin-left: 6px;
+  margin-right: 10%;
 }
 
 /* Footer fixed input */
