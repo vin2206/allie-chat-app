@@ -40,9 +40,11 @@ function AllieChat() {
           content: msg.text
         }));
 
-        const fetchBody = {
+        const now = new Date();
+const fetchBody = {
   messages: formattedHistory,
-  clientTime: new Date().toLocaleTimeString('en-US', { hour12: false }) // Example: "02:13:05"
+  clientTime: now.toLocaleTimeString('en-US', { hour12: false }),
+  clientDate: now.toLocaleDateString('en-GB'), // e.g., "02/08/2025"
 };
 if (isOwner) fetchBody.ownerKey = "unlockvinay1236";
 
