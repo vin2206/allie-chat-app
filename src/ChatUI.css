@@ -294,14 +294,14 @@ backdrop-filter: blur(10px);
 .allie-message .bubble-content {
   background: linear-gradient(135deg, #ffe3e3, #c2f0fc);
   color: #222;
-  border-radius: 6px 18px 18px 18px;
+  border-radius: 5px 18px 18px 18px;
   padding: 8px 20px 16px 13px;   /* Only 20px right padding for time, not 44px! */
 }
 .user-message .bubble-content {
   background: linear-gradient(135deg, #ff99cc, #b388eb, #80d0f1);
   color: #fff;
-  border-radius: 18px 6px 18px 20px;
-  padding: 8px 35px 16px 13px;   /* Keep 44px for time on right bubbles */
+  border-radius: 18px 5px 18px 20px;
+  padding: 8px 40px 16px 13px;   /* Keep 44px for time on right bubbles */
 }
 
 .msg-time {
