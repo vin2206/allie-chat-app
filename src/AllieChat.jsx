@@ -125,8 +125,8 @@ if (isOwner) fetchBody.ownerKey = "unlockvinay1236";
         </div>
         <div className="username-container">
           <div className="username">
-            Shraddha <span className="heart">❤️</span>
-          </div>
+  Shraddha
+</div>
         </div>
       </div>
 
