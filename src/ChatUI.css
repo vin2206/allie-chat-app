@@ -61,7 +61,7 @@ backdrop-filter: blur(10px);
   margin-top: 80px;
   margin-bottom: 90px;
   overflow-y: auto;
-  padding: 20px 15px;
+  padding: 10px 4px;
   display: flex;
   flex-direction: column;
 }
@@ -71,7 +71,8 @@ backdrop-filter: blur(10px);
   max-width: 75%;
   font-size: 16px;
   word-break: break-word;
-  margin-bottom: 4px;
+  margin-bottom: 1px;
+  margin-top: 0;
   animation: fadeIn 0.4s ease;
   transition: all 0.2s ease;
   animation-fill-mode: both;
@@ -271,7 +272,7 @@ backdrop-filter: blur(10px);
 .bubble-content {
   display: inline-flex;
   align-items: flex-end;
-  padding: 11px 16px 11px 16px;   /* WhatsApp-style padding */
+  padding: 8px 13px 8px 13px;   /* WhatsApp-style padding */
   border-radius: 20px 20px 20px 8px;
   box-shadow: 0 4px 18px 0 rgba(112, 76, 255, 0.09), 0 1.5px 8px rgba(60, 20, 60, 0.08);
   font-size: 16px;
