@@ -61,7 +61,6 @@ backdrop-filter: blur(10px);
   margin-top: 80px;
   margin-bottom: 90px;
   overflow-y: auto;
-  padding: 10px 4px;
   display: flex;
   flex-direction: column;
 }
@@ -291,12 +290,16 @@ backdrop-filter: blur(10px);
   background: linear-gradient(135deg, #ff99cc, #b388eb, #80d0f1);
   color: #fff;
   border-radius: 20px 20px 8px 20px;
+  justify-content: flex-end;  /* ensures right align inside the bubble */
+  text-align: right;
 }
 
 .allie-message .bubble-content {
   background: linear-gradient(135deg, #ffe3e3, #c2f0fc);
   color: #222;
   border-radius: 20px 20px 20px 8px;
+  justify-content: flex-end;  /* ensures right align inside the bubble */
+  text-align: right;
 }
 
 .msg-time {
