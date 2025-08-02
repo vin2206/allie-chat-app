@@ -159,17 +159,6 @@ backdrop-filter: blur(10px);
   transform: scale(0.95);
 }
 
-@keyframes glowPulse {
-  0% { box-shadow: 0 0 8px rgba(255, 105, 180, 0.4); }
-  50% { box-shadow: 0 0 18px rgba(255, 105, 180, 0.8); }
-  100% { box-shadow: 0 0 8px rgba(255, 105, 180, 0.4); }
-}
-
-.heart {
-  margin-left: 1px;
-  font-size: 18px;
-}
-
 .premium-modal {
   position: fixed;
   top: 0;
