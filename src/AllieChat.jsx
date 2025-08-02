@@ -141,7 +141,7 @@ if (isOwner) fetchBody.ownerKey = "unlockvinay1236";
 </div>
         ))}
         {isTyping && (
-  <div className="message allie typing-bounce">
+  <div className="message allie-message typing-bounce">
     <span></span>
     <span></span>
     <span></span>
