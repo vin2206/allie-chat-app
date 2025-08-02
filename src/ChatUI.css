@@ -98,14 +98,14 @@ backdrop-filter: blur(10px);
 
 .user-message {
   align-self: flex-end;
-  margin-left: 6px;
-  margin-right: 10%;
+  margin-left: 20%;
+  margin-right: 2px;
 }
 
 .allie-message {
   align-self: flex-start;
-  margin-left: 6px;
-  margin-right: 10%;
+  margin-left: 2px;
+  margin-right: 20%;
 }
 
 /* Footer fixed input */
