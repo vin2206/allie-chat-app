@@ -68,7 +68,7 @@ backdrop-filter: blur(10px);
 
 /* Message bubble layout */
 .message {
-  max-width: 90%;
+  max-width: 80%;
   font-size: 16px;
   word-break: break-word;
   margin-bottom: 2px;
@@ -99,15 +99,15 @@ backdrop-filter: blur(10px);
 .user-message {
   align-self: flex-end;
   margin-left: 60px;    /* gives a small gap from left for right-side bubble */
-  margin-right: 4px;    /* small gap from right edge */
+  margin-right: 2px;    /* small gap from right edge */
   margin-top: 3px;
   margin-bottom: 3px;
 }
 
 .allie-message {
   align-self: flex-start;
-  margin-left: 8px;     /* small gap from left edge */
-  margin-right: 40px;   /* gap from right for left-side bubble */
+  margin-left: 9px;     /* small gap from left edge */
+  margin-right: 20px;   /* gap from right for left-side bubble */
   margin-top: 3px;
   margin-bottom: 3px;
 }
@@ -279,7 +279,7 @@ backdrop-filter: blur(10px);
 
 .bubble-content {
   display: inline-block;      /* <- KEY! */
-  padding: 8px 40px 16px 13px;
+  padding: 8px 44px 16px 13px;
   border-radius: 20px 20px 20px 8px;
   box-shadow: 0 4px 18px 0 rgba(112, 76, 255, 0.09), 0 1.5px 8px rgba(60, 20, 60, 0.08);
   font-size: 16px;
@@ -294,18 +294,18 @@ backdrop-filter: blur(10px);
 .user-message .bubble-content {
   background: linear-gradient(135deg, #ff99cc, #b388eb, #80d0f1);
   color: #fff;
-  border-radius: 20px 20px 8px 20px;
+  border-radius: 18px 8px 18px 20px;
 }
 
 .allie-message .bubble-content {
   background: linear-gradient(135deg, #ffe3e3, #c2f0fc);
   color: #222;
-  border-radius: 20px 20px 20px 8px;
+  border-radius: 8px 18px 18px 18px;
 }
 
 .msg-time {
   position: absolute;
-  right: 16px;
+  right: 12px;
   bottom: 7px;
   font-size: 11px;
   color: #888;
