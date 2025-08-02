@@ -99,7 +99,7 @@ backdrop-filter: blur(10px);
 .user-message {
   align-self: flex-end;
   margin-left: 60px;    /* gives a small gap from left for right-side bubble */
-  margin-right: 8px;    /* small gap from right edge */
+  margin-right: 4px;    /* small gap from right edge */
   margin-top: 3px;
   margin-bottom: 3px;
 }
@@ -107,7 +107,7 @@ backdrop-filter: blur(10px);
 .allie-message {
   align-self: flex-start;
   margin-left: 8px;     /* small gap from left edge */
-  margin-right: 60px;   /* gap from right for left-side bubble */
+  margin-right: 40px;   /* gap from right for left-side bubble */
   margin-top: 3px;
   margin-bottom: 3px;
 }
@@ -279,7 +279,7 @@ backdrop-filter: blur(10px);
 
 .bubble-content {
   display: inline-block;      /* <- KEY! */
-  padding: 8px 35px 14px 13px;
+  padding: 8px 40px 16px 13px;
   border-radius: 20px 20px 20px 8px;
   box-shadow: 0 4px 18px 0 rgba(112, 76, 255, 0.09), 0 1.5px 8px rgba(60, 20, 60, 0.08);
   font-size: 16px;
