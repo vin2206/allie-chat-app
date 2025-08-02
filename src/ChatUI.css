@@ -279,7 +279,7 @@ backdrop-filter: blur(10px);
 
 .bubble-content {
   display: inline-block;      /* <- KEY! */
-  padding: 8px 13px 8px 13px;
+  padding: 8px 40px 16px 13px;
   border-radius: 20px 20px 20px 8px;
   box-shadow: 0 4px 18px 0 rgba(112, 76, 255, 0.09), 0 1.5px 8px rgba(60, 20, 60, 0.08);
   font-size: 16px;
@@ -304,14 +304,16 @@ backdrop-filter: blur(10px);
 }
 
 .msg-time {
+  position: absolute;
+  right: 16px;
+  bottom: 7px;
   font-size: 11px;
   color: #888;
   opacity: 0.8;
-  margin-left: 8px;
-  margin-bottom: 1px;
   white-space: nowrap;
   letter-spacing: 0.1px;
-  float: right;       /* Makes time float right in bubble */
+  margin: 0;
+  padding: 0;
 }
 .user-message .msg-time {
   float: right;
