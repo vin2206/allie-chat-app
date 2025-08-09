@@ -364,3 +364,12 @@ backdrop-filter: blur(10px);
 .message .bubble-content:has(.audio-player) {
   padding-right: 90px; /* leave room for time at right */
 }
+
+/* Make sure time badge doesn't block clicks on the audio */
+.msg-time { pointer-events: none; }
+
+/* Audio player should occupy the bubble width and stay on top */
+.audio-player { width: 100%; display: block; position: relative; z-index: 1; }
+
+/* Keep bubble positioned for the time badge if it's absolutely placed */
+.message .bubble-content { position: relative; }
