@@ -12,12 +12,6 @@ function AllieChat() {
   const [isOwner, setIsOwner] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
 
-  // Decide if the user asked for a voice reply (directly or indirectly)
-  const wantsVoice = (text = '') => {
-    const re = /(voice|audio|awaaz|aawaz|sunao|voice\s*bhejo)/i;
-    return re.test(text);
-  };
-
   const handleSend = async () => {
     if (inputValue.trim() === '' || isPaused) return;
 
@@ -47,17 +41,12 @@ function AllieChat() {
         }));
 
         const now = new Date();
-
-        // 👇 Only request voice if user actually asked for it
-        const wantVoice = wantsVoice(newMessage.text);
-
-        const fetchBody = {
-          messages: formattedHistory,
-          clientTime: now.toLocaleTimeString('en-US', { hour12: false }),
-          clientDate: now.toLocaleDateString('en-GB'),
-          wantVoice // <- backend should respect this to return audio only when true
-        };
-        if (isOwner) fetchBody.ownerKey = "unlockvinay1236";
+const fetchBody = {
+  messages: formattedHistory,
+  clientTime: now.toLocaleTimeString('en-US', { hour12: false }),
+  clientDate: now.toLocaleDateString('en-GB'), // e.g., "02/08/2025"
+};
+if (isOwner) fetchBody.ownerKey = "unlockvinay1236";
 
         const response = await fetch("https://allie-chat-proxy-production.up.railway.app/chat", {
           method: 'POST',
@@ -80,6 +69,7 @@ function AllieChat() {
           return;
         }
 
+        const reply = data.reply || "Hmm… Shraddha didn’t respond.";
         // ✅ If pause triggered by backend
         if (data.pause) {
           setIsPaused(true);
@@ -107,19 +97,10 @@ function AllieChat() {
           }, 5 * 60 * 1000);
         }
 
-        // 👇 Handle voice reply only if backend sent audioUrl
-        if (data.audioUrl) {
-          setMessages((prev) => [
-            ...prev,
-            { audioUrl: data.audioUrl, sender: 'allie', time: currentTime }
-          ]);
-        } else {
-          const reply = data.reply || "Hmm… Shraddha didn’t respond.";
-          setMessages((prev) => [
-            ...prev,
-            { text: reply, sender: 'allie', time: currentTime }
-          ]);
-        }
+        setMessages((prev) => [
+  ...prev,
+  { text: reply, sender: 'allie', time: currentTime }
+]);
       } catch (error) {
         setIsTyping(false);
         console.error('Error calling Allie proxy:', error);
@@ -129,10 +110,10 @@ function AllieChat() {
   };
 
   useEffect(() => {
-    if (bottomRef.current) {
-      bottomRef.current.scrollIntoView({ behavior: 'smooth' });
-    }
-  }, [messages, isTyping]);
+  if (bottomRef.current) {
+    bottomRef.current.scrollIntoView({ behavior: 'smooth' });
+  }
+}, [messages, isTyping]);
 
   const displayedMessages = messages;
 
@@ -143,35 +124,29 @@ function AllieChat() {
           <img src="/1227230000.png" alt="Allie" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
         </div>
         <div className="username-container">
-          <div className="username">Shraddha</div>
+          <div className="username">
+  Shraddha
+</div>
         </div>
       </div>
 
       <div className="chat-container">
         <div className="chat-spacer"></div>
-
         {displayedMessages.map((msg, index) => (
           <div key={index} className={`message ${msg.sender === 'user' ? 'user-message' : 'allie-message'}`}>
-            <span className="bubble-content">
-              {/* If backend sent audio, show player; else show text */}
-              {msg.audioUrl ? (
-                <audio className="audio-player" controls preload="none" src={msg.audioUrl} />
-              ) : (
-                msg.text
-              )}
-              <span className="msg-time">{msg.time}</span>
-            </span>
-          </div>
+  <span className="bubble-content">
+    {msg.text}
+    <span className="msg-time">{msg.time}</span>
+  </span>
+</div>
         ))}
-
         {isTyping && (
-          <div className="message allie typing-bounce">
-            <span></span>
-            <span></span>
-            <span></span>
-          </div>
-        )}
-
+  <div className="message allie typing-bounce">
+    <span></span>
+    <span></span>
+    <span></span>
+  </div>
+)}
         <div ref={bottomRef}></div>
       </div>
 
