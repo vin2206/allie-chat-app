@@ -304,6 +304,7 @@ backdrop-filter: blur(10px);
   letter-spacing: 0.1px;
   margin: 0;
   padding: 0;
+  pointer-events: none;
 }
 
 /* ---- Voice & buttons (adds, won't break your current theme) ---- */
@@ -355,6 +356,8 @@ backdrop-filter: blur(10px);
   border-radius: 10px;
   background: #fff;
   box-shadow: 0 2px 8px rgba(0,0,0,.12);
+  display: block;
+  z-index: 1;
 }
 
 /* Optional: tighter spacing for audio bubbles so time fits nicely */
