@@ -231,8 +231,9 @@ if (isOwner) fetchBody.ownerKey = "unlockvinay1236";
     msg.text
   )}
   <span className="msg-time">{msg.time}</span>
-</span>
-        ))}
+    </span>
+  </div>
+))}
         {isTyping && (
   <div className="message allie typing-bounce">
     <span></span>
