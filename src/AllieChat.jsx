@@ -89,12 +89,23 @@ const sendVoiceBlob = async (blob) => {
       body: fd
     });
     const data = await resp.json();
+    const fullUrl = data.audioUrl && (data.audioUrl.startsWith('http')
+  ? data.audioUrl
+  : `https://allie-chat-proxy-production.up.railway.app${data.audioUrl}`);
     setIsTyping(false);
     if (data.audioUrl) {
-      setMessages(prev => [...prev, { audioUrl: data.audioUrl, sender: 'allie', time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }]);
-    } else {
-      setMessages(prev => [...prev, { text: data.reply || "Hmm… Shraddha didn’t respond.", sender: 'allie', time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }]);
-    }
+  setMessages(prev => [...prev, {
+    audioUrl: fullUrl,
+    sender: 'allie',
+    time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+  }]);
+} else {
+  setMessages(prev => [...prev, {
+    text: data.reply || "Hmm… Shraddha didn’t respond.",
+    sender: 'allie',
+    time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+  }]);
+}
   } catch (e) {
     console.error('Voice upload failed:', e);
     setMessages(prev => [...prev, { text: 'Voice upload failed. Try again.', sender: 'allie', time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }]);
@@ -146,7 +157,14 @@ if (isOwner) fetchBody.ownerKey = "unlockvinay1236";
 
         const data = await response.json();
         setIsTyping(false);
-
+        // If backend sent a voice note, show it and stop.
+if (data.audioUrl) {
+  const fullUrl = data.audioUrl.startsWith('http')
+    ? data.audioUrl
+    : `https://allie-chat-proxy-production.up.railway.app${data.audioUrl}`;
+  setMessages(prev => [...prev, { audioUrl: fullUrl, sender: 'allie', time: currentTime }]);
+  return;
+}
         // If locked, show premium popup
         if (data.locked) {
           setMessages((prev) => [
@@ -194,7 +212,7 @@ if (isOwner) fetchBody.ownerKey = "unlockvinay1236";
       } catch (error) {
         setIsTyping(false);
         console.error('Error calling Allie proxy:', error);
-        setMessages((prev) => [...prev.slice(0, -1), { text: 'Oops! Allie is quiet right now.', sender: 'allie' }]);
+        setMessages((prev) => [...prev, { text: 'Oops! Allie is quiet right now.', sender: 'allie' }]);
       }
     }, 2500);
   };
