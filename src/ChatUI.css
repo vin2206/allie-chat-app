@@ -361,4 +361,3 @@ backdrop-filter: blur(10px);
 .message .bubble-content:has(.audio-player) {
   padding-right: 90px; /* leave room for time at right */
 }
-.footer button.send-btn { } /* just a class hook, no rules needed */
