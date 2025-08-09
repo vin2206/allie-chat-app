@@ -135,9 +135,9 @@ const sendVoiceBlob = async (blob) => {
     setTimeout(async () => {
       try {
         const formattedHistory = updatedMessages.map((msg) => ({
-          role: msg.sender === 'user' ? 'user' : 'assistant',
-          content: msg.text
-        }));
+  role: msg.sender === 'user' ? 'user' : 'assistant',
+  content: msg.text ?? (msg.audioUrl ? '[voice note]' : '')
+}));
 
         const now = new Date();
         const wantVoice = askedForVoice(newMessage.text);
