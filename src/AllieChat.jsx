@@ -13,6 +13,18 @@ function AllieChat() {
   const [isTyping, setIsTyping] = useState(false);
   // --- HOLD-TO-RECORD state/refs ---
 const [isRecording, setIsRecording] = useState(false);
+  // Persistent session id per device/browser (used for voice quota)
+const sessionIdRef = useRef(null);
+if (!sessionIdRef.current) {
+  const saved = localStorage.getItem('chat_session_id');
+  if (saved) {
+    sessionIdRef.current = saved;
+  } else {
+    const newId = (crypto?.randomUUID?.() || String(Date.now()));
+    localStorage.setItem('chat_session_id', newId);
+    sessionIdRef.current = newId;
+  }
+}
 const holdTimerRef = useRef(null);
 const mediaRecorderRef = useRef(null);
 const chunksRef = useRef([]);
@@ -82,6 +94,7 @@ const sendVoiceBlob = async (blob) => {
     fd.append('audio', new File([blob], 'note.webm', { type: 'audio/webm' }));
     fd.append('clientTime', new Date().toLocaleTimeString('en-US', { hour12: false }));
     fd.append('clientDate', today());
+    fd.append('session_id', sessionIdRef.current);
     // backend will reply in voice because user sent a voice note
 
     const resp = await fetch('https://allie-chat-proxy-production.up.railway.app/chat', {
@@ -146,6 +159,7 @@ const fetchBody = {
   clientTime: now.toLocaleTimeString('en-US', { hour12: false }),
   clientDate: now.toLocaleDateString('en-GB'), // e.g., "02/08/2025"
   wantVoice, // tells backend if voice reply is requested
+  session_id: sessionIdRef.current, // <-- per-device quota
 };
 if (isOwner) fetchBody.ownerKey = "unlockvinay1236";
 
