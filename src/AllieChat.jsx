@@ -281,7 +281,7 @@ if (isOwner) fetchBody.ownerKey = "unlockvinay1236";
   🎤
 </button>
         
-        <button onClick={handleSend}>➤</button>
+        <button className="send-btn" onClick={handleSend}>➤</button>
       </div>
     </div>
   );
