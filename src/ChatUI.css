@@ -305,3 +305,59 @@ backdrop-filter: blur(10px);
   margin: 0;
   padding: 0;
 }
+
+/* ---- Voice & buttons (adds, won't break your current theme) ---- */
+
+/* Make sure generic .footer button rule doesn't force same look on both. */
+.footer .send-btn,
+.footer .mic-btn {
+  width: 55px;
+  height: 55px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  border: none; cursor: pointer;
+  box-shadow: 0 8px 18px rgba(0,0,0,0.4);
+  transition: transform 0.15s ease;
+  transform: translateY(-2px);
+  color: #fff;
+}
+
+/* Send keeps your gradient */
+.footer .send-btn {
+  background: linear-gradient(135deg, #ff6ec4, #7873f5);
+  font-size: 24px;
+}
+.footer .send-btn:active { transform: scale(0.95); }
+
+/* Mic: white by default, turns glowing red while recording */
+.footer .mic-btn {
+  background: #ffffff;
+  color: #7a4cff;
+  font-size: 20px;
+}
+.footer .mic-btn.recording {
+  color: #fff;
+  background: linear-gradient(135deg, #ff5a7a, #ff9a6b);
+  box-shadow: 0 10px 24px rgba(255,90,122,.35);
+  animation: micPulse 1.1s ease-in-out infinite;
+}
+@keyframes micPulse {
+  0% { transform: translateY(-2px) scale(1); }
+  50% { transform: translateY(-2px) scale(1.06); }
+  100% { transform: translateY(-2px) scale(1); }
+}
+
+/* Voice bubble player fits within your bubble style */
+.audio-player {
+  width: 230px;
+  height: 36px;
+  outline: none;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(0,0,0,.12);
+}
+
+/* Optional: tighter spacing for audio bubbles so time fits nicely */
+.message .bubble-content:has(.audio-player) {
+  padding-right: 90px; /* leave room for time at right */
+}
