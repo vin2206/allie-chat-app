@@ -11,7 +11,95 @@ function AllieChat() {
   const [showModal, setShowModal] = useState(false);
   const [isOwner, setIsOwner] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
+  // --- HOLD-TO-RECORD state/refs ---
+const [isRecording, setIsRecording] = useState(false);
+const holdTimerRef = useRef(null);
+const mediaRecorderRef = useRef(null);
+const chunksRef = useRef([]);
 
+// optional: simple day string
+const today = () => new Date().toLocaleDateString('en-GB');
+  // Did the user ask for a voice reply?
+const askedForVoice = (text = '') => {
+  return /(voice|audio|awaaz|aawaz|voice\s*bhejo)/i.test(text);
+};
+
+  // --------- PRESS & HOLD mic handlers ---------
+const startRecording = async () => {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    const mr = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+    chunksRef.current = [];
+    mr.ondataavailable = (e) => e.data.size && chunksRef.current.push(e.data);
+    mr.onstop = async () => {
+      const blob = new Blob(chunksRef.current, { type: 'audio/webm' });
+      await sendVoiceBlob(blob);
+      stream.getTracks().forEach(t => t.stop());
+    };
+    mr.start();
+    mediaRecorderRef.current = mr;
+    setIsRecording(true);
+  } catch (e) {
+    console.error('Mic error:', e);
+    alert('Microphone permission needed.');
+  }
+};
+
+const stopRecording = () => {
+  if (mediaRecorderRef.current && isRecording) {
+    mediaRecorderRef.current.stop();
+  }
+  setIsRecording(false);
+};
+
+const onMicHoldStart = () => {
+  // must hold for 1s to actually start recording
+  holdTimerRef.current = setTimeout(() => {
+    startRecording();
+  }, 1000);
+};
+
+const onMicHoldEnd = () => {
+  // released before 1s → cancel; released after start → stop
+  if (holdTimerRef.current) {
+    clearTimeout(holdTimerRef.current);
+    holdTimerRef.current = null;
+  }
+  if (isRecording) stopRecording();
+};
+
+// Upload the voice to backend as multipart/form-data
+const sendVoiceBlob = async (blob) => {
+  // local preview bubble (so user sees they sent a voice)
+  setMessages(prev => [
+    ...prev,
+    { audioUrl: URL.createObjectURL(blob), sender: 'user', time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }
+    ]);
+    setIsTyping(true);
+
+  try {
+    const fd = new FormData();
+    fd.append('audio', new File([blob], 'note.webm', { type: 'audio/webm' }));
+    fd.append('clientTime', new Date().toLocaleTimeString('en-US', { hour12: false }));
+    fd.append('clientDate', today());
+    // backend will reply in voice because user sent a voice note
+
+    const resp = await fetch('https://allie-chat-proxy-production.up.railway.app/chat', {
+      method: 'POST',
+      body: fd
+    });
+    const data = await resp.json();
+    setIsTyping(false);
+    if (data.audioUrl) {
+      setMessages(prev => [...prev, { audioUrl: data.audioUrl, sender: 'allie', time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }]);
+    } else {
+      setMessages(prev => [...prev, { text: data.reply || "Hmm… Shraddha didn’t respond.", sender: 'allie', time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }]);
+    }
+  } catch (e) {
+    console.error('Voice upload failed:', e);
+    setMessages(prev => [...prev, { text: 'Voice upload failed. Try again.', sender: 'allie', time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }]);
+  }
+};
   const handleSend = async () => {
     if (inputValue.trim() === '' || isPaused) return;
 
@@ -41,10 +129,12 @@ function AllieChat() {
         }));
 
         const now = new Date();
+        const wantVoice = askedForVoice(newMessage.text);
 const fetchBody = {
   messages: formattedHistory,
   clientTime: now.toLocaleTimeString('en-US', { hour12: false }),
   clientDate: now.toLocaleDateString('en-GB'), // e.g., "02/08/2025"
+  wantVoice, // tells backend if voice reply is requested
 };
 if (isOwner) fetchBody.ownerKey = "unlockvinay1236";
 
@@ -135,10 +225,13 @@ if (isOwner) fetchBody.ownerKey = "unlockvinay1236";
         {displayedMessages.map((msg, index) => (
           <div key={index} className={`message ${msg.sender === 'user' ? 'user-message' : 'allie-message'}`}>
   <span className="bubble-content">
-    {msg.text}
-    <span className="msg-time">{msg.time}</span>
-  </span>
-</div>
+  {msg.audioUrl ? (
+    <audio className="audio-player" controls preload="none" src={msg.audioUrl} />
+  ) : (
+    msg.text
+  )}
+  <span className="msg-time">{msg.time}</span>
+</span>
         ))}
         {isTyping && (
   <div className="message allie typing-bounce">
@@ -176,6 +269,18 @@ if (isOwner) fetchBody.ownerKey = "unlockvinay1236";
           onChange={(e) => setInputValue(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && handleSend()}
         />
+        <button
+  className={`mic-btn ${isRecording ? 'recording' : ''}`}
+  onMouseDown={onMicHoldStart}
+  onMouseUp={onMicHoldEnd}
+  onMouseLeave={onMicHoldEnd}
+  onTouchStart={onMicHoldStart}
+  onTouchEnd={onMicHoldEnd}
+  title="Hold 1s to record"
+>
+  🎤
+</button>
+        
         <button onClick={handleSend}>➤</button>
       </div>
     </div>
