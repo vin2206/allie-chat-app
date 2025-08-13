@@ -360,6 +360,17 @@ backdrop-filter: blur(10px);
   z-index: 1;
 }
 
+/* --- Audio rendering fixes --- */
+.audio-wrapper {
+  display: block;
+  width: 100%;
+}
+.audio-player {
+  width: 100% !important;   /* ensure full width inside bubble */
+  height: 40px;             /* slightly taller so controls show on Android */
+  display: block;
+}
+
 /* Optional: tighter spacing for audio bubbles so time fits nicely */
 .message .bubble-content:has(.audio-player) {
   padding-right: 90px; /* leave room for time at right */
