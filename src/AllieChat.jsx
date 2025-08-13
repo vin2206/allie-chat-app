@@ -258,10 +258,12 @@ if (data.audioUrl) {
           <div key={index} className={`message ${msg.sender === 'user' ? 'user-message' : 'allie-message'}`}>
   <span className="bubble-content">
   {msg.audioUrl ? (
+  <div className="audio-wrapper">
     <audio className="audio-player" controls preload="none" src={msg.audioUrl} />
-  ) : (
-    msg.text
-  )}
+  </div>
+) : (
+  msg.text
+)}
   <span className="msg-time">{msg.time}</span>
     </span>
   </div>
