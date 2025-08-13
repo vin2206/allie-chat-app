@@ -348,27 +348,20 @@ backdrop-filter: blur(10px);
   100% { transform: translateY(-2px) scale(1); }
 }
 
-/* Voice bubble player fits within your bubble style */
-.audio-player {
-  width: 230px;
-  height: 36px;
-  outline: none;
-  border-radius: 10px;
-  background: #fff;
-  box-shadow: 0 2px 8px rgba(0,0,0,.12);
-  display: block;
-  z-index: 1;
-}
-
 /* --- Audio rendering fixes --- */
 .audio-wrapper {
   display: block;
   width: 100%;
 }
+
 .audio-player {
-  width: 100% !important;   /* ensure full width inside bubble */
-  height: 40px;             /* slightly taller so controls show on Android */
   display: block;
+  width: 100%;
+  height: 40px;              /* a bit taller so Android shows controls */
+  outline: none;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(0,0,0,.12);
 }
 
 /* Optional: tighter spacing for audio bubbles so time fits nicely */
