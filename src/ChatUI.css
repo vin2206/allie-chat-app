@@ -377,3 +377,6 @@ backdrop-filter: blur(10px);
 
 /* Keep bubble positioned for the time badge if it's absolutely placed */
 .message .bubble-content { position: relative; }
+
+.audio-fallback { margin-top: 4px; font-size: 12px; }
+.audio-fallback a { color: #2b6cb0; text-decoration: underline; }
