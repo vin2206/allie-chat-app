@@ -28,6 +28,8 @@ if (!sessionIdRef.current) {
 const holdTimerRef = useRef(null);
 const mediaRecorderRef = useRef(null);
 const chunksRef = useRef([]);
+const autoStopTimerRef = useRef(null);
+const MAX_RECORD_MS = 5000; // 5 seconds cap
 
 // optional: simple day string
 const today = () => new Date().toLocaleDateString('en-GB');
@@ -59,6 +61,11 @@ const startRecording = async () => {
       stream.getTracks().forEach(t => t.stop());
     };
     mr.start();
+    // auto stop after MAX_RECORD_MS
+if (autoStopTimerRef.current) clearTimeout(autoStopTimerRef.current);
+autoStopTimerRef.current = setTimeout(() => {
+  stopRecording();
+}, MAX_RECORD_MS);
     mediaRecorderRef.current = mr;
     setIsRecording(true);
   } catch (e) {
@@ -68,26 +75,14 @@ const startRecording = async () => {
 };
 
 const stopRecording = () => {
+  if (autoStopTimerRef.current) {
+    clearTimeout(autoStopTimerRef.current);
+    autoStopTimerRef.current = null;
+  }
   if (mediaRecorderRef.current && isRecording) {
     mediaRecorderRef.current.stop();
   }
   setIsRecording(false);
-};
-
-const onMicHoldStart = () => {
-  // must hold for 1s to actually start recording
-  holdTimerRef.current = setTimeout(() => {
-    startRecording();
-  }, 1000);
-};
-
-const onMicHoldEnd = () => {
-  // released before 1s → cancel; released after start → stop
-  if (holdTimerRef.current) {
-    clearTimeout(holdTimerRef.current);
-    holdTimerRef.current = null;
-  }
-  if (isRecording) stopRecording();
 };
 
 // Upload the voice to backend as multipart/form-data
@@ -325,14 +320,13 @@ if (data.audioUrl) {
         />
         <button
   className={`mic-btn ${isRecording ? 'recording' : ''}`}
-  onMouseDown={onMicHoldStart}
-  onMouseUp={onMicHoldEnd}
-  onMouseLeave={onMicHoldEnd}
-  onTouchStart={onMicHoldStart}
-  onTouchEnd={onMicHoldEnd}
-  title="Hold 1s to record"
+  onClick={() => { if (!isRecording) { startRecording(); } else { stopRecording(); } }}
+  title={isRecording ? "Recording… tap to stop" : "Tap to record (5s)"}
+  aria-label={isRecording ? "Stop recording" : "Start recording"}
 >
-  🎤
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+    <path d="M12 14a3 3 0 0 0 3-3V6a3 3 0 1 0-6 0v5a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 14 0h-2zM11 19v3h2v-3h-2z"/>
+  </svg>
 </button>
         
         <button className="send-btn" onClick={handleSend}>➤</button>
