@@ -159,7 +159,7 @@ const sendVoiceBlob = async (blob) => {
       try {
         const formattedHistory = updatedMessages.map((msg) => ({
   role: msg.sender === 'user' ? 'user' : 'assistant',
-  content: msg.text ?? (msg.audioUrl ? '[voice note]' : '')
+  content: msg.text ?? (msg.audioUrl ? '🔊 (voice reply sent)' : '')
 }));
 
         const now = new Date();
