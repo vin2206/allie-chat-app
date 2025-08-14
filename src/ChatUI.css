@@ -349,27 +349,25 @@ backdrop-filter: blur(10px);
 }
 
 /* --- Audio rendering fixes --- */
-.audio-wrapper {
-  display: block;
-  width: 100%;
+/* --- Audio bubble layout (make room for real controls) --- */
+.audio-wrapper { width: 100%; }
+
+.message .bubble-content:has(.audio-player) {
+  display: inline-block;
+  min-width: 240px;          /* ensures the full play bar shows */
+  max-width: 80vw;           /* keeps it responsive */
+  padding-right: 90px;       /* space for the time */
+  overflow: visible;
 }
 
 .audio-player {
   display: block;
   width: 100%;
-  height: 40px;              /* a bit taller so Android shows controls */
-  outline: none;
-  border-radius: 10px;
-  background: #fff;
-  box-shadow: 0 2px 8px rgba(0,0,0,.12);
+  height: 40px;
+  position: relative;
+  z-index: 1;
 }
 
-/* Optional: tighter spacing for audio bubbles so time fits nicely */
-.message .bubble-content:has(.audio-player) {
-  padding-right: 90px; /* leave room for time at right */
-}
-
-/* Make sure time badge doesn't block clicks on the audio */
 .msg-time { pointer-events: none; }
 
 /* Audio player should occupy the bubble width and stay on top */
