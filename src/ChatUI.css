@@ -350,27 +350,32 @@ backdrop-filter: blur(10px);
 
 /* --- Audio rendering fixes --- */
 /* --- Audio bubble layout (make room for real controls) --- */
+/* --- Audio bubble layout (no :has()) --- */
 .audio-wrapper { width: 100%; }
-
-.message .bubble-content:has(.audio-player) {
-  display: inline-block;
-  min-width: 240px;          /* ensures the full play bar shows */
-  max-width: 80vw;           /* keeps it responsive */
-  padding-right: 90px;       /* space for the time */
-  overflow: visible;
-}
 
 .audio-player {
   display: block;
   width: 100%;
-  height: 40px;
+  height: 40px;               /* tall enough so Android shows controls */
   position: relative;
   z-index: 1;
+  outline: none;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(0,0,0,.12);
 }
 
-.msg-time { pointer-events: none; }
+/* When the bubble contains audio, give more room for the time stamp */
+.bubble-content.has-audio {
+  min-width: 240px;           /* ensures full control bar fits */
+  max-width: 80vw;
+  padding-right: 90px;        /* space for the time at right */
+  overflow: visible;
+}
 
-.message .bubble-content { position: relative; }
-
+/* Fallback link only if the <audio> fails to have a src */
 .audio-fallback { margin-top: 4px; font-size: 12px; }
-.audio-player:where([src]):not([src=""]) + .audio-fallback { display: none; }
+.audio-player[src] + .audio-fallback { display: none; }
+
+/* Keep time badge clickable-safe */
+.msg-time { pointer-events: none; }
