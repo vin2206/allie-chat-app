@@ -256,16 +256,22 @@ if (data.audioUrl) {
         <div className="chat-spacer"></div>
         {displayedMessages.map((msg, index) => (
           <div key={index} className={`message ${msg.sender === 'user' ? 'user-message' : 'allie-message'}`}>
-  <span className="bubble-content">
   {msg.audioUrl ? (
   <div className="audio-wrapper">
-    <audio className="audio-player" controls preload="none" src={msg.audioUrl} />
+    <audio
+      className="audio-player"
+      controls
+      preload="none"
+      src={msg.audioUrl}
+      onError={(e) => console.warn('audio failed:', e.currentTarget.src)}
+    />
+    <div className="audio-fallback">
+      <a href={msg.audioUrl} target="_blank" rel="noreferrer">Open audio</a>
+    </div>
   </div>
 ) : (
   msg.text
 )}
-  <span className="msg-time">{msg.time}</span>
-    </span>
   </div>
 ))}
         {isTyping && (
