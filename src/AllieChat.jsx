@@ -264,7 +264,7 @@ if (data.audioUrl) {
         <div className="chat-spacer"></div>
         {displayedMessages.map((msg, index) => (
           <div key={index} className={`message ${msg.sender === 'user' ? 'user-message' : 'allie-message'}`}>
-  <span className="bubble-content">
+  <span className={`bubble-content ${msg.audioUrl ? 'has-audio' : ''}`}>
   {msg.audioUrl ? (
     <div className="audio-wrapper">
       <audio
