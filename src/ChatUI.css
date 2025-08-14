@@ -370,11 +370,7 @@ backdrop-filter: blur(10px);
 
 .msg-time { pointer-events: none; }
 
-/* Audio player should occupy the bubble width and stay on top */
-.audio-player { width: 100%; display: block; position: relative; z-index: 1; }
-
-/* Keep bubble positioned for the time badge if it's absolutely placed */
 .message .bubble-content { position: relative; }
 
 .audio-fallback { margin-top: 4px; font-size: 12px; }
-.audio-fallback a { color: #2b6cb0; text-decoration: underline; }
+.audio-player:where([src]):not([src=""]) + .audio-fallback { display: none; }
