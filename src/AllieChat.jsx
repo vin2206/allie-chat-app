@@ -37,7 +37,7 @@ const askedForVoice = (text = "") => {
   const phrases = [
     "voice note bhejo","voice bhejo","audio bhejo","apni voice bhejo",
     "apni awaaz bhejo","apni avaaz bhejo","awaz bhejo","awaaz bhejo",
-    "voice send","audio send","voice message send","apni avaj sunado"
+    "voice send","audio send","voice message send","apni avaj sunado",
     "awaaz sunao","avaaz sunao","awaz sunao","voice sunao","sunado voice",
     "awaaz sunado","avaaz sunado","awaz sunado","please voice","voice please"
   ];
