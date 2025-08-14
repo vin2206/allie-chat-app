@@ -32,16 +32,18 @@ const chunksRef = useRef([]);
 // optional: simple day string
 const today = () => new Date().toLocaleDateString('en-GB');
   // Did the user ask for a voice reply?
+// Put near the top of AllieChat.jsx
 const askedForVoice = (text = "") => {
-  const t = text.toLowerCase().replace(/\s+/g, " ");
-  const phrases = [
-    "voice note bhejo","voice bhejo","audio bhejo","apni voice bhejo",
-    "apni awaaz bhejo","apni avaaz bhejo","awaz bhejo","awaaz bhejo",
-    "voice send","audio send","voice message send","apni avaj sunado",
-    "awaaz sunao","avaaz sunao","awaz sunao","voice sunao","sunado voice",
-    "awaaz sunado","avaaz sunado","awaz sunado","please voice","voice please"
-  ];
-  return phrases.some(p => t.includes(p));
+  const t = (text || "").toLowerCase();
+
+  // noun: voice/audio/awaaz/awaz/avaaz/avaj/awaj (loose spelling)
+  const noun = /(voice|audio|a+w?a+a?j|a+w?a+a?z|awaaz|awaz|avaaz|avaj|awaj)/i;
+  // verb: send/bhejo/bhejdo/sunao/sunado/bolo (allow “na”, “do”, “please”, “to” etc. anywhere)
+  const verb = /(bhej(?:o|do)?|send|suna(?:o|do)?|bol(?:o|kar)?)/i;
+
+  // We consider it a real request only if sentence contains BOTH a noun and a verb,
+  // in any order, with anything in between (e.g., “avaaz to sunado please”).
+  return noun.test(t) && verb.test(t);
 };
 
   // --------- PRESS & HOLD mic handlers ---------
