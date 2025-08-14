@@ -33,11 +33,15 @@ const chunksRef = useRef([]);
 const today = () => new Date().toLocaleDateString('en-GB');
   // Did the user ask for a voice reply?
 const askedForVoice = (text = "") => {
-  const t = text.toLowerCase();
-  return (
-    /\b(bhejo|bhej do|send|sunao|sunado|bolo|bolkar)\s*(apni\s*)?(voice|audio|awaaz|aawaz)(\s*note)?\b/.test(t) ||
-    /\b(voice|audio|awaaz|aawaz)\s*(note|message)?\s*(bhejo|bhej do|send)\b/.test(t)
-  );
+  const t = text.toLowerCase().replace(/\s+/g, " ");
+  const phrases = [
+    "voice note bhejo","voice bhejo","audio bhejo","apni voice bhejo",
+    "apni awaaz bhejo","apni avaaz bhejo","awaz bhejo","awaaz bhejo",
+    "voice send","audio send","voice message send","apni avaj sunado"
+    "awaaz sunao","avaaz sunao","awaz sunao","voice sunao","sunado voice",
+    "awaaz sunado","avaaz sunado","awaz sunado","please voice","voice please"
+  ];
+  return phrases.some(p => t.includes(p));
 };
 
   // --------- PRESS & HOLD mic handlers ---------
