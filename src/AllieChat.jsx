@@ -52,22 +52,36 @@ const askedForVoice = (text = "") => {
 const startRecording = async () => {
   try {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
     const mr = new MediaRecorder(stream, { mimeType: 'audio/webm' });
     chunksRef.current = [];
-    mr.ondataavailable = (e) => e.data.size && chunksRef.current.push(e.data);
-    mr.onstop = async () => {
-      const blob = new Blob(chunksRef.current, { type: 'audio/webm' });
-      await sendVoiceBlob(blob);
-      stream.getTracks().forEach(t => t.stop());
+
+    mr.ondataavailable = (e) => {
+      if (e.data && e.data.size) chunksRef.current.push(e.data);
     };
-    mr.start();
-    // auto stop after MAX_RECORD_MS
-if (autoStopTimerRef.current) clearTimeout(autoStopTimerRef.current);
-autoStopTimerRef.current = setTimeout(() => {
-  stopRecording();
-}, MAX_RECORD_MS);
+
+    // when we stop (either by click or auto-timer) → build blob & send
+    mr.onstop = async () => {
+      try {
+        // ensure last chunk is flushed on some Android builds
+        if (mr.state !== 'inactive' && mr.requestData) mr.requestData();
+
+        const blob = new Blob(chunksRef.current, { type: 'audio/webm' });
+        await sendVoiceBlob(blob);
+      } finally {
+        stream.getTracks().forEach(t => t.stop());
+      }
+    };
+
+    mr.start();                       // start recording
     mediaRecorderRef.current = mr;
     setIsRecording(true);
+
+    // auto-stop hard at 5s
+    if (autoStopTimerRef.current) clearTimeout(autoStopTimerRef.current);
+    autoStopTimerRef.current = setTimeout(() => {
+      stopRecording();                // will trigger onstop → send
+    }, MAX_RECORD_MS);
   } catch (e) {
     console.error('Mic error:', e);
     alert('Microphone permission needed.');
@@ -79,54 +93,69 @@ const stopRecording = () => {
     clearTimeout(autoStopTimerRef.current);
     autoStopTimerRef.current = null;
   }
-  if (mediaRecorderRef.current && isRecording) {
-    mediaRecorderRef.current.stop();
+  const mr = mediaRecorderRef.current;
+  if (mr && mr.state === 'recording') {
+    try { if (mr.requestData) mr.requestData(); } catch {}
+    mr.stop();                        // this fires mr.onstop → sendVoiceBlob
   }
   setIsRecording(false);
 };
 
 // Upload the voice to backend as multipart/form-data
 const sendVoiceBlob = async (blob) => {
-  // local preview bubble (so user sees they sent a voice)
-  setMessages(prev => [
+  // local preview of what the user sent
+  setMessages(prev => ([
     ...prev,
-    { audioUrl: URL.createObjectURL(blob), sender: 'user', time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }
-    ]);
-    setIsTyping(true);
+    { audioUrl: URL.createObjectURL(blob), sender: 'user',
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }
+  ]));
+  setIsTyping(true);
 
   try {
+    // --- include full history so backend has context ---
+    const formattedHistory = messages.map(m => ({
+      role: m.sender === 'user' ? 'user' : 'assistant',
+      content: m.text ?? (m.audioUrl ? '[voice note]' : '')
+    }));
+
     const fd = new FormData();
     fd.append('audio', new File([blob], 'note.webm', { type: 'audio/webm' }));
+    fd.append('messages', JSON.stringify(formattedHistory));  // <- IMPORTANT
     fd.append('clientTime', new Date().toLocaleTimeString('en-US', { hour12: false }));
     fd.append('clientDate', today());
     fd.append('session_id', sessionIdRef.current);
-    // backend will reply in voice because user sent a voice note
 
     const resp = await fetch('https://allie-chat-proxy-production.up.railway.app/chat', {
       method: 'POST',
       body: fd
     });
+
     const data = await resp.json();
-    const fullUrl = data.audioUrl && (data.audioUrl.startsWith('http')
-  ? data.audioUrl
-  : `https://allie-chat-proxy-production.up.railway.app${data.audioUrl}`);
     setIsTyping(false);
+
     if (data.audioUrl) {
-  setMessages(prev => [...prev, {
-    audioUrl: fullUrl,
-    sender: 'allie',
-    time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-  }]);
-} else {
-  setMessages(prev => [...prev, {
-    text: data.reply || "Hmm… Shraddha didn’t respond.",
-    sender: 'allie',
-    time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-  }]);
-}
+      const fullUrl = data.audioUrl.startsWith('http')
+        ? data.audioUrl
+        : `https://allie-chat-proxy-production.up.railway.app${data.audioUrl}`;
+      setMessages(prev => [...prev, {
+        audioUrl: fullUrl, sender: 'allie',
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      }]);
+    } else {
+      setMessages(prev => [...prev, {
+        text: data.reply || "Hmm… Shraddha didn’t respond.",
+        sender: 'allie',
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      }]);
+    }
   } catch (e) {
     console.error('Voice upload failed:', e);
-    setMessages(prev => [...prev, { text: 'Voice upload failed. Try again.', sender: 'allie', time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }]);
+    setIsTyping(false);
+    setMessages(prev => [...prev, {
+      text: 'Voice upload failed. Try again.',
+      sender: 'allie',
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    }]);
   }
 };
   const handleSend = async () => {
