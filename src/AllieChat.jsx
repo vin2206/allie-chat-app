@@ -14,6 +14,9 @@ function AllieChat() {
   // --- Roleplay wiring (Step 1) ---
 const [roleMode, setRoleMode] = useState(localStorage.getItem('roleMode') || 'stranger'); // 'stranger' | 'roleplay'
 const [roleType, setRoleType] = useState(localStorage.getItem('roleType') || null);       // null | 'wife' | 'bhabhi' | 'girlfriend' | 'cousin'
+const [showRoleMenu, setShowRoleMenu] = useState(false);
+  // Next request should clear server context after a role switch
+const shouldResetRef = useRef(false);
 
 // Display name for header
 const displayName =
@@ -42,6 +45,7 @@ const mediaRecorderRef = useRef(null);
 const chunksRef = useRef([]);
 const autoStopTimerRef = useRef(null);
 const MAX_RECORD_MS = 5000; // 5 seconds cap
+  const chipStyle = { padding: '8px 10px', border: 'none', background: '#f0f0ff', borderRadius: 999, cursor: 'pointer' };
 
 // optional: simple day string
 const today = () => new Date().toLocaleDateString('en-GB');
@@ -59,7 +63,28 @@ const askedForVoice = (text = "") => {
   // in any order, with anything in between (e.g., “avaaz to sunado please”).
   return noun.test(t) && verb.test(t);
 };
+const applyRoleChange = (mode, type) => {
+  // Save choice
+  setRoleMode(mode);
+  setRoleType(type);
+  localStorage.setItem('roleMode', mode);
+  localStorage.setItem('roleType', type || '');
 
+  // Close menu
+  setShowRoleMenu(false);
+
+  // Clear chat locally & show quick opener
+  const opener = mode === 'roleplay'
+    ? (type === 'wife' ? 'Aaj itni der laga di reply mein? 😉'
+       : type === 'girlfriend' ? 'Miss kiya mujhe? 😌'
+       : type === 'bhabhi' ? 'Arre tum aa gaye, kya kar rahe the itni der? 😉'
+       : 'Oye, yaad hai school waali masti? 😄')
+    : 'Hi… kaise ho aap? ☺️';
+  setMessages([{ text: opener, sender: 'allie' }]);
+
+  // Make the very next API call start fresh on server
+  shouldResetRef.current = true;
+};
   // --------- PRESS & HOLD mic handlers ---------
 const startRecording = async () => {
   try {
@@ -138,6 +163,7 @@ const sendVoiceBlob = async (blob) => {
     fd.append('session_id', sessionIdWithRole);
     fd.append('roleMode', roleMode);
     fd.append('roleType', roleType || 'stranger');
+    if (shouldResetRef.current) { fd.append('reset', 'true'); shouldResetRef.current = false; }
 
     const resp = await fetch('https://allie-chat-proxy-production.up.railway.app/chat', {
       method: 'POST',
@@ -211,6 +237,7 @@ const fetchBody = {
 roleMode,
 roleType: roleType || 'stranger',
 };
+if (shouldResetRef.current) { fetchBody.reset = true; shouldResetRef.current = false; }        
 if (isOwner) fetchBody.ownerKey = "unlockvinay1236";
 
         const response = await fetch("https://allie-chat-proxy-production.up.railway.app/chat", {
@@ -297,8 +324,37 @@ if (data.audioUrl) {
         </div>
         <div className="username-container">
           <div className="username">{displayName}</div>
-        </div>
-      </div>
+          <button
+        onClick={() => setShowRoleMenu(v => !v)}
+        style={{ marginLeft: 10, background: 'transparent', border: 'none', color: '#fff', fontSize: 22 }}
+        aria-label="Role menu"
+      >⋮</button>
+    </div>
+  </div>
+
+    {showRoleMenu && (
+  <div style={{
+    position: 'fixed', top: 60, right: 16, zIndex: 1000,
+    background: '#fff', color: '#222', borderRadius: 12, boxShadow: '0 10px 24px rgba(0,0,0,.2)',
+    padding: 8, width: 220
+  }}>
+    <div style={{ fontWeight: 700, marginBottom: 8 }}>Mode</div>
+    <button
+      style={{ width: '100%', padding: '8px 10px', textAlign: 'left', border: 'none', background: '#f7f7f7', borderRadius: 8, marginBottom: 8 }}
+      onClick={() => applyRoleChange('stranger', null)}
+    >
+      Stranger (default)
+    </button>
+
+    <div style={{ fontWeight: 700, margin: '8px 0 6px' }}>Roleplay</div>
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+      <button style={chipStyle} onClick={() => applyRoleChange('roleplay','wife')}>Wife</button>
+      <button style={chipStyle} onClick={() => applyRoleChange('roleplay','bhabhi')}>Bhabhi</button>
+      <button style={chipStyle} onClick={() => applyRoleChange('roleplay','girlfriend')}>Girlfriend</button>
+      <button style={chipStyle} onClick={() => applyRoleChange('roleplay','cousin')}>Cousin</button>
+    </div>
+  </div>
+)}
 
       <div className="chat-container">
         <div className="chat-spacer"></div>
