@@ -46,7 +46,9 @@ backdrop-filter: blur(10px);
 
 .username-container {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;   /* lay items in a row */
+  align-items: center;
+  gap: 6px;              /* space between name, badge, and ⋮ */
 }
 
 .username {
@@ -54,6 +56,18 @@ backdrop-filter: blur(10px);
   font-size: 26px;
   color: white;
   font-family: 'Lobster', cursive;
+}
+
+.role-badge {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 2px 8px;
+  font-size: 12px;
+  line-height: 18px;
+  color: #fff;
+  border-radius: 999px;
+  text-transform: capitalize;
+  box-shadow: 0 2px 6px rgba(0,0,0,.18);
 }
 
 /* Chat area */
@@ -371,6 +385,10 @@ backdrop-filter: blur(10px);
   max-width: 80vw;
   padding-right: 90px;        /* space for the time at right */
   overflow: visible;
+}
+
+.role-menu button:hover {
+  filter: brightness(0.96);
 }
 
 /* Fallback link only if the <audio> fails to have a src */
