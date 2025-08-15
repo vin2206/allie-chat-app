@@ -11,6 +11,15 @@ function AllieChat() {
   const [showModal, setShowModal] = useState(false);
   const [isOwner, setIsOwner] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
+  // --- Roleplay wiring (Step 1) ---
+const [roleMode, setRoleMode] = useState(localStorage.getItem('roleMode') || 'stranger'); // 'stranger' | 'roleplay'
+const [roleType, setRoleType] = useState(localStorage.getItem('roleType') || null);       // null | 'wife' | 'bhabhi' | 'girlfriend' | 'cousin'
+
+// Display name for header
+const displayName =
+  roleMode === 'roleplay' && roleType
+    ? `Shraddha (${roleType.charAt(0).toUpperCase() + roleType.slice(1)})`
+    : 'Shraddha';
   // --- HOLD-TO-RECORD state/refs ---
 const [isRecording, setIsRecording] = useState(false);
   // Persistent session id per device/browser (used for voice quota)
@@ -25,6 +34,9 @@ if (!sessionIdRef.current) {
     sessionIdRef.current = newId;
   }
 }
+  // Tie the session to the chosen role to avoid context bleed
+const roleSuffix = roleMode === 'roleplay' && roleType ? `:${roleType}` : ':stranger';
+const sessionIdWithRole = `${sessionIdRef.current}${roleSuffix}`;
 const holdTimerRef = useRef(null);
 const mediaRecorderRef = useRef(null);
 const chunksRef = useRef([]);
@@ -123,7 +135,9 @@ const sendVoiceBlob = async (blob) => {
     fd.append('messages', JSON.stringify(formattedHistory));  // <- IMPORTANT
     fd.append('clientTime', new Date().toLocaleTimeString('en-US', { hour12: false }));
     fd.append('clientDate', today());
-    fd.append('session_id', sessionIdRef.current);
+    fd.append('session_id', sessionIdWithRole);
+    fd.append('roleMode', roleMode);
+    fd.append('roleType', roleType || 'stranger');
 
     const resp = await fetch('https://allie-chat-proxy-production.up.railway.app/chat', {
       method: 'POST',
@@ -193,7 +207,9 @@ const fetchBody = {
   clientTime: now.toLocaleTimeString('en-US', { hour12: false }),
   clientDate: now.toLocaleDateString('en-GB'), // e.g., "02/08/2025"
   wantVoice, // tells backend if voice reply is requested
-  session_id: sessionIdRef.current, // <-- per-device quota
+  session_id: sessionIdWithRole,     // <-- per-role session
+roleMode,
+roleType: roleType || 'stranger',
 };
 if (isOwner) fetchBody.ownerKey = "unlockvinay1236";
 
@@ -280,9 +296,7 @@ if (data.audioUrl) {
           <img src="/1227230000.png" alt="Allie" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
         </div>
         <div className="username-container">
-          <div className="username">
-  Shraddha
-</div>
+          <div className="username">{displayName}</div>
         </div>
       </div>
 
