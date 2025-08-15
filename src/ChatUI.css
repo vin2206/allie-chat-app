@@ -326,12 +326,7 @@ backdrop-filter: blur(10px);
 .footer .send-btn {
   background: linear-gradient(135deg, #ff6ec4, #7873f5);
   font-size: 24px;
-}
-/* Force send icon to white */
-.footer .send-btn svg,
-.footer .send-btn i {
-  color: #ffffff !important;
-  fill: #ffffff !important;
+  color: #ffffff;
 }
 .footer .mic-btn:active { transform: scale(.96); }
 
