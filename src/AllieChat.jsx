@@ -17,6 +17,7 @@ const [roleType, setRoleType] = useState(localStorage.getItem('roleType') || nul
 const [showRoleMenu, setShowRoleMenu] = useState(false);
   // Next request should clear server context after a role switch
 const shouldResetRef = useRef(false);
+  const roleMenuRef = useRef(null);
 
 // Display name for header
 const displayName =
@@ -45,6 +46,13 @@ const mediaRecorderRef = useRef(null);
 const chunksRef = useRef([]);
 const autoStopTimerRef = useRef(null);
 const MAX_RECORD_MS = 5000; // 5 seconds cap
+  const roleColors = {
+  wife: '#ff6ec4',
+  girlfriend: '#ff9f40',
+  bhabhi: '#7c4dff',
+  cousin: '#00bcd4',
+};
+  const ROLEPLAY_NEEDS_PREMIUM = false; // set to true to gate roleplay
   const chipStyle = { padding: '8px 10px', border: 'none', background: '#f0f0ff', borderRadius: 999, cursor: 'pointer' };
 
 // optional: simple day string
@@ -64,6 +72,11 @@ const askedForVoice = (text = "") => {
   return noun.test(t) && verb.test(t);
 };
 const applyRoleChange = (mode, type) => {
+  if (mode === 'roleplay' && ROLEPLAY_NEEDS_PREMIUM && !isOwner) {
+  setShowRoleMenu(false);
+  setShowModal(true);   // re-use your existing premium modal
+  return;
+}
   // Save choice
   setRoleMode(mode);
   setRoleType(type);
@@ -314,6 +327,26 @@ if (data.audioUrl) {
   }
 }, [messages, isTyping]);
 
+  useEffect(() => {
+  if (!showRoleMenu) return;
+
+  const onDocClick = (e) => {
+    if (roleMenuRef.current && !roleMenuRef.current.contains(e.target)) {
+      setShowRoleMenu(false);
+    }
+  };
+  const onEsc = (e) => {
+    if (e.key === 'Escape') setShowRoleMenu(false);
+  };
+
+  document.addEventListener('mousedown', onDocClick);
+  document.addEventListener('keydown', onEsc);
+  return () => {
+    document.removeEventListener('mousedown', onDocClick);
+    document.removeEventListener('keydown', onEsc);
+  };
+}, [showRoleMenu]);
+
   const displayedMessages = messages;
 
   return (
@@ -324,7 +357,15 @@ if (data.audioUrl) {
         </div>
         <div className="username-container">
           <div className="username">{displayName}</div>
-          <button
+            {roleMode === 'roleplay' && roleType && (
+  <span
+    className="role-badge"
+    style={{ backgroundColor: roleColors[roleType] || '#666' }}
+  >
+    {roleType}
+  </span>
+)}
+        <button
         onClick={() => setShowRoleMenu(v => !v)}
         style={{ marginLeft: 10, background: 'transparent', border: 'none', color: '#fff', fontSize: 22 }}
         aria-label="Role menu"
@@ -333,7 +374,7 @@ if (data.audioUrl) {
   </div>
 
     {showRoleMenu && (
-  <div style={{
+  <div ref={roleMenuRef} className="role-menu" style={{
     position: 'fixed', top: 60, right: 16, zIndex: 1000,
     background: '#fff', color: '#222', borderRadius: 12, boxShadow: '0 10px 24px rgba(0,0,0,.2)',
     padding: 8, width: 220
