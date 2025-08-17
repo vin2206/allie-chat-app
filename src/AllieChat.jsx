@@ -41,7 +41,6 @@ if (!sessionIdRef.current) {
   // Tie the session to the chosen role to avoid context bleed
 const roleSuffix = roleMode === 'roleplay' && roleType ? `:${roleType}` : ':stranger';
 const sessionIdWithRole = `${sessionIdRef.current}${roleSuffix}`;
-const holdTimerRef = useRef(null);
 const mediaRecorderRef = useRef(null);
 const chunksRef = useRef([]);
 const autoStopTimerRef = useRef(null);
@@ -71,11 +70,6 @@ const askedForVoice = (text = "") => {
   return noun.test(t) && verb.test(t);
 };
 const applyRoleChange = (mode, type) => {
-  if (mode === 'roleplay' && ROLEPLAY_NEEDS_PREMIUM && !isOwner) {
-  setShowRoleMenu(false);
-  setShowModal(true);   // re-use your existing premium modal
-  return;
-}
   // Save choice
   setRoleMode(mode);
   setRoleType(type);
@@ -422,7 +416,7 @@ if (data.audioUrl) {
       <button
   style={chipStyle}
   onClick={() => {
-    if (!confirm('Start new chat as Shraddha (Wife)? This will clear current messages.')) return;
+    if (!window.confirm('Start new chat as Shraddha (Wife)? This will clear current messages.')) return;
     applyRoleChange('roleplay','wife');
   }}
 >Wife</button>
@@ -430,7 +424,7 @@ if (data.audioUrl) {
 <button
   style={chipStyle}
   onClick={() => {
-    if (!confirm('Start new chat as Shraddha (Bhabhi)? This will clear current messages.')) return;
+    if (!window.confirm('Start new chat as Shraddha (Bhabhi)? This will clear current messages.')) return;
     applyRoleChange('roleplay','bhabhi');
   }}
 >Bhabhi</button>
@@ -438,7 +432,7 @@ if (data.audioUrl) {
 <button
   style={chipStyle}
   onClick={() => {
-    if (!confirm('Start new chat as Shraddha (Girlfriend)? This will clear current messages.')) return;
+    if (!window.confirm('Start new chat as Shraddha (Girlfriend)? This will clear current messages.')) return;
     applyRoleChange('roleplay','girlfriend');
   }}
 >Girlfriend</button>
@@ -446,7 +440,7 @@ if (data.audioUrl) {
 <button
   style={chipStyle}
   onClick={() => {
-    if (!confirm('Start new chat as Shraddha (Cousin)? This will clear current messages.')) return;
+    if (!window.confirm('Start new chat as Shraddha (Cousin)? This will clear current messages.')) return;
     applyRoleChange('roleplay','cousin');
   }}
 >Cousin</button>
@@ -494,11 +488,11 @@ if (data.audioUrl) {
           <div className="modal-content">
             <h3>Shraddha wants to talk to you 😢</h3>
             <p>Unlock to continue unlimited chat and hear her voice notes ❤️</p>
-            <button onClick={() => { setShowModal(false); alert("Weekly Unlock Coming Soon!"); }}>
+            <button onClick={() => { setShowModal(false); window.alert("Weekly Unlock Coming Soon!"); }}>
               Weekly Unlimited – ₹199
             </button>
-            <button onClick={() => { setShowModal(false); alert("Daily Top-Up Coming Soon!"); }}>
-              Daily Top-Up – ₹49
+            <button onClick={() => { setShowModal(false); window.alert("Daily Top-Up Coming Soon!"); }}>
+              Daily Top-Up – ₹52
             </button>
             <button onClick={() => setShowModal(false)} className="cancel-btn">
               Maybe Later
