@@ -127,7 +127,7 @@ const startRecording = async () => {
     }, MAX_RECORD_MS);
   } catch (e) {
     console.error('Mic error:', e);
-    alert('Microphone permission needed.');
+    window.alert('Microphone permission needed.');
   }
 };
 
@@ -166,7 +166,7 @@ const sendVoiceBlob = async (blob) => {
 
     const fd = new FormData();
     if (isOwner) fd.append('ownerKey', 'unlockvinay1236');
-    fd.append('audio', new File([blob], 'note.webm', { type: 'audio/webm' }));
+    fd.append('audio', blob, 'note.webm');
     fd.append('messages', JSON.stringify(trimmed));
     fd.append('clientTime', new Date().toLocaleTimeString('en-US', { hour12: false }));
     fd.append('clientDate', today());
@@ -404,7 +404,7 @@ if (data.audioUrl) {
     <button
   style={{ width: '100%', padding: '8px 10px', textAlign: 'left', border: 'none', background: '#f7f7f7', borderRadius: 8, marginBottom: 8 }}
   onClick={() => {
-    if (!confirm('Switch back to Stranger? This will clear current messages.')) return;
+    if (!window.confirm('Switch back to Stranger? This will clear current messages.')) return;
     applyRoleChange('stranger', null);
   }}
 >
