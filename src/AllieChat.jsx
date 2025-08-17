@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './ChatUI.css';
+// --- backend base ---
+const BACKEND_BASE = 'https://allie-chat-proxy-production.up.railway.app';
 
 function AllieChat() {
   const [messages, setMessages] = useState([
@@ -8,6 +10,15 @@ function AllieChat() {
   const [inputValue, setInputValue] = useState('');
   const bottomRef = useRef(null);
   const [isPaused, setIsPaused] = useState(false);
+  // Does roleplay require premium? (server-controlled)
+const [roleplayNeedsPremium, setRoleplayNeedsPremium] = useState(false);
+
+useEffect(() => {
+  fetch(`${BACKEND_BASE}/config`)
+    .then(r => r.json())
+    .then(d => setRoleplayNeedsPremium(!!d.roleplayNeedsPremium))
+    .catch(() => setRoleplayNeedsPremium(false));
+}, []);
   const [showModal, setShowModal] = useState(false);
   const [isOwner, setIsOwner] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
@@ -70,6 +81,13 @@ const askedForVoice = (text = "") => {
   return noun.test(t) && verb.test(t);
 };
 const applyRoleChange = (mode, type) => {
+  // Premium gate (server-controlled)
+  if (mode === 'roleplay' && roleplayNeedsPremium && !isOwner) {
+    setShowRoleMenu(false);
+    setShowModal(true);   // show your premium modal
+    return;
+  }
+
   // Save choice
   setRoleMode(mode);
   setRoleType(type);
@@ -175,10 +193,10 @@ const sendVoiceBlob = async (blob) => {
     fd.append('roleType', roleType || 'stranger');
     if (shouldResetRef.current) { fd.append('reset', 'true'); shouldResetRef.current = false; }
 
-    const resp = await fetch('https://allie-chat-proxy-production.up.railway.app/chat', {
-      method: 'POST',
-      body: fd
-    });
+    const resp = await fetch(`${BACKEND_BASE}/chat`, {
+  method: 'POST',
+  body: fd
+});
 
     const data = await resp.json();
     setIsTyping(false);
@@ -195,7 +213,7 @@ const sendVoiceBlob = async (blob) => {
     if (data.audioUrl) {
       const fullUrl = data.audioUrl.startsWith('http')
         ? data.audioUrl
-        : `https://allie-chat-proxy-production.up.railway.app${data.audioUrl}`;
+        : `${BACKEND_BASE}${data.audioUrl}`;
       setMessages(prev => [...prev, {
         audioUrl: fullUrl, sender: 'allie',
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
@@ -274,11 +292,11 @@ roleType: roleType || 'stranger',
 if (shouldResetRef.current) { fetchBody.reset = true; shouldResetRef.current = false; }        
 if (isOwner) fetchBody.ownerKey = "unlockvinay1236";
 
-        const response = await fetch("https://allie-chat-proxy-production.up.railway.app/chat", {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(fetchBody)
-        });
+        const response = await fetch(`${BACKEND_BASE}/chat`, {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify(fetchBody)
+});
 
         const data = await response.json();
         setIsTyping(false);
@@ -286,7 +304,7 @@ if (isOwner) fetchBody.ownerKey = "unlockvinay1236";
 if (data.audioUrl) {
   const fullUrl = data.audioUrl.startsWith('http')
     ? data.audioUrl
-    : `https://allie-chat-proxy-production.up.railway.app${data.audioUrl}`;
+    : `${BACKEND_BASE}${data.audioUrl}`;
   setMessages(prev => [...prev, { audioUrl: fullUrl, sender: 'allie', time: currentTime }]);
   return;
 }
