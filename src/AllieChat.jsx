@@ -52,7 +52,6 @@ const MAX_RECORD_MS = 5000; // 5 seconds cap
   bhabhi: '#7c4dff',
   cousin: '#00bcd4',
 };
-  const ROLEPLAY_NEEDS_PREMIUM = false; // set to true to gate roleplay
   const chipStyle = { padding: '8px 10px', border: 'none', background: '#f0f0ff', borderRadius: 999, cursor: 'pointer' };
 
 // optional: simple day string
@@ -168,9 +167,13 @@ const sendVoiceBlob = async (blob) => {
       content: m.text ?? (m.audioUrl ? '[voice note]' : '')
     }));
 
+    const MAX_MSG = roleMode === 'roleplay' ? 18 : 24;
+    const trimmed = formattedHistory.slice(-MAX_MSG);
+
     const fd = new FormData();
+    if (isOwner) fd.append('ownerKey', 'unlockvinay1236');
     fd.append('audio', new File([blob], 'note.webm', { type: 'audio/webm' }));
-    fd.append('messages', JSON.stringify(formattedHistory));  // <- IMPORTANT
+    fd.append('messages', JSON.stringify(trimmed));
     fd.append('clientTime', new Date().toLocaleTimeString('en-US', { hour12: false }));
     fd.append('clientDate', today());
     fd.append('session_id', sessionIdWithRole);
@@ -185,6 +188,15 @@ const sendVoiceBlob = async (blob) => {
 
     const data = await resp.json();
     setIsTyping(false);
+    if (data.locked) {
+  setMessages(prev => [...prev, {
+    text: data.reply || 'Locked. Upgrade to continue.',
+    sender: 'allie',
+    time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+  }]);
+  setShowModal(true);
+  return;
+}
 
     if (data.audioUrl) {
       const fullUrl = data.audioUrl.startsWith('http')
@@ -213,6 +225,18 @@ const sendVoiceBlob = async (blob) => {
 };
   const handleSend = async () => {
     if (inputValue.trim() === '' || isPaused) return;
+    // Quick commands
+if (inputValue.trim().toLowerCase() === '#stranger') {
+  applyRoleChange('stranger', null);
+  setInputValue('');
+  return;
+}
+if (inputValue.trim().toLowerCase() === '#reset') {
+  shouldResetRef.current = true;
+  setMessages([{ text: 'Hi… kaise ho aap? ☺️', sender: 'allie' }]);
+  setInputValue('');
+  return;
+}
 
     // --- OWNER UNLOCK COMMAND ---
     if (inputValue.trim() === '#unlockvinay1236') {
@@ -238,11 +262,14 @@ const sendVoiceBlob = async (blob) => {
   role: msg.sender === 'user' ? 'user' : 'assistant',
   content: msg.text ?? (msg.audioUrl ? '🔊 (voice reply sent)' : '')
 }));
+        
+const MAX_MSG = roleMode === 'roleplay' ? 18 : 24;
+const trimmed = formattedHistory.slice(-MAX_MSG);
 
         const now = new Date();
         const wantVoice = askedForVoice(newMessage.text);
 const fetchBody = {
-  messages: formattedHistory,
+  messages: trimmed,
   clientTime: now.toLocaleTimeString('en-US', { hour12: false }),
   clientDate: now.toLocaleDateString('en-GB'), // e.g., "02/08/2025"
   wantVoice, // tells backend if voice reply is requested
@@ -381,18 +408,48 @@ if (data.audioUrl) {
   }}>
     <div style={{ fontWeight: 700, marginBottom: 8 }}>Mode</div>
     <button
-      style={{ width: '100%', padding: '8px 10px', textAlign: 'left', border: 'none', background: '#f7f7f7', borderRadius: 8, marginBottom: 8 }}
-      onClick={() => applyRoleChange('stranger', null)}
-    >
-      Stranger (default)
-    </button>
+  style={{ width: '100%', padding: '8px 10px', textAlign: 'left', border: 'none', background: '#f7f7f7', borderRadius: 8, marginBottom: 8 }}
+  onClick={() => {
+    if (!confirm('Switch back to Stranger? This will clear current messages.')) return;
+    applyRoleChange('stranger', null);
+  }}
+>
+  Stranger (default)
+</button>
 
     <div style={{ fontWeight: 700, margin: '8px 0 6px' }}>Roleplay</div>
     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-      <button style={chipStyle} onClick={() => applyRoleChange('roleplay','wife')}>Wife</button>
-      <button style={chipStyle} onClick={() => applyRoleChange('roleplay','bhabhi')}>Bhabhi</button>
-      <button style={chipStyle} onClick={() => applyRoleChange('roleplay','girlfriend')}>Girlfriend</button>
-      <button style={chipStyle} onClick={() => applyRoleChange('roleplay','cousin')}>Cousin</button>
+      <button
+  style={chipStyle}
+  onClick={() => {
+    if (!confirm('Start new chat as Shraddha (Wife)? This will clear current messages.')) return;
+    applyRoleChange('roleplay','wife');
+  }}
+>Wife</button>
+
+<button
+  style={chipStyle}
+  onClick={() => {
+    if (!confirm('Start new chat as Shraddha (Bhabhi)? This will clear current messages.')) return;
+    applyRoleChange('roleplay','bhabhi');
+  }}
+>Bhabhi</button>
+
+<button
+  style={chipStyle}
+  onClick={() => {
+    if (!confirm('Start new chat as Shraddha (Girlfriend)? This will clear current messages.')) return;
+    applyRoleChange('roleplay','girlfriend');
+  }}
+>Girlfriend</button>
+
+<button
+  style={chipStyle}
+  onClick={() => {
+    if (!confirm('Start new chat as Shraddha (Cousin)? This will clear current messages.')) return;
+    applyRoleChange('roleplay','cousin');
+  }}
+>Cousin</button>
     </div>
   </div>
 )}
