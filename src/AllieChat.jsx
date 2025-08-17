@@ -366,10 +366,10 @@ if (data.audioUrl) {
   </span>
 )}
         <button
-        onClick={() => setShowRoleMenu(v => !v)}
-        style={{ marginLeft: 10, background: 'transparent', border: 'none', color: '#fff', fontSize: 22 }}
-        aria-label="Role menu"
-      >⋮</button>
+  onClick={() => setShowRoleMenu(v => !v)}
+  style={{ background: 'transparent', border: 'none', color: '#fff', fontSize: 22 }}
+  aria-label="Role menu"
+>⋮</button>
     </div>
   </div>
 
