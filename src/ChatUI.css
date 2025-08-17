@@ -391,6 +391,17 @@ backdrop-filter: blur(10px);
   filter: brightness(0.96);
 }
 
+.role-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  font-size: 12px;
+  line-height: 18px;
+  border-radius: 999px;
+  color: #fff;
+  text-transform: capitalize;
+  box-shadow: 0 2px 6px rgba(0,0,0,.15);
+}
+
 /* Fallback link only if the <audio> fails to have a src */
 .audio-fallback { margin-top: 4px; font-size: 12px; }
 .audio-player[src] + .audio-fallback { display: none; }
