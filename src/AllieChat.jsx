@@ -2,6 +2,22 @@ import React, { useState, useEffect, useRef } from 'react';
 import './ChatUI.css';
 // --- backend base ---
 const BACKEND_BASE = 'https://allie-chat-proxy-production.up.railway.app';
+// -------- Minimal custom confirm dialog (no browser URL) ----------
+function ConfirmDialog({ open, title, message, onCancel, onConfirm }) {
+  if (!open) return null;
+  return (
+    <div className="confirm-backdrop" role="dialog" aria-modal="true">
+      <div className="confirm-modal">
+        <h3>{title}</h3>
+        <p>{message}</p>
+        <div className="confirm-buttons">
+          <button className="btn-secondary" onClick={onCancel}>Cancel</button>
+          <button className="btn-primary" onClick={onConfirm}>OK</button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function AllieChat() {
   const [messages, setMessages] = useState([
@@ -26,6 +42,14 @@ useEffect(() => {
 const [roleMode, setRoleMode] = useState(localStorage.getItem('roleMode') || 'stranger'); // 'stranger' | 'roleplay'
 const [roleType, setRoleType] = useState(localStorage.getItem('roleType') || null);       // null | 'wife' | 'bhabhi' | 'girlfriend' | 'cousin'
 const [showRoleMenu, setShowRoleMenu] = useState(false);
+  // custom confirm modal state
+const [confirmState, setConfirmState] = useState({
+  open: false, title: '', message: '', onConfirm: null
+});
+const openConfirm = (title, message, onConfirm) =>
+  setConfirmState({ open: true, title, message, onConfirm });
+const closeConfirm = () =>
+  setConfirmState(s => ({ ...s, open: false, onConfirm: null }));
   // Next request should clear server context after a role switch
 const shouldResetRef = useRef(false);
   const roleMenuRef = useRef(null);
@@ -422,9 +446,12 @@ if (data.audioUrl) {
     <button
   style={{ width: '100%', padding: '8px 10px', textAlign: 'left', border: 'none', background: '#f7f7f7', borderRadius: 8, marginBottom: 8 }}
   onClick={() => {
-    if (!window.confirm('Switch back to Stranger? This will clear current messages.')) return;
-    applyRoleChange('stranger', null);
-  }}
+  openConfirm(
+    'Switch to Stranger?',
+    'This will start a fresh chat and clear current messages.',
+    () => { closeConfirm(); applyRoleChange('stranger', null); }
+  );
+}}
 >
   Stranger (default)
 </button>
@@ -434,33 +461,45 @@ if (data.audioUrl) {
       <button
   style={chipStyle}
   onClick={() => {
-    if (!window.confirm('Start new chat as Shraddha (Wife)? This will clear current messages.')) return;
-    applyRoleChange('roleplay','wife');
-  }}
+  openConfirm(
+    'Start as Shraddha (Wife)?',
+    'A fresh chat will begin and current messages will be cleared.',
+    () => { closeConfirm(); applyRoleChange('roleplay','wife'); }
+  );
+}}
 >Wife</button>
 
 <button
   style={chipStyle}
   onClick={() => {
-    if (!window.confirm('Start new chat as Shraddha (Bhabhi)? This will clear current messages.')) return;
-    applyRoleChange('roleplay','bhabhi');
-  }}
+  openConfirm(
+    'Start as Shraddha (Bhabhi)?',
+    'A fresh chat will begin and current messages will be cleared.',
+    () => { closeConfirm(); applyRoleChange('roleplay','bhabhi'); }
+  );
+}}
 >Bhabhi</button>
 
 <button
   style={chipStyle}
   onClick={() => {
-    if (!window.confirm('Start new chat as Shraddha (Girlfriend)? This will clear current messages.')) return;
-    applyRoleChange('roleplay','girlfriend');
-  }}
+  openConfirm(
+    'Start as Shraddha (Girlfriend)?',
+    'A fresh chat will begin and current messages will be cleared.',
+    () => { closeConfirm(); applyRoleChange('roleplay','girlfriend'); }
+  );
+}}
 >Girlfriend</button>
 
 <button
   style={chipStyle}
   onClick={() => {
-    if (!window.confirm('Start new chat as Shraddha (Cousin)? This will clear current messages.')) return;
-    applyRoleChange('roleplay','cousin');
-  }}
+  openConfirm(
+    'Start as Shraddha (Cousin)?',
+    'A fresh chat will begin and current messages will be cleared.',
+    () => { closeConfirm(); applyRoleChange('roleplay','cousin'); }
+  );
+}}
 >Cousin</button>
     </div>
   </div>
@@ -519,6 +558,14 @@ if (data.audioUrl) {
         </div>
       )}
 
+      <ConfirmDialog
+  open={confirmState.open}
+  title={confirmState.title}
+  message={confirmState.message}
+  onCancel={closeConfirm}
+  onConfirm={confirmState.onConfirm || closeConfirm}
+/>
+      
       <div className="footer">
         <input
           type="text"
