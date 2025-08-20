@@ -433,3 +433,41 @@ backdrop-filter: blur(10px);
   background:#f1f1f4; color:#333; font-weight:600;
 }
 @keyframes pop{ from{ transform:scale(.97); opacity:.6 } to{ transform:scale(1); opacity:1 } }
+
+/* ——— header “Modes” pill ——— */
+.role-btn{
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border: 1px solid rgba(255,255,255,.35);
+  border-radius: 999px;
+  background: rgba(255,255,255,.22);
+  color: #fff;
+  font-weight: 700;
+  font-size: 12px;
+  line-height: 1;
+  box-shadow: 0 6px 16px rgba(0,0,0,.25);
+  backdrop-filter: blur(6px);
+  cursor: pointer;
+}
+.role-btn:active { transform: translateY(1px); }
+@media (hover:hover){ .role-btn:hover{ background: rgba(255,255,255,.32); } }
+
+.role-btn-icon{ font-size: 14px; line-height: 1; }
+.role-btn-text{ letter-spacing: .2px; }
+
+/* subtle attention ping (runs twice) */
+.role-btn::after{
+  content: "";
+  position: absolute; inset: -4px;
+  border-radius: 999px;
+  box-shadow: 0 0 0 0 rgba(255,255,255,.55);
+  animation: rolepulse 2.1s ease-out 2;
+  pointer-events: none;
+}
+@keyframes rolepulse{
+  0%   { box-shadow: 0 0 0 0 rgba(255,255,255,.55); }
+  100% { box-shadow: 0 0 0 14px rgba(255,255,255,0); }
+}
