@@ -419,25 +419,27 @@ if (data.audioUrl) {
           <img src="/1227230000.png" alt="Allie" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
         </div>
         <div className="username-container">
-          <div className="username">{displayName}</div>
-            {roleMode === 'roleplay' && roleType && (
-  <span
-    className="role-badge"
-    style={{ backgroundColor: roleColors[roleType] || '#666' }}
+  <div className="name-wrap">
+    <div className="username">{displayName}</div>
+    {roleMode === 'roleplay' && roleType && (
+      <span
+        className="role-badge"
+        style={{ backgroundColor: roleColors[roleType] || '#666' }}
+      >
+        {roleType}
+      </span>
+    )}
+  </div>
+
+  <button
+    className="role-btn"
+    onClick={() => setShowRoleMenu(v => !v)}
+    aria-label="Choose mode"
+    title="Choose mode"
   >
-    {roleType}
-  </span>
-)}
-        <button
-  className="role-btn"
-  onClick={() => setShowRoleMenu(v => !v)}
-  aria-label="Choose role/mode"
-  title="Choose role/mode"
->
-  <span className="role-btn-icon">🎭</span>
-  <span className="role-btn-text">Modes</span>
-</button>
-    </div>
+    <span className="role-btn-text">Mode</span>
+  </button>
+</div>
   </div>
 
     {showRoleMenu && (
