@@ -429,10 +429,14 @@ if (data.audioUrl) {
   </span>
 )}
         <button
+  className="role-btn"
   onClick={() => setShowRoleMenu(v => !v)}
-  style={{ background: 'transparent', border: 'none', color: '#fff', fontSize: 22 }}
-  aria-label="Role menu"
->⋮</button>
+  aria-label="Choose role/mode"
+  title="Choose role/mode"
+>
+  <span className="role-btn-icon">🎭</span>
+  <span className="role-btn-text">Modes</span>
+</button>
     </div>
   </div>
 
