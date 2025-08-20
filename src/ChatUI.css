@@ -49,6 +49,8 @@ backdrop-filter: blur(10px);
   flex-direction: row;
   align-items: center;
   gap: 6px;
+  flex: 1;                       /* take full header width */
+  justify-content: space-between; /* left: name+pill | right: Mode */
 }
 
 .name-wrap {
