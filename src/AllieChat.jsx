@@ -55,10 +55,10 @@ const shouldResetRef = useRef(false);
   const roleMenuRef = useRef(null);
 
 // Display name for header
-const displayName =
-  roleMode === 'roleplay' && roleType
-    ? `Shraddha (${roleType.charAt(0).toUpperCase() + roleType.slice(1)})`
-    : 'Shraddha';
+const displayName = 'Shraddha';
+const capRole = roleType
+  ? roleType.charAt(0).toUpperCase() + roleType.slice(1)
+  : '';
   // --- HOLD-TO-RECORD state/refs ---
 const [isRecording, setIsRecording] = useState(false);
   // Persistent session id per device/browser (used for voice quota)
@@ -426,7 +426,7 @@ if (data.audioUrl) {
         className="role-badge"
         style={{ backgroundColor: roleColors[roleType] || '#666' }}
       >
-        {roleType}
+        {capRole}
       </span>
     )}
   </div>
