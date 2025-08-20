@@ -49,8 +49,6 @@ backdrop-filter: blur(10px);
   flex-direction: row;
   align-items: center;
   gap: 6px;
-  flex: 1;                        /* take remaining header width */
-  justify-content: space-between;  /* left group | right button */
 }
 
 .name-wrap {
@@ -459,6 +457,7 @@ backdrop-filter: blur(10px);
   box-shadow: 0 6px 16px rgba(0,0,0,.25);
   backdrop-filter: blur(6px);
   cursor: pointer;
+  margin-left: auto;
 }
 .role-btn:active { transform: translateY(1px); }
 @media (hover:hover){ .role-btn:hover{ background: rgba(255,255,255,.32); } }
