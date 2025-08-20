@@ -46,9 +46,17 @@ backdrop-filter: blur(10px);
 
 .username-container {
   display: flex;
-  flex-direction: row;   /* lay items in a row */
+  flex-direction: row;
   align-items: center;
-  gap: 6px;              /* space between name, badge, and ⋮ */
+  gap: 6px;
+  flex: 1;                        /* take remaining header width */
+  justify-content: space-between;  /* left group | right button */
+}
+
+.name-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;        /* keeps badge next to name */
 }
 
 .username {
