@@ -355,7 +355,7 @@ backdrop-filter: blur(10px);
 
 /* Mic: white by default, turns glowing red while recording */
 .footer .mic-btn svg {
-  width: 24px; height: 24px;
+  width: 28px; height: 28px;
   display: block;
   opacity: 1;                  /* ensure not “light” */
 }
