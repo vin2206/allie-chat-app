@@ -20,9 +20,11 @@ function ConfirmDialog({ open, title, message, onCancel, onConfirm }) {
 }
 
 function AllieChat() {
-  const [messages, setMessages] = useState([
-    { text: 'Hi… kaise ho aap? ☺️', sender: 'allie' },
-  ]);
+  const [messages, setMessages] = useState(() => {
+  const initMode = localStorage.getItem('roleMode') || 'stranger';
+  const initType = localStorage.getItem('roleType') || '';
+  return [{ text: getOpener(initMode, initType), sender: 'allie' }];
+});
   const [inputValue, setInputValue] = useState('');
   const bottomRef = useRef(null);
   const [isPaused, setIsPaused] = useState(false);
@@ -104,6 +106,19 @@ const askedForVoice = (text = "") => {
   // in any order, with anything in between (e.g., “avaaz to sunado please”).
   return noun.test(t) && verb.test(t);
 };
+  
+  function getOpener(mode, type) {
+  if (mode !== 'roleplay') return 'Hi… kaise ho aap? 😊';
+
+  switch ((type || '').toLowerCase()) {
+    case 'wife':       return 'Aaj itni der laga di reply mein? 😉';
+    case 'girlfriend': return 'Miss kiya mujhe babu? 😊';
+    case 'bhabhi':     return 'Arre tum aa gaye devarji, kha the subha se? 😅';
+    case 'cousin':     return 'Hello, kaise ho bhaiya? 😁';
+    default:           return 'Hi… kaise ho aap? 😊';
+  }
+}
+  
 const applyRoleChange = (mode, type) => {
   // Premium gate (server-controlled)
   if (mode === 'roleplay' && roleplayNeedsPremium && !isOwner) {
@@ -121,14 +136,8 @@ const applyRoleChange = (mode, type) => {
   // Close menu
   setShowRoleMenu(false);
 
-  // Clear chat locally & show quick opener
-  const opener = mode === 'roleplay'
-    ? (type === 'wife' ? 'Aaj itni der laga di reply mein? 😉'
-       : type === 'girlfriend' ? 'Miss kiya mujhe? 😌'
-       : type === 'bhabhi' ? 'Arre tum aa gaye, kya kar rahe the itni der? 😉'
-       : 'Oye, yaad hai school waali masti? 😄')
-    : 'Hi… kaise ho aap? ☺️';
-  setMessages([{ text: opener, sender: 'allie' }]);
+  const opener = getOpener(mode, type);
+setMessages([{ text: opener, sender: 'allie' }]);
 
   // Make the very next API call start fresh on server
   shouldResetRef.current = true;
