@@ -348,7 +348,7 @@ backdrop-filter: blur(10px);
 /* Send keeps your gradient */
 .footer .send-btn {
   background: linear-gradient(135deg, #ff6ec4, #7873f5);
-  font-size: 24px;
+  font-size: 26px;
   color: #ffffff;
 }
 .footer .mic-btn:active { transform: scale(.96); }
