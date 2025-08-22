@@ -88,6 +88,23 @@ const MAX_RECORD_MS = 5000; // 5 seconds cap
   bhabhi: '#7c4dff',
   cousin: '#00bcd4',
 };
+  // Avatar map
+const avatarMap = {
+  stranger: '/avatars/shraddha_stranger.png',
+  wife: '/avatars/shraddha_wife.png',
+  girlfriend: '/avatars/shraddha_girlfriend.png',
+  bhabhi: '/avatars/shraddha_bhabhi.png',
+  cousin: '/avatars/shraddha_cousin.png',
+};
+
+function getAvatarSrc(mode, type) {
+  if (mode === 'roleplay' && type && avatarMap[type]) return avatarMap[type];
+  return avatarMap.stranger;
+}
+  useEffect(() => {
+  Object.values(avatarMap).forEach(src => { const img = new Image(); img.src = src; });
+}, []);
+  
   const chipStyle = { padding: '8px 10px', border: 'none', background: '#f0f0ff', borderRadius: 999, cursor: 'pointer' };
 
 // optional: simple day string
@@ -425,7 +442,11 @@ if (data.audioUrl) {
     <div className="App">
       <div className="header">
         <div className="profile-pic">
-          <img src="/1227230000.png" alt="Allie" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
+          <img
+  src={getAvatarSrc(roleMode, roleType)}
+  alt={`Shraddha – ${roleMode === 'roleplay' && roleType ? roleType : 'stranger'}`}
+  style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }}
+/>
         </div>
         <div className="username-container">
   <div className="name-wrap">
