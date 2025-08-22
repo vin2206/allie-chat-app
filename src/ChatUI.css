@@ -33,7 +33,6 @@ backdrop-filter: blur(10px);
   border-radius: 50%;
   overflow: hidden;
   margin-right: 15px;
-  box-shadow: 0 0 8px rgba(0,0,0,0.5);
 }
 
 .profile-pic img {
