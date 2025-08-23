@@ -129,9 +129,9 @@ const askedForVoice = (text = "") => {
   if (mode !== 'roleplay') return 'Hi… kaise ho aap? 😊';
 
   switch ((type || '').toLowerCase()) {
-    case 'wife':       return 'Aaj itni der laga di reply mein? 😉';
-    case 'girlfriend': return 'Miss kiya mujhe babu? 😊';
-    case 'bhabhi':     return 'Arre tum aa gaye devarji, kha the subha se? 😅';
+    case 'wife':       return 'Aaj itni der laga di reply mein jaan? 😉';
+    case 'girlfriend': return 'Miss kiya apko babu 😊';
+    case 'bhabhi':     return 'tum aa gaye devarji, kha the subha se? 😅';
     case 'cousin':     return 'Hello, kaise ho bhaiya? 😁';
     default:           return 'Hi… kaise ho aap? 😊';
   }
