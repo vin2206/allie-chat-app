@@ -118,7 +118,7 @@ const askedForVoice = (text = "") => {
   // noun: voice/audio/awaaz/awaz/avaaz/avaj/awaj (loose spelling)
   const noun = /(voice|audio|a+w?a+a?j|a+w?a+a?z|awaaz|awaz|avaaz|avaj|awaj)/i;
   // verb: send/bhejo/bhejdo/sunao/sunado/bolo (allow “na”, “do”, “please”, “to” etc. anywhere)
-  const verb = /(bhej(?:o|do)?|send|suna(?:o|do)?|bol(?:o|kar)?)/i;
+  const verb = /(bhej(?:o|do)?|send|suna(?:o|do)?)/i;
 
   // We consider it a real request only if sentence contains BOTH a noun and a verb,
   // in any order, with anything in between (e.g., “avaaz to sunado please”).
