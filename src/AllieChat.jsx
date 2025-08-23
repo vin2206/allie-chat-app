@@ -40,6 +40,7 @@ useEffect(() => {
   const [showModal, setShowModal] = useState(false);
   const [isOwner, setIsOwner] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
+  const [cooldown, setCooldown] = useState(false);
   // --- Roleplay wiring (Step 1) ---
 const [roleMode, setRoleMode] = useState(localStorage.getItem('roleMode') || 'stranger'); // 'stranger' | 'roleplay'
 const [roleType, setRoleType] = useState(localStorage.getItem('roleType') || null);       // null | 'wife' | 'bhabhi' | 'girlfriend' | 'cousin'
@@ -161,6 +162,7 @@ setMessages([{ text: opener, sender: 'allie' }]);
 };
   // --------- PRESS & HOLD mic handlers ---------
 const startRecording = async () => {
+  if (isTyping || isPaused || cooldown) return;
   try {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
 
@@ -214,6 +216,7 @@ const stopRecording = () => {
 
 // Upload the voice to backend as multipart/form-data
 const sendVoiceBlob = async (blob) => {
+  if (isTyping || cooldown) return;
   // local preview of what the user sent
   setMessages(prev => ([
     ...prev,
@@ -286,7 +289,7 @@ const sendVoiceBlob = async (blob) => {
   }
 };
   const handleSend = async () => {
-    if (inputValue.trim() === '' || isPaused) return;
+    if (inputValue.trim() === '' || isPaused || isTyping || cooldown) return;
     // Quick commands
 if (inputValue.trim().toLowerCase() === '#stranger') {
   applyRoleChange('stranger', null);
@@ -341,7 +344,8 @@ roleType: roleType || 'stranger',
 };
 if (shouldResetRef.current) { fetchBody.reset = true; shouldResetRef.current = false; }        
 if (isOwner) fetchBody.ownerKey = "unlockvinay1236";
-
+setCooldown(true);
+setTimeout(() => setCooldown(false), 4000);
         const response = await fetch(`${BACKEND_BASE}/chat`, {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
