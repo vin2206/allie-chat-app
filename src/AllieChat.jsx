@@ -435,23 +435,23 @@ try {
         </div>
         <div className="username-container">
   <div className="name-wrap">
-    <div className="username">{displayName}</div>
-    {roleMode === 'roleplay' && roleType && (
-      <span
-        className="role-badge"
-        style={{ backgroundColor: roleColors[roleType] || '#666' }}
-      >
-        {capRole}
-      </span>
-    )}
-    {roleMode === 'stranger' && (
-  <span className="role-badge role-badge-stranger" title="Default">
-    Stranger
-  </span>
-)}
-    Stranger
-  </button>
-  </div>
+  <div className="username">{displayName}</div>
+
+  {roleMode === 'roleplay' && roleType && (
+    <span
+      className="role-badge"
+      style={{ backgroundColor: roleColors[roleType] || '#666' }}
+    >
+      {capRole}
+    </span>
+  )}
+
+  {roleMode === 'stranger' && (
+    <span className="role-badge role-badge-stranger" title="Default">
+      Stranger
+    </span>
+  )}
+</div>
 
   <button
     className="role-btn"
