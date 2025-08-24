@@ -475,14 +475,13 @@ backdrop-filter: blur(10px);
   animation: rolepulse 2.1s ease-out 2;
   pointer-events: none;
 }
-/* === Default (Stranger) badge color — soft rose === */
+@keyframes rolepulse{
+  0%   { box-shadow: 0 0 0 0 rgba(255,255,255,.55); }
+  100% { box-shadow: 0 0 0 14px rgba(255,255,255,0); }
+}
 .role-badge-stranger {
   background: #fb7185;               /* rose-400 (not too dark) */
   color: #fff;
   border: 1px solid rgba(255,255,255,.35);
   margin-left: 8px;                   /* same spacing as others */
-}
-@keyframes rolepulse{
-  0%   { box-shadow: 0 0 0 0 rgba(255,255,255,.55); }
-  100% { box-shadow: 0 0 0 14px rgba(255,255,255,0); }
 }
