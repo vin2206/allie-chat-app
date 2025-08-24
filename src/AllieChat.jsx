@@ -20,11 +20,20 @@ function ConfirmDialog({ open, title, message, onCancel, onConfirm }) {
 }
 
 function AllieChat() {
-  const [messages, setMessages] = useState(() => {
-  const initMode = localStorage.getItem('roleMode') || 'stranger';
-  const initType = localStorage.getItem('roleType') || '';
-  return [{ text: getOpener(initMode, initType), sender: 'allie' }];
-});
+  function getOpener(mode, type) {
+  if (mode !== 'roleplay') return 'Hi… kaise ho aap? 😊';
+
+  switch ((type || '').toLowerCase()) {
+    case 'wife':       return 'Aaj itni der laga di reply mein jaan? 😉';
+    case 'girlfriend': return 'Miss kiya apko babu 😊';
+    case 'bhabhi':     return 'tum aa gaye devarji, kha the subha se? 😅';
+    case 'cousin':     return 'Hello, kaise ho bhaiya? 😁';
+    default:           return 'Hi… kaise ho aap? 😊';
+  }
+}
+  const [messages, setMessages] = useState([
+  { text: getOpener('stranger', null), sender: 'allie' }
+]);
   const [inputValue, setInputValue] = useState('');
   const bottomRef = useRef(null);
   const [isPaused, setIsPaused] = useState(false);
@@ -42,8 +51,8 @@ useEffect(() => {
   const [isTyping, setIsTyping] = useState(false);
   const [cooldown, setCooldown] = useState(false);
   // --- Roleplay wiring (Step 1) ---
-const [roleMode, setRoleMode] = useState(localStorage.getItem('roleMode') || 'stranger'); // 'stranger' | 'roleplay'
-const [roleType, setRoleType] = useState(localStorage.getItem('roleType') || null);       // null | 'wife' | 'bhabhi' | 'girlfriend' | 'cousin'
+const [roleMode, setRoleMode] = useState('stranger');
+const [roleType, setRoleType] = useState(null);
 const [showRoleMenu, setShowRoleMenu] = useState(false);
   // custom confirm modal state
 const [confirmState, setConfirmState] = useState({
@@ -125,39 +134,26 @@ const askedForVoice = (text = "") => {
   return noun.test(t) && verb.test(t);
 };
   
-  function getOpener(mode, type) {
-  if (mode !== 'roleplay') return 'Hi… kaise ho aap? 😊';
-
-  switch ((type || '').toLowerCase()) {
-    case 'wife':       return 'Aaj itni der laga di reply mein jaan? 😉';
-    case 'girlfriend': return 'Miss kiya apko babu 😊';
-    case 'bhabhi':     return 'tum aa gaye devarji, kha the subha se? 😅';
-    case 'cousin':     return 'Hello, kaise ho bhaiya? 😁';
-    default:           return 'Hi… kaise ho aap? 😊';
-  }
-}
-  
 const applyRoleChange = (mode, type) => {
-  // Premium gate (server-controlled)
+  // premium gate for roleplay
   if (mode === 'roleplay' && roleplayNeedsPremium && !isOwner) {
     setShowRoleMenu(false);
-    setShowModal(true);   // show your premium modal
+    setShowModal(true);
     return;
   }
 
-  // Save choice
+  // set state, but DO NOT save to localStorage
   setRoleMode(mode);
   setRoleType(type);
-  localStorage.setItem('roleMode', mode);
-  localStorage.setItem('roleType', type || '');
 
-  // Close menu
+  // close menu
   setShowRoleMenu(false);
 
+  // show the correct opener
   const opener = getOpener(mode, type);
-setMessages([{ text: opener, sender: 'allie' }]);
+  setMessages([{ text: opener, sender: 'allie' }]);
 
-  // Make the very next API call start fresh on server
+  // clear server context on next request
   shouldResetRef.current = true;
 };
   // --------- PRESS & HOLD mic handlers ---------
@@ -321,97 +317,82 @@ if (inputValue.trim().toLowerCase() === '#reset') {
     setInputValue('');
     setIsTyping(true);
 
-    setTimeout(async () => {
-      try {
-        const formattedHistory = updatedMessages.map((msg) => ({
-  role: msg.sender === 'user' ? 'user' : 'assistant',
-  content: msg.text ?? (msg.audioUrl ? '🔊 (voice reply sent)' : '')
-}));
-        
-const MAX_MSG = roleMode === 'roleplay' ? 18 : 24;
-const trimmed = formattedHistory.slice(-MAX_MSG);
+    // start fetch immediately; enforce a minimum 2.5s typing time
+const startedAt = Date.now();
+try {
+  const formattedHistory = updatedMessages.map((msg) => ({
+    role: msg.sender === 'user' ? 'user' : 'assistant',
+    content: msg.text ?? (msg.audioUrl ? '🔊 (voice reply sent)' : '')
+  }));
 
-        const now = new Date();
-        const wantVoice = askedForVoice(newMessage.text);
-const fetchBody = {
-  messages: trimmed,
-  clientTime: now.toLocaleTimeString('en-US', { hour12: false }),
-  clientDate: now.toLocaleDateString('en-GB'), // e.g., "02/08/2025"
-  wantVoice, // tells backend if voice reply is requested
-  session_id: sessionIdWithRole,     // <-- per-role session
-roleMode,
-roleType: roleType || 'stranger',
-};
-if (shouldResetRef.current) { fetchBody.reset = true; shouldResetRef.current = false; }        
-if (isOwner) fetchBody.ownerKey = "unlockvinay1236";
-setCooldown(true);
-setTimeout(() => setCooldown(false), 4000);
-        const response = await fetch(`${BACKEND_BASE}/chat`, {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify(fetchBody)
-});
+  const MAX_MSG = roleMode === 'roleplay' ? 18 : 24;
+  const trimmed = formattedHistory.slice(-MAX_MSG);
 
-        const data = await response.json();
-        setIsTyping(false);
-        // If backend sent a voice note, show it and stop.
-if (data.audioUrl) {
-  const fullUrl = data.audioUrl.startsWith('http')
-    ? data.audioUrl
-    : `${BACKEND_BASE}${data.audioUrl}`;
-  setMessages(prev => [...prev, { audioUrl: fullUrl, sender: 'allie', time: currentTime }]);
-  return;
+  const now = new Date();
+  const wantVoice = askedForVoice(newMessage.text);
+  const fetchBody = {
+    messages: trimmed,
+    clientTime: now.toLocaleTimeString('en-US', { hour12: false }),
+    clientDate: now.toLocaleDateString('en-GB'),
+    wantVoice,
+    session_id: sessionIdWithRole,
+    roleMode,
+    roleType: roleType || 'stranger',
+  };
+  if (shouldResetRef.current) { fetchBody.reset = true; shouldResetRef.current = false; }
+  if (isOwner) fetchBody.ownerKey = "unlockvinay1236";
+
+  setCooldown(true);
+  setTimeout(() => setCooldown(false), 3000);
+
+  const response = await fetch(`${BACKEND_BASE}/chat`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(fetchBody)
+  });
+  const data = await response.json();
+
+  // enforce minimum 2.5s typing display
+  const elapsed = Date.now() - startedAt;
+  const waitMore = Math.max(0, 2500 - elapsed);
+  setTimeout(() => {
+    setIsTyping(false);
+
+    if (data.audioUrl) {
+      const fullUrl = data.audioUrl.startsWith('http') ? data.audioUrl : `${BACKEND_BASE}${data.audioUrl}`;
+      setMessages(prev => [...prev, { audioUrl: fullUrl, sender: 'allie', time: currentTime }]);
+      return;
+    }
+
+    if (data.locked) {
+      setMessages(prev => [...prev, { text: data.reply, sender: 'allie', time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }]);
+      setTimeout(() => setShowModal(true), 500);
+      return;
+    }
+
+    if (data.pause) {
+      setIsPaused(true);
+      setMessages(prev => [...prev, { text: data.reply, sender: 'allie', time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }]);
+      setTimeout(() => {
+        setIsPaused(false);
+        setMessages(prev => [...prev, { text: 'Hi… wapas aa gayi hoon 😳 tum miss kar rahe the na?', sender: 'allie', time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }]);
+      }, 5 * 60 * 1000);
+      return;
+    }
+
+    if (data.reset) {
+      setTimeout(() => { setMessages([{ text: 'Hi… kaise ho aap? ☺️', sender: 'allie' }]); }, 5 * 60 * 1000);
+    }
+
+    const reply = data.reply || "Hmm… Shraddha didn’t respond.";
+    setMessages(prev => [...prev, { text: reply, sender: 'allie', time: currentTime }]);
+  }, waitMore);
+
+} catch (error) {
+  setIsTyping(false);
+  console.error('Error calling Allie proxy:', error);
+  setMessages(prev => [...prev, { text: 'Oops! Allie is quiet right now.', sender: 'allie' }]);
 }
-        // If locked, show premium popup
-        if (data.locked) {
-          setMessages((prev) => [
-            ...prev,
-            { text: data.reply, sender: 'allie', time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }
-          ]);
-          setTimeout(() => {
-            setShowModal(true);
-          }, 500);
-          return;
-        }
-
-        const reply = data.reply || "Hmm… Shraddha didn’t respond.";
-        // ✅ If pause triggered by backend
-        if (data.pause) {
-          setIsPaused(true);
-          setMessages((prev) => [
-            ...prev,
-            { text: data.reply, sender: 'allie', time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }
-          ]);
-
-          // After 5 minutes, unpause & restart shy phase
-          setTimeout(() => {
-            setIsPaused(false);
-            setMessages((prev) => [
-              ...prev,
-              { text: 'Hi… wapas aa gayi hoon 😳 tum miss kar rahe the na?', sender: 'allie', time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }
-            ]);
-          }, 5 * 60 * 1000);
-
-          return; // ✅ stop further processing
-        }
-
-        if (data.reset) {
-          // Reset conversation after 5 min
-          setTimeout(() => {
-            setMessages([{ text: 'Hi… kaise ho aap? ☺️', sender: 'allie' }]);
-          }, 5 * 60 * 1000);
-        }
-
-        setMessages((prev) => [
-  ...prev,
-  { text: reply, sender: 'allie', time: currentTime }
-]);
-      } catch (error) {
-        setIsTyping(false);
-        console.error('Error calling Allie proxy:', error);
-        setMessages((prev) => [...prev, { text: 'Oops! Allie is quiet right now.', sender: 'allie' }]);
-      }
-    }, 2500);
   };
 
   useEffect(() => {
@@ -463,6 +444,14 @@ if (data.audioUrl) {
         {capRole}
       </span>
     )}
+    <button
+    className="role-badge"
+    style={{ marginLeft: 8, background: '#6c757d', cursor: 'pointer' }}
+    onClick={() => applyRoleChange('stranger', null)}
+    title="Switch to Stranger"
+  >
+    Stranger
+  </button>
   </div>
 
   <button
