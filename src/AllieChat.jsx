@@ -444,12 +444,11 @@ try {
         {capRole}
       </span>
     )}
-    <button
-    className="role-badge"
-    style={{ marginLeft: 8, background: '#6c757d', cursor: 'pointer' }}
-    onClick={() => applyRoleChange('stranger', null)}
-    title="Switch to Stranger"
-  >
+    {roleMode === 'stranger' && (
+  <span className="role-badge role-badge-stranger" title="Default">
+    Stranger
+  </span>
+)}
     Stranger
   </button>
   </div>
