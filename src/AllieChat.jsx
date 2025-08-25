@@ -11,6 +11,15 @@ const WEEKLY_PACK= { id: 'weekly', label: 'Weekly Pack', price: 199, coins: 2000
 // localStorage helpers
 const COIN_KEY = 'coins_v1';
 const AUTORENEW_KEY = 'autorenew_v1'; // {daily:bool, weekly:bool}
+// --- NEW: lightweight auth (local only) ---
+const USER_KEY = 'user_v1';
+const welcomeKeyFor = (email) => `welcome_${email}_v1`;
+
+const loadUser = () => {
+  try { return JSON.parse(localStorage.getItem(USER_KEY)); }
+  catch { return null; }
+};
+const saveUser = (u) => localStorage.setItem(USER_KEY, JSON.stringify(u));
 const loadCoins = () => Number(localStorage.getItem(COIN_KEY) || 0);
 const saveCoins = (n) => localStorage.setItem(COIN_KEY, String(Math.max(0, n|0)));
 const loadAuto = () => {
@@ -30,6 +39,49 @@ function ConfirmDialog({ open, title, message, onCancel, onConfirm }) {
           <button className="btn-secondary" onClick={onCancel}>Cancel</button>
           <button className="btn-primary" onClick={onConfirm}>OK</button>
         </div>
+      </div>
+    </div>
+  );
+}
+/* ---------- NEW: email sign-in card ---------- */
+function AuthGate({ onSignedIn }) {
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const ok = /\S+@\S+\.\S+/.test(email) && name.trim().length >= 2;
+
+  return (
+    <div className="auth-backdrop">
+      <div className="auth-card">
+        <div className="auth-title">Welcome 👋</div>
+        <div className="auth-sub">Sign in to continue chatting with Shraddha</div>
+
+        <input className="auth-input" placeholder="Your name" autoComplete="name"
+              value={name} onChange={e => setName(e.target.value)} />
+        <input className="auth-input" placeholder="Email address" type="email" autoComplete="email"
+              value={email} onChange={e => setEmail(e.target.value)} />
+
+        <button className="auth-btn" disabled={!ok}
+          onClick={() => onSignedIn({ name: name.trim(), email: email.trim().toLowerCase() })}>
+          Continue
+        </button>
+
+        <div className="auth-foot">We’ll never spam you.</div>
+      </div>
+    </div>
+  );
+}
+/* ---------- NEW: 100-coin welcome modal ---------- */
+function WelcomeBonus({ open, onClose, amount = 100 }) {
+  if (!open) return null;
+  return (
+    <div className="welcome-backdrop" onClick={onClose}>
+      <div className="welcome-card" onClick={(e) => e.stopPropagation()}>
+        <div className="welcome-burst">🎉</div>
+        <h3>Welcome!</h3>
+        <p>You’ve unlocked a <b>first-time bonus</b>.</p>
+        <div className="welcome-amount">+{amount} coins</div>
+        <button className="welcome-btn" onClick={onClose}>Start chatting</button>
+        <div className="welcome-note">Roleplay models are part of the upgrade.</div>
       </div>
     </div>
   );
@@ -70,6 +122,20 @@ const [showCoins, setShowCoins] = useState(false);
 const [autoRenew, setAutoRenew] = useState(loadAuto());
 useEffect(() => saveCoins(coins), [coins]);
 useEffect(() => saveAuto(autoRenew), [autoRenew]);
+  // NEW: auth + welcome
+const [user, setUser] = useState(loadUser());
+const [showWelcome, setShowWelcome] = useState(false);
+
+// Give +100 coins once per email on first sign-in
+useEffect(() => {
+  if (!user) return;
+  const wk = welcomeKeyFor(user.email);
+  if (!localStorage.getItem(wk)) {
+    setCoins(c => c + 100);              // add +100 once
+    localStorage.setItem(wk, '1');
+    setShowWelcome(true);
+  }
+}, [user]);
 
 const openCoins = () => setShowCoins(true);
 const closeCoins = () => setShowCoins(false);
@@ -335,16 +401,6 @@ const sendVoiceBlob = async (blob) => {
     setInputValue('');
     return;
   }
-  // Owner unlock
-  if (inputValue.trim() === '#unlockvinay1236') {
-    setIsOwner(true);
-    setInputValue('');
-    setMessages(prev => [
-      ...prev,
-      { text: "✅ Owner mode unlocked! Unlimited chat enabled.", sender: 'allie', time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }
-    ]);
-    return;
-  }
 
   // Decide cost before sending
   const wantVoiceNow = askedForVoice(inputValue);
@@ -518,6 +574,12 @@ const sendVoiceBlob = async (blob) => {
 }, [showRoleMenu]);
 
   const displayedMessages = messages;
+  // Block UI until user signs in
+if (!user) {
+  return (
+    <AuthGate onSignedIn={(u) => { saveUser(u); setUser(u); }} />
+  );
+}
 
   return (
     <div className="App">
@@ -728,6 +790,7 @@ const sendVoiceBlob = async (blob) => {
   onCancel={closeConfirm}
   onConfirm={confirmState.onConfirm || closeConfirm}
 />
+ <WelcomeBonus open={showWelcome} onClose={() => setShowWelcome(false)} amount={100} />
       
       <div className="footer">
         <input
