@@ -390,8 +390,45 @@ try {
 
 } catch (error) {
   setIsTyping(false);
-  console.error('Error calling Allie proxy:', error);
-  setMessages(prev => [...prev, { text: 'Oops! Allie is quiet right now.', sender: 'allie' }]);
+  console.error('Error calling Shraddha proxy:', error);
+
+  // --- one-shot retry for transient errors ---
+  try {
+    // rebuild the body just like in try{}
+    const formattedHistory = updatedMessages.map((msg) => ({
+      role: msg.sender === 'user' ? 'user' : 'assistant',
+      content: msg.text ?? (msg.audioUrl ? '🔊 (voice reply sent)' : '')
+    }));
+
+    const MAX_MSG = roleMode === 'roleplay' ? 18 : 24;
+    const trimmed = formattedHistory.slice(-MAX_MSG);
+
+    const now = new Date();
+    const wantVoice = askedForVoice(newMessage.text);
+    const fetchRetryBody = {
+      messages: trimmed,
+      clientTime: now.toLocaleTimeString('en-US', { hour12: false }),
+      clientDate: now.toLocaleDateString('en-GB'),
+      wantVoice,
+      session_id: sessionIdWithRole,
+      roleMode,
+      roleType: roleType || 'stranger',
+    };
+    if (shouldResetRef.current) { fetchRetryBody.reset = true; shouldResetRef.current = false; }
+    if (isOwner) fetchRetryBody.ownerKey = "unlockvinay1236";
+
+    await new Promise(r => setTimeout(r, 1200));
+    const retryResp = await fetch(`${BACKEND_BASE}/chat`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(fetchRetryBody)
+    });
+    const data = await retryResp.json();
+    const reply = data.reply || "Hmm… thoda slow tha. Ab batao?";
+    setMessages(prev => [...prev, { text: reply, sender: 'allie', time: currentTime }]);
+  } catch {
+    setMessages(prev => [...prev, { text: 'Oops! Shraddha is quiet right now.', sender: 'allie' }]);
+  }
 }
   };
 
