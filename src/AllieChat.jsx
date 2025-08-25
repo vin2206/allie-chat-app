@@ -2,6 +2,22 @@ import React, { useState, useEffect, useRef } from 'react';
 import './ChatUI.css';
 // --- backend base ---
 const BACKEND_BASE = 'https://allie-chat-proxy-production.up.railway.app';
+// === Coins config (Option A agreed) ===
+const TEXT_COST = 10;
+const VOICE_COST = 18; // keep 18; change to 15 only if you insist
+const DAILY_PACK = { id: 'daily',  label: 'Daily Pack',  price: 49,  coins: 420 };
+const WEEKLY_PACK= { id: 'weekly', label: 'Weekly Pack', price: 199, coins: 2000 };
+
+// localStorage helpers
+const COIN_KEY = 'coins_v1';
+const AUTORENEW_KEY = 'autorenew_v1'; // {daily:bool, weekly:bool}
+const loadCoins = () => Number(localStorage.getItem(COIN_KEY) || 0);
+const saveCoins = (n) => localStorage.setItem(COIN_KEY, String(Math.max(0, n|0)));
+const loadAuto = () => {
+  try { return JSON.parse(localStorage.getItem(AUTORENEW_KEY)) || { daily:false, weekly:false }; }
+  catch { return { daily:false, weekly:false }; }
+};
+const saveAuto = (obj) => localStorage.setItem(AUTORENEW_KEY, JSON.stringify(obj));
 // -------- Minimal custom confirm dialog (no browser URL) ----------
 function ConfirmDialog({ open, title, message, onCancel, onConfirm }) {
   if (!open) return null;
@@ -46,9 +62,22 @@ useEffect(() => {
     .then(d => setRoleplayNeedsPremium(!!d.roleplayNeedsPremium))
     .catch(() => setRoleplayNeedsPremium(false));
 }, []);
-  const [showModal, setShowModal] = useState(false);
   const [isOwner, setIsOwner] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
+  // Coins + modal state
+const [coins, setCoins] = useState(loadCoins());
+const [showCoins, setShowCoins] = useState(false);
+const [autoRenew, setAutoRenew] = useState(loadAuto());
+useEffect(() => saveCoins(coins), [coins]);
+useEffect(() => saveAuto(autoRenew), [autoRenew]);
+
+const openCoins = () => setShowCoins(true);
+const closeCoins = () => setShowCoins(false);
+const addCoins = (pack) => {
+  setCoins(c => c + (pack?.coins || 0));
+  closeCoins();
+  setMessages(prev => [...prev, { text: `🪙 +${pack.coins} coins added`, sender: 'allie', time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }]);
+};
   const [cooldown, setCooldown] = useState(false);
   // --- Roleplay wiring (Step 1) ---
 const [roleMode, setRoleMode] = useState('stranger');
@@ -211,8 +240,16 @@ const stopRecording = () => {
 };
 
 // Upload the voice to backend as multipart/form-data
+// Upload the voice to backend as multipart/form-data
 const sendVoiceBlob = async (blob) => {
   if (isTyping || cooldown) return;
+
+  // Coins gate for VOICE
+  if (!isOwner && coins < VOICE_COST) {
+    openCoins();
+    return;
+  }
+
   // local preview of what the user sent
   setMessages(prev => ([
     ...prev,
@@ -242,22 +279,19 @@ const sendVoiceBlob = async (blob) => {
     fd.append('roleType', roleType || 'stranger');
     if (shouldResetRef.current) { fd.append('reset', 'true'); shouldResetRef.current = false; }
 
-    const resp = await fetch(`${BACKEND_BASE}/chat`, {
-  method: 'POST',
-  body: fd
-});
-
+    const resp = await fetch(`${BACKEND_BASE}/chat`, { method: 'POST', body: fd });
     const data = await resp.json();
     setIsTyping(false);
+
     if (data.locked) {
-  setMessages(prev => [...prev, {
-    text: data.reply || 'Locked. Upgrade to continue.',
-    sender: 'allie',
-    time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-  }]);
-  setShowModal(true);
-  return;
-}
+      setMessages(prev => [...prev, {
+        text: data.reply || 'Locked. Get coins to continue.',
+        sender: 'allie',
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      }]);
+      openCoins();
+      return;
+    }
 
     if (data.audioUrl) {
       const fullUrl = data.audioUrl.startsWith('http')
@@ -267,12 +301,14 @@ const sendVoiceBlob = async (blob) => {
         audioUrl: fullUrl, sender: 'allie',
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       }]);
+      if (!isOwner) setCoins(c => Math.max(0, c - VOICE_COST));
     } else {
       setMessages(prev => [...prev, {
         text: data.reply || "Hmm… Shraddha didn’t respond.",
         sender: 'allie',
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       }]);
+      if (!isOwner) setCoins(c => Math.max(0, c - TEXT_COST));
     }
   } catch (e) {
     console.error('Voice upload failed:', e);
@@ -285,31 +321,55 @@ const sendVoiceBlob = async (blob) => {
   }
 };
   const handleSend = async () => {
-    if (inputValue.trim() === '' || isPaused || isTyping || cooldown) return;
-    // Quick commands
-if (inputValue.trim().toLowerCase() === '#stranger') {
-  applyRoleChange('stranger', null);
-  setInputValue('');
-  return;
-}
-if (inputValue.trim().toLowerCase() === '#reset') {
-  shouldResetRef.current = true;
-  setMessages([{ text: 'Hi… kaise ho aap? ☺️', sender: 'allie' }]);
-  setInputValue('');
-  return;
-}
+  if (inputValue.trim() === '' || isPaused || isTyping || cooldown) return;
 
-    // --- OWNER UNLOCK COMMAND ---
-    if (inputValue.trim() === '#unlockvinay1236') {
-      setIsOwner(true);
-      setInputValue('');
-      setMessages(prev => [
-        ...prev,
-        { text: "✅ Owner mode unlocked! Unlimited chat enabled.", sender: 'allie', time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }
-      ]);
-      return; // Stop here, do NOT send this message to backend
+  // Quick commands
+  if (inputValue.trim().toLowerCase() === '#stranger') {
+    applyRoleChange('stranger', null);
+    setInputValue('');
+    return;
+  }
+  if (inputValue.trim().toLowerCase() === '#reset') {
+    shouldResetRef.current = true;
+    setMessages([{ text: 'Hi… kaise ho aap? ☺️', sender: 'allie' }]);
+    setInputValue('');
+    return;
+  }
+  // Owner unlock
+  if (inputValue.trim() === '#unlockvinay1236') {
+    setIsOwner(true);
+    setInputValue('');
+    setMessages(prev => [
+      ...prev,
+      { text: "✅ Owner mode unlocked! Unlimited chat enabled.", sender: 'allie', time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }
+    ]);
+    return;
+  }
+
+  // Decide cost before sending
+  const wantVoiceNow = askedForVoice(inputValue);
+  if (!isOwner) {
+    if (wantVoiceNow) {
+      if (coins < VOICE_COST) {
+        if (coins >= TEXT_COST) {
+          openConfirm(
+            `Not enough coins for voice`,
+            `Voice needs ${VOICE_COST} coins, you have ${coins}. Send as text for ${TEXT_COST} coins instead?`,
+            async () => { await actuallySend(false); }
+          );
+        } else {
+          openCoins();
+        }
+        return;
+      }
+    } else {
+      if (coins < TEXT_COST) { openCoins(); return; }
     }
+  }
 
+  await actuallySend(wantVoiceNow);
+
+  async function actuallySend(wantVoice) {
     const currentTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     const newMessage = { text: inputValue, sender: 'user', time: currentTime, seen: false };
     const updatedMessages = [...messages, newMessage];
@@ -317,121 +377,120 @@ if (inputValue.trim().toLowerCase() === '#reset') {
     setInputValue('');
     setIsTyping(true);
 
-    // start fetch immediately; enforce a minimum 2.5s typing time
-const startedAt = Date.now();
-try {
-  const formattedHistory = updatedMessages.map((msg) => ({
-    role: msg.sender === 'user' ? 'user' : 'assistant',
-    content: msg.text ?? (msg.audioUrl ? '🔊 (voice reply sent)' : '')
-  }));
+    const startedAt = Date.now();
+    try {
+      const formattedHistory = updatedMessages.map((msg) => ({
+        role: msg.sender === 'user' ? 'user' : 'assistant',
+        content: msg.text ?? (msg.audioUrl ? '🔊 (voice reply sent)' : '')
+      }));
 
-  const MAX_MSG = roleMode === 'roleplay' ? 18 : 24;
-  const trimmed = formattedHistory.slice(-MAX_MSG);
+      const MAX_MSG = roleMode === 'roleplay' ? 18 : 24;
+      const trimmed = formattedHistory.slice(-MAX_MSG);
 
-  const now = new Date();
-  const wantVoice = askedForVoice(newMessage.text);
-  const fetchBody = {
-    messages: trimmed,
-    clientTime: now.toLocaleTimeString('en-US', { hour12: false }),
-    clientDate: now.toLocaleDateString('en-GB'),
-    wantVoice,
-    session_id: sessionIdWithRole,
-    roleMode,
-    roleType: roleType || 'stranger',
-  };
-  if (shouldResetRef.current) { fetchBody.reset = true; shouldResetRef.current = false; }
-  if (isOwner) fetchBody.ownerKey = "unlockvinay1236";
+      const now = new Date();
+      const fetchBody = {
+        messages: trimmed,
+        clientTime: now.toLocaleTimeString('en-US', { hour12: false }),
+        clientDate: now.toLocaleDateString('en-GB'),
+        wantVoice: !!wantVoice,
+        session_id: sessionIdWithRole,
+        roleMode,
+        roleType: roleType || 'stranger',
+      };
+      if (shouldResetRef.current) { fetchBody.reset = true; shouldResetRef.current = false; }
+      if (isOwner) fetchBody.ownerKey = "unlockvinay1236";
 
-  setCooldown(true);
-  setTimeout(() => setCooldown(false), 3000);
+      setCooldown(true);
+      setTimeout(() => setCooldown(false), 3000);
 
-  const response = await fetch(`${BACKEND_BASE}/chat`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(fetchBody)
-  });
-  const data = await response.json();
+      const response = await fetch(`${BACKEND_BASE}/chat`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(fetchBody)
+      });
+      const data = await response.json();
 
-  // enforce minimum 2.5s typing display
-  const elapsed = Date.now() - startedAt;
-  const waitMore = Math.max(0, 2500 - elapsed);
-  setTimeout(() => {
-    setIsTyping(false);
-
-    if (data.audioUrl) {
-      const fullUrl = data.audioUrl.startsWith('http') ? data.audioUrl : `${BACKEND_BASE}${data.audioUrl}`;
-      setMessages(prev => [...prev, { audioUrl: fullUrl, sender: 'allie', time: currentTime }]);
-      return;
-    }
-
-    if (data.locked) {
-      setMessages(prev => [...prev, { text: data.reply, sender: 'allie', time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }]);
-      setTimeout(() => setShowModal(true), 500);
-      return;
-    }
-
-    if (data.pause) {
-      setIsPaused(true);
-      setMessages(prev => [...prev, { text: data.reply, sender: 'allie', time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }]);
+      const elapsed = Date.now() - startedAt;
+      const waitMore = Math.max(0, 2500 - elapsed);
       setTimeout(() => {
-        setIsPaused(false);
-        setMessages(prev => [...prev, { text: 'Hi… wapas aa gayi hoon 😳 tum miss kar rahe the na?', sender: 'allie', time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }]);
-      }, 5 * 60 * 1000);
-      return;
+        setIsTyping(false);
+
+        if (data.audioUrl) {
+          const fullUrl = data.audioUrl.startsWith('http') ? data.audioUrl : `${BACKEND_BASE}${data.audioUrl}`;
+          setMessages(prev => [...prev, { audioUrl: fullUrl, sender: 'allie', time: currentTime }]);
+          if (!isOwner) setCoins(c => Math.max(0, c - VOICE_COST));
+          return;
+        }
+
+        if (data.locked) {
+          setMessages(prev => [...prev, { text: data.reply, sender: 'allie', time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }]);
+          setTimeout(() => openCoins(), 400);
+          return;
+        }
+
+        if (data.pause) {
+          setIsPaused(true);
+          setMessages(prev => [...prev, { text: data.reply, sender: 'allie', time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }]);
+          setTimeout(() => {
+            setIsPaused(false);
+            setMessages(prev => [...prev, { text: 'Hi… wapas aa gayi hoon 😳 tum miss kar rahe the na?', sender: 'allie', time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }]);
+          }, 5 * 60 * 1000);
+          return;
+        }
+
+        if (data.reset) {
+          setTimeout(() => { setMessages([{ text: 'Hi… kaise ho aap? ☺️', sender: 'allie' }]); }, 5 * 60 * 1000);
+        }
+
+        const reply = data.reply || "Hmm… Shraddha didn’t respond.";
+        setMessages(prev => [...prev, { text: reply, sender: 'allie', time: currentTime }]);
+        if (!isOwner) setCoins(c => Math.max(0, c - TEXT_COST));
+      }, waitMore);
+
+    } catch (error) {
+      setIsTyping(false);
+      console.error('Error calling Shraddha proxy:', error);
+
+      // one-shot retry (kept same)
+      try {
+        const formattedHistory = updatedMessages.map((msg) => ({
+          role: msg.sender === 'user' ? 'user' : 'assistant',
+          content: msg.text ?? (msg.audioUrl ? '🔊 (voice reply sent)' : '')
+        }));
+
+        const MAX_MSG = roleMode === 'roleplay' ? 18 : 24;
+        const trimmed = formattedHistory.slice(-MAX_MSG);
+
+        const now = new Date();
+        const fetchRetryBody = {
+          messages: trimmed,
+          clientTime: now.toLocaleTimeString('en-US', { hour12: false }),
+          clientDate: now.toLocaleDateString('en-GB'),
+          wantVoice: !!wantVoice,
+          session_id: sessionIdWithRole,
+          roleMode,
+          roleType: roleType || 'stranger',
+        };
+        if (shouldResetRef.current) { fetchRetryBody.reset = true; shouldResetRef.current = false; }
+        if (isOwner) fetchRetryBody.ownerKey = "unlockvinay1236";
+
+        await new Promise(r => setTimeout(r, 1200));
+        const retryResp = await fetch(`${BACKEND_BASE}/chat`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(fetchRetryBody)
+        });
+        const data = await retryResp.json();
+        const reply = data.reply || "Hmm… thoda slow tha. Ab batao?";
+        setMessages(prev => [...prev, { text: reply, sender: 'allie', time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }]);
+        if (!isOwner) setCoins(c => Math.max(0, c - TEXT_COST));
+      } catch {
+        setMessages(prev => [...prev, { text: 'Oops! Shraddha is quiet right now.', sender: 'allie' }]);
+      }
     }
-
-    if (data.reset) {
-      setTimeout(() => { setMessages([{ text: 'Hi… kaise ho aap? ☺️', sender: 'allie' }]); }, 5 * 60 * 1000);
-    }
-
-    const reply = data.reply || "Hmm… Shraddha didn’t respond.";
-    setMessages(prev => [...prev, { text: reply, sender: 'allie', time: currentTime }]);
-  }, waitMore);
-
-} catch (error) {
-  setIsTyping(false);
-  console.error('Error calling Shraddha proxy:', error);
-
-  // --- one-shot retry for transient errors ---
-  try {
-    // rebuild the body just like in try{}
-    const formattedHistory = updatedMessages.map((msg) => ({
-      role: msg.sender === 'user' ? 'user' : 'assistant',
-      content: msg.text ?? (msg.audioUrl ? '🔊 (voice reply sent)' : '')
-    }));
-
-    const MAX_MSG = roleMode === 'roleplay' ? 18 : 24;
-    const trimmed = formattedHistory.slice(-MAX_MSG);
-
-    const now = new Date();
-    const wantVoice = askedForVoice(newMessage.text);
-    const fetchRetryBody = {
-      messages: trimmed,
-      clientTime: now.toLocaleTimeString('en-US', { hour12: false }),
-      clientDate: now.toLocaleDateString('en-GB'),
-      wantVoice,
-      session_id: sessionIdWithRole,
-      roleMode,
-      roleType: roleType || 'stranger',
-    };
-    if (shouldResetRef.current) { fetchRetryBody.reset = true; shouldResetRef.current = false; }
-    if (isOwner) fetchRetryBody.ownerKey = "unlockvinay1236";
-
-    await new Promise(r => setTimeout(r, 1200));
-    const retryResp = await fetch(`${BACKEND_BASE}/chat`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(fetchRetryBody)
-    });
-    const data = await retryResp.json();
-    const reply = data.reply || "Hmm… thoda slow tha. Ab batao?";
-    setMessages(prev => [...prev, { text: reply, sender: 'allie', time: currentTime }]);
-  } catch {
-    setMessages(prev => [...prev, { text: 'Oops! Shraddha is quiet right now.', sender: 'allie' }]);
   }
-}
-  };
-
+};
+  
   useEffect(() => {
   if (bottomRef.current) {
     bottomRef.current.scrollIntoView({ behavior: 'smooth' });
@@ -489,6 +548,15 @@ try {
     </span>
   )}
 </div>
+          
+  <button
+    className="coin-pill"
+    onClick={openCoins}
+    title="Your balance (tap to buy coins)"
+    aria-label="Coins"
+  >
+    🪙 {coins}
+  </button>
 
   <button
     className="role-btn"
@@ -605,23 +673,43 @@ try {
         <div ref={bottomRef}></div>
       </div>
 
-      {showModal && (
-        <div className="premium-modal">
-          <div className="modal-content">
-            <h3>Shraddha wants to talk to you 😢</h3>
-            <p>Unlock to continue unlimited chat and hear her voice notes ❤️</p>
-            <button onClick={() => { setShowModal(false); window.alert("Weekly Unlock Coming Soon!"); }}>
-              Weekly Unlimited – ₹199
-            </button>
-            <button onClick={() => { setShowModal(false); window.alert("Daily Top-Up Coming Soon!"); }}>
-              Daily Top-Up – ₹52
-            </button>
-            <button onClick={() => setShowModal(false)} className="cancel-btn">
-              Maybe Later
-            </button>
-          </div>
-        </div>
-      )}
+      {showCoins && (
+  <div className="premium-modal" onClick={closeCoins}>
+    <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+      <h3>Need more time with Shraddha?</h3>
+      <p style={{marginTop:4}}>Balance: <b>{coins}</b> coins</p>
+      <p style={{fontSize:12, opacity:.8, marginTop:2}}>Text = {TEXT_COST} coins · Voice = {VOICE_COST} coins</p>
+
+      <div style={{marginTop:12, textAlign:'left'}}>
+        <button onClick={() => addCoins(DAILY_PACK)}>
+          Daily — ₹{DAILY_PACK.price} · +{DAILY_PACK.coins} coins
+        </button>
+        <label style={{display:'block', fontSize:12, marginTop:4}}>
+          <input
+            type="checkbox"
+            checked={!!autoRenew.daily}
+            onChange={() => setAutoRenew(a => ({...a, daily: !a.daily}))}
+          /> Auto-renew (via Razorpay)
+        </label>
+
+        <button onClick={() => addCoins(WEEKLY_PACK)}>
+          Weekly — ₹{WEEKLY_PACK.price} · +{WEEKLY_PACK.coins} coins
+        </button>
+        <label style={{display:'block', fontSize:12, marginTop:4}}>
+          <input
+            type="checkbox"
+            checked={!!autoRenew.weekly}
+            onChange={() => setAutoRenew(a => ({...a, weekly: !a.weekly}))}
+          /> Auto-renew (via Razorpay)
+        </label>
+      </div>
+
+      <button onClick={closeCoins} className="cancel-btn" style={{marginTop:8}}>
+        Maybe Later
+      </button>
+    </div>
+  </div>
+)}
 
       <ConfirmDialog
   open={confirmState.open}
