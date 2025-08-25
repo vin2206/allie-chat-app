@@ -166,10 +166,10 @@ const askedForVoice = (text = "") => {
 const applyRoleChange = (mode, type) => {
   // premium gate for roleplay
   if (mode === 'roleplay' && roleplayNeedsPremium && !isOwner) {
-    setShowRoleMenu(false);
-    setShowModal(true);
-    return;
-  }
+  setShowRoleMenu(false);
+  openCoins();               // ← show the new coins popup instead
+  return;
+}
 
   // set state, but DO NOT save to localStorage
   setRoleMode(mode);
