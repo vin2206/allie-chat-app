@@ -7,6 +7,7 @@ const TEXT_COST = 10;
 const VOICE_COST = 18; // keep 18; change to 15 only if you insist
 const DAILY_PACK = { id: 'daily',  label: 'Daily Pack',  price: 49,  coins: 420 };
 const WEEKLY_PACK= { id: 'weekly', label: 'Weekly Pack', price: 199, coins: 2000 };
+const OWNER_EMAIL = 'vinayvedic23@gmail.com';
 
 // localStorage helpers
 const COIN_KEY = 'coins_v1';
@@ -135,6 +136,11 @@ useEffect(() => {
     localStorage.setItem(wk, '1');
     setShowWelcome(true);
   }
+}, [user]);
+  // Auto-unlock Owner mode if signed-in email matches
+useEffect(() => {
+  if (!user) return;
+  setIsOwner((user.email || '').toLowerCase() === OWNER_EMAIL);
 }, [user]);
 
 const openCoins = () => setShowCoins(true);
@@ -612,13 +618,13 @@ if (!user) {
 </div>
           
   <button
-    className="coin-pill"
-    onClick={openCoins}
-    title="Your balance (tap to buy coins)"
-    aria-label="Coins"
-  >
-    🪙 {coins}
-  </button>
+  className="coin-pill"
+  onClick={isOwner ? () => {} : openCoins}
+  title={isOwner ? "Owner: unlimited" : "Your balance (tap to buy coins)"}
+  aria-label="Coins"
+>
+  🪙 {isOwner ? '∞' : coins}
+</button>
 
   <button
     className="role-btn"
