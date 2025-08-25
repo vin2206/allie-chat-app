@@ -676,35 +676,45 @@ const sendVoiceBlob = async (blob) => {
       {showCoins && (
   <div className="premium-modal" onClick={closeCoins}>
     <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-      <h3>Need more time with Shraddha?</h3>
+
+      <h3 className="coins-modal-title">Need more time with Shraddha?</h3>
+      <div className="coins-sub">Unlock roleplay models — Wife · Girlfriend · Bhabhi · Cousin</div>
+
       <p style={{marginTop:4}}>Balance: <b>{coins}</b> coins</p>
-      <p style={{fontSize:12, opacity:.8, marginTop:2}}>Text = {TEXT_COST} coins · Voice = {VOICE_COST} coins</p>
 
-      <div style={{marginTop:12, textAlign:'left'}}>
-        <button onClick={() => addCoins(DAILY_PACK)}>
-          Daily — ₹{DAILY_PACK.price} · +{DAILY_PACK.coins} coins
-        </button>
-        <label style={{display:'block', fontSize:12, marginTop:4}}>
-          <input
-            type="checkbox"
-            checked={!!autoRenew.daily}
-            onChange={() => setAutoRenew(a => ({...a, daily: !a.daily}))}
-          /> Auto-renew (via Razorpay)
-        </label>
-
-        <button onClick={() => addCoins(WEEKLY_PACK)}>
-          Weekly — ₹{WEEKLY_PACK.price} · +{WEEKLY_PACK.coins} coins
-        </button>
-        <label style={{display:'block', fontSize:12, marginTop:4}}>
-          <input
-            type="checkbox"
-            checked={!!autoRenew.weekly}
-            onChange={() => setAutoRenew(a => ({...a, weekly: !a.weekly}))}
-          /> Auto-renew (via Razorpay)
-        </label>
+      <div className="rate-chips">
+        <div className="rate-chip">Text = {TEXT_COST} coins</div>
+        <div className="rate-chip">Voice = {VOICE_COST} coins</div>
       </div>
 
-      <button onClick={closeCoins} className="cancel-btn" style={{marginTop:8}}>
+      <div className="packs">
+        <button className="pack-btn" onClick={() => addCoins(DAILY_PACK)}>
+          <div className="pack-left">
+            <div className="pack-title">Daily Recharge</div>
+            <div className="pack-sub">+{DAILY_PACK.coins} coins</div>
+          </div>
+          <div className="pack-right">
+            <div className="price">₹{DAILY_PACK.price}</div>
+          </div>
+        </button>
+
+        <button className="pack-btn secondary" onClick={() => addCoins(WEEKLY_PACK)}>
+          <div className="pack-left">
+            <div className="pack-title">Weekly Recharge</div>
+            <div className="pack-sub">+{WEEKLY_PACK.coins} coins</div>
+          </div>
+          <div className="pack-right">
+            <span className="best-tag">Best value</span>
+            <div className="price">₹{WEEKLY_PACK.price}</div>
+          </div>
+        </button>
+      </div>
+
+      <div className="renew-note">
+        Auto-renews daily/weekly via Razorpay. Cancel anytime from your account.
+      </div>
+
+      <button onClick={closeCoins} className="cancel-btn" style={{marginTop:12}}>
         Maybe Later
       </button>
     </div>
