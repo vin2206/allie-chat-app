@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './ChatUI.css';
 // --- Google Sign-In (GIS) ---
-const GOOGLE_CLIENT_ID = '962465973550-2lhard334t8kvjpdhh60catlb1k6fpb6.apps.googleusercontent.com.apps.googleusercontent.com';
+const GOOGLE_CLIENT_ID = '962465973550-2lhard334t8kvjpdhh60catlb1k6fpb6.apps.googleusercontent.com';
 const parseJwt = (t) => JSON.parse(atob(t.split('.')[1]));
 // --- backend base ---
 const BACKEND_BASE = 'https://allie-chat-proxy-production.up.railway.app';
@@ -82,7 +82,7 @@ function AuthGate({ onSignedIn }) {
   return (
     <div className="auth-backdrop">
       <div className="auth-card">
-        <div className="auth-title">Welcome 👋</div>
+        <div className="auth-title">Welcome</div>
         <div className="auth-sub">Sign in to continue chatting with Shraddha</div>
 
         {/* Google Sign-In button renders here */}
@@ -118,7 +118,6 @@ function AuthGate({ onSignedIn }) {
           Continue
         </button>
 
-        <div className="auth-foot">We’ll never spam you.</div>
       </div>
     </div>
   );
