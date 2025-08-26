@@ -47,14 +47,11 @@ function ConfirmDialog({ open, title, message, onCancel, onConfirm }) {
     </div>
   );
 }
-/* ---------- Sign-in: Google button + email fallback ---------- */
+/* ---------- Sign-in: Google only (centered) ---------- */
 function AuthGate({ onSignedIn }) {
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-
-  // Render “Continue with Google” button
   useEffect(() => {
     if (!window.google) return;
+
     window.google.accounts.id.initialize({
       client_id: GOOGLE_CLIENT_ID,
       callback: (res) => {
@@ -63,7 +60,7 @@ function AuthGate({ onSignedIn }) {
           onSignedIn({
             name: p.name || '',
             email: (p.email || '').toLowerCase(),
-            sub: p.sub,                 // unique Google user ID (prevents multi-claims)
+            sub: p.sub,
             picture: p.picture || ''
           });
         } catch (e) {
@@ -71,13 +68,13 @@ function AuthGate({ onSignedIn }) {
         }
       },
     });
+
+    // Render the Google button
     window.google.accounts.id.renderButton(
       document.getElementById('googleSignIn'),
       { theme: 'outline', size: 'large', text: 'continue_with', shape: 'pill' }
     );
   }, [onSignedIn]);
-
-  const ok = /\S+@\S+\.\S+/.test(email) && name.trim().length >= 2;
 
   return (
     <div className="auth-backdrop">
@@ -85,39 +82,10 @@ function AuthGate({ onSignedIn }) {
         <div className="auth-title">Welcome</div>
         <div className="auth-sub">Sign in to continue chatting with Shraddha</div>
 
-        {/* Google Sign-In button renders here */}
-        <div id="googleSignIn" style={{ marginBottom: 12 }} />
-
-        <div style={{ opacity: .6, fontSize: 12, margin: '8px 0' }}>or use email</div>
-
-        <input
-          className="auth-input"
-          placeholder="Your name"
-          autoComplete="name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-        />
-        <input
-          className="auth-input"
-          placeholder="Email address"
-          type="email"
-          autoComplete="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-        />
-
-        <button
-          className="auth-btn"
-          disabled={!ok}
-          onClick={() => onSignedIn({
-            name: name.trim(),
-            email: email.trim().toLowerCase(),
-            sub: null
-          })}
-        >
-          Continue
-        </button>
-
+        {/* centered wrapper for the Google button */}
+        <div className="google-row">
+          <div id="googleSignIn" />
+        </div>
       </div>
     </div>
   );
