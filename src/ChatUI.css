@@ -572,3 +572,10 @@ backdrop-filter: blur(10px);
 }
 .welcome-note{ margin-top:8px; font-size:12px; color:#777; }
 @keyframes burst { 0%{ transform: scale(.6); opacity:.3 } 60%{ transform:scale(1.08); opacity:1 } 100%{ transform:scale(1) } }
+
+/* Center the Google Sign-In button */
+.google-row {
+  display: flex;
+  justify-content: center;
+  margin-top: 10px;
+}
