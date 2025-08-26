@@ -126,20 +126,7 @@ if (el && host) {
         <div className="auth-sub">Sign in to chat with a Realistic AI Girlfriend</div>
 
         <div className="google-row">
-  <div className="gbtn-wrap" id="gbtn">
-    {/* Fake button shown instantly to avoid any visual change */}
-    <div className="gis-fake" aria-hidden="true">
-      {/* Minimal Google "G" (brand-safe) */}
-      <svg className="g" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg">
-        <path fill="#EA4335" d="M9 3.48a5.52 5.52 0 013.9 1.52l2.6-2.6A9 9 0 009 0 9 9 0 000 9l3.3-2.56A5.52 5.52 0 019 3.48z"/>
-        <path fill="#4285F4" d="M17.64 9.2c0-.6-.06-1.2-.18-1.76H9v3.34h4.84a4.14 4.14 0 01-1.78 2.72l2.72 2.1C16.86 13.9 17.64 11.72 17.64 9.2z"/>
-        <path fill="#FBBC05" d="M3.3 10.44A5.4 5.4 0 013 9c0-.5.08-1 .22-1.44L0 5 0 5A9 9 0 000 9c0 1.42.34 2.76.94 3.94l2.36-2.5z"/>
-        <path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.72-2.1A5.5 5.5 0 019 12.52a5.52 5.52 0 01-5.7-4.08L0 12.94A9 9 0 009 18z"/>
-      </svg>
-      Continue with Google
-    </div>
-
-    {/* Real GIS mounts here */}
+  <div className="gbtn-wrap">
     <div id="googleSignIn" />
   </div>
 </div>
