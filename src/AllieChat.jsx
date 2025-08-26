@@ -79,10 +79,10 @@ function AuthGate({ onSignedIn }) {
   return (
     <div className="auth-backdrop">
       <div className="auth-card">
-        <div className="auth-title">Welcome</div>
-        <div className="auth-sub">Sign in to continue chatting with Shraddha</div>
+        <img className="auth-logo" src="/shraddha-logo.png" alt="Shraddha — AI Girlfriend" />
 
-        {/* centered wrapper for the Google button */}
+        <div className="auth-sub">Sign in to chat with a Realistic AI Girlfriend</div>
+
         <div className="google-row">
           <div id="googleSignIn" />
         </div>
