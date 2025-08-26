@@ -615,17 +615,22 @@ backdrop-filter: blur(10px);
   justify-content: center;
   margin-top: 10px;
 }
-/* Reserve stable space so there is zero layout shift while GIS loads */
+/* Reserve space + hide until GIS paints */
 .gbtn-wrap {
   width: min(320px, 82vw);
-  height: 44px;              /* matches "large" GIS button height */
+  height: 44px;                 /* matches "large" GIS button */
   display: flex;
   align-items: center;
   justify-content: center;
+  visibility: hidden;           /* <- start hidden to avoid flash */
+}
+
+.gbtn-wrap.ready {              /* shown after GIS finishes */
+  visibility: visible;
 }
 
 #googleSignIn {
-  width: 100%;               /* let GIS use the reserved width */
+  width: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
