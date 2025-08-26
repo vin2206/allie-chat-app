@@ -530,16 +530,33 @@ backdrop-filter: blur(10px);
 }
 /* --- Auth gate --- */
 .auth-backdrop{
-  position: fixed; inset: 0; display:flex; align-items:center; justify-content:center;
-  background: radial-gradient(1200px 600px at 50% -10%, rgba(255,255,255,.65), rgba(0,0,0,.35));
-  z-index: 10000; backdrop-filter: blur(3px);
+  position: fixed; inset: 0;
+  display:flex; align-items:center; justify-content:center;
+  /* Lighter pastel background just for the sign-in overlay */
+  background:
+    linear-gradient(180deg, #ffeaf5 0%, #f6dcff 45%, #ece8ff 100%),
+    radial-gradient(600px 300px at 50% 0%, rgba(255,255,255,.55), rgba(0,0,0,.12));
+  backdrop-filter: blur(3px);
+  z-index: 10000;
 }
 .auth-card{
-  width:min(92vw,440px); background:#fff; color:#222; border-radius:18px;
-  padding:20px; box-shadow:0 26px 60px rgba(0,0,0,.32); text-align:center; animation:pop .18s ease-out;
+  width: min(92vw, 380px);
+  background:#fff; color:#222; border-radius:18px;
+  padding:22px;
+  box-shadow:0 26px 60px rgba(0,0,0,.24);
+  text-align:center;
+  display:flex; flex-direction:column; align-items:center; gap:10px;
 }
+
+.auth-logo{
+  width: 180px; height: auto;
+  display:block; margin: 2px auto 4px;
+}
+
+.auth-sub{ font-size:13px; color:#666; margin: 0 0 8px; }
+
+.google-row{ display:flex; justify-content:center; width:100%; }
 .auth-title{ font-size:22px; font-weight:900; margin-bottom:4px; color:#ff0a85; }
-.auth-sub{ font-size:13px; color:#666; margin-bottom:14px; }
 .auth-input{
   width:100%; padding:12px 14px; border-radius:12px; border:1px solid #eee; outline:none;
   margin:6px 0; font-size:14px; background:#fafafa;
