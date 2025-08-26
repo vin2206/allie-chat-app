@@ -126,13 +126,13 @@ function AllieChat() {
   const bottomRef = useRef(null);
   const [isPaused, setIsPaused] = useState(false);
   // Does roleplay require premium? (server-controlled)
-const [roleplayNeedsPremium, setRoleplayNeedsPremium] = useState(false);
+const [roleplayNeedsPremium, setRoleplayNeedsPremium] = useState(true);
 
 useEffect(() => {
   fetch(`${BACKEND_BASE}/config`)
     .then(r => r.json())
     .then(d => setRoleplayNeedsPremium(!!d.roleplayNeedsPremium))
-    .catch(() => setRoleplayNeedsPremium(false));
+    .catch(() => {}); // keep safe default = true
 }, []);
   const [isOwner, setIsOwner] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
@@ -361,9 +361,9 @@ const sendVoiceBlob = async (blob) => {
     const trimmed = formattedHistory.slice(-MAX_MSG);
 
     const fd = new FormData();
-    if (isOwner) fd.append('ownerKey', 'unlockvinay1236');
     fd.append('audio', blob, 'note.webm');
     fd.append('messages', JSON.stringify(trimmed));
+    fd.append('userEmail', (user?.email || '').toLowerCase());
     fd.append('clientTime', new Date().toLocaleTimeString('en-US', { hour12: false }));
     fd.append('clientDate', today());
     fd.append('session_id', sessionIdWithRole);
@@ -474,13 +474,13 @@ const sendVoiceBlob = async (blob) => {
         messages: trimmed,
         clientTime: now.toLocaleTimeString('en-US', { hour12: false }),
         clientDate: now.toLocaleDateString('en-GB'),
+        userEmail: (user?.email || '').toLowerCase(),
         wantVoice: !!wantVoice,
         session_id: sessionIdWithRole,
         roleMode,
         roleType: roleType || 'stranger',
       };
       if (shouldResetRef.current) { fetchBody.reset = true; shouldResetRef.current = false; }
-      if (isOwner) fetchBody.ownerKey = "unlockvinay1236";
 
       setCooldown(true);
       setTimeout(() => setCooldown(false), 3000);
@@ -545,16 +545,17 @@ const sendVoiceBlob = async (blob) => {
 
         const now = new Date();
         const fetchRetryBody = {
-          messages: trimmed,
-          clientTime: now.toLocaleTimeString('en-US', { hour12: false }),
-          clientDate: now.toLocaleDateString('en-GB'),
-          wantVoice: !!wantVoice,
-          session_id: sessionIdWithRole,
-          roleMode,
-          roleType: roleType || 'stranger',
-        };
-        if (shouldResetRef.current) { fetchRetryBody.reset = true; shouldResetRef.current = false; }
-        if (isOwner) fetchRetryBody.ownerKey = "unlockvinay1236";
+  messages: trimmed,
+  clientTime: now.toLocaleTimeString('en-US', { hour12: false }),
+  clientDate: now.toLocaleDateString('en-GB'),
+  userEmail: (user?.email || '').toLowerCase(),  // ← add this
+  wantVoice: !!wantVoice,
+  session_id: sessionIdWithRole,
+  roleMode,
+  roleType: roleType || 'stranger',
+};
+if (shouldResetRef.current) { fetchRetryBody.reset = true; shouldResetRef.current = false; }
+// (removed legacy ownerKey line)
 
         await new Promise(r => setTimeout(r, 1200));
         const retryResp = await fetch(`${BACKEND_BASE}/chat`, {
