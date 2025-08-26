@@ -50,31 +50,56 @@ function ConfirmDialog({ open, title, message, onCancel, onConfirm }) {
 /* ---------- Sign-in: Google only (centered) ---------- */
 function AuthGate({ onSignedIn }) {
   useEffect(() => {
-    if (!window.google) return;
+  let cancelled = false;
 
-    window.google.accounts.id.initialize({
-      client_id: GOOGLE_CLIENT_ID,
-      callback: (res) => {
-        try {
-          const p = parseJwt(res.credential);
-          onSignedIn({
-            name: p.name || '',
-            email: (p.email || '').toLowerCase(),
-            sub: p.sub,
-            picture: p.picture || ''
-          });
-        } catch (e) {
-          console.error('GIS parse failed', e);
-        }
-      },
+  const ensureScript = () =>
+    new Promise((resolve, reject) => {
+      if (window.google?.accounts?.id) return resolve();
+      const existing = document.querySelector('script[src="https://accounts.google.com/gsi/client"]');
+      if (existing) {
+        existing.addEventListener('load', () => resolve());
+        existing.addEventListener('error', reject);
+        return;
+      }
+      const s = document.createElement('script');
+      s.src = 'https://accounts.google.com/gsi/client';
+      s.async = true;
+      s.defer = true;
+      s.onload = () => resolve();
+      s.onerror = reject;
+      document.head.appendChild(s);
     });
 
-    // Render the Google button
-    window.google.accounts.id.renderButton(
-      document.getElementById('googleSignIn'),
-      { theme: 'outline', size: 'large', text: 'continue_with', shape: 'pill' }
-    );
-  }, [onSignedIn]);
+  ensureScript()
+    .then(() => {
+      if (cancelled) return;
+      window.google.accounts.id.initialize({
+        client_id: GOOGLE_CLIENT_ID,
+        callback: (res) => {
+          try {
+            const p = parseJwt(res.credential);
+            onSignedIn({
+              name: p.name || '',
+              email: (p.email || '').toLowerCase(),
+              sub: p.sub,
+              picture: p.picture || ''
+            });
+          } catch (e) {
+            console.error('GIS parse failed', e);
+          }
+        },
+      });
+      const el = document.getElementById('googleSignIn');
+      if (el) {
+        window.google.accounts.id.renderButton(el, {
+          theme: 'outline', size: 'large', text: 'continue_with', shape: 'pill'
+        });
+      }
+    })
+    .catch((e) => console.error('GIS load failed:', e));
+
+  return () => { cancelled = true; };
+}, [onSignedIn]);
 
   return (
     <div className="auth-backdrop">
@@ -609,7 +634,7 @@ if (!user) {
 }
 
   return (
-    <div className="App">
+    <div className={`App ${user ? 'signed-in' : 'auth'}`}>
       <div className="header">
         <div className="profile-pic">
           <img
