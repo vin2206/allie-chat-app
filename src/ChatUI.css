@@ -574,7 +574,6 @@ backdrop-filter: blur(10px);
 
 .auth-sub{ font-size:13px; color:#666; margin: 0 0 8px; }
 
-.google-row{ display:flex; justify-content:center; width:100%; }
 .auth-title{ font-size:22px; font-weight:900; margin-bottom:4px; color:#ff0a85; }
 .auth-input{
   width:100%; padding:12px 14px; border-radius:12px; border:1px solid #eee; outline:none;
