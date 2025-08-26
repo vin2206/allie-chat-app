@@ -1,5 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './ChatUI.css';
+// --- Google Sign-In (GIS) ---
+const GOOGLE_CLIENT_ID = '962465973550-2lhard334t8kvjpdhh60catlb1k6fpb6.apps.googleusercontent.com.apps.googleusercontent.com';
+const parseJwt = (t) => JSON.parse(atob(t.split('.')[1]));
 // --- backend base ---
 const BACKEND_BASE = 'https://allie-chat-proxy-production.up.railway.app';
 // === Coins config (Option A agreed) ===
@@ -14,7 +17,7 @@ const COIN_KEY = 'coins_v1';
 const AUTORENEW_KEY = 'autorenew_v1'; // {daily:bool, weekly:bool}
 // --- NEW: lightweight auth (local only) ---
 const USER_KEY = 'user_v1';
-const welcomeKeyFor = (email) => `welcome_${email}_v1`;
+const welcomeKeyFor = (id) => `welcome_${id}_v1`; // id = sub (preferred) or email
 
 const loadUser = () => {
   try { return JSON.parse(localStorage.getItem(USER_KEY)); }
@@ -44,10 +47,36 @@ function ConfirmDialog({ open, title, message, onCancel, onConfirm }) {
     </div>
   );
 }
-/* ---------- NEW: email sign-in card ---------- */
+/* ---------- Sign-in: Google button + email fallback ---------- */
 function AuthGate({ onSignedIn }) {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
+
+  // Render “Continue with Google” button
+  useEffect(() => {
+    if (!window.google) return;
+    window.google.accounts.id.initialize({
+      client_id: GOOGLE_CLIENT_ID,
+      callback: (res) => {
+        try {
+          const p = parseJwt(res.credential);
+          onSignedIn({
+            name: p.name || '',
+            email: (p.email || '').toLowerCase(),
+            sub: p.sub,                 // unique Google user ID (prevents multi-claims)
+            picture: p.picture || ''
+          });
+        } catch (e) {
+          console.error('GIS parse failed', e);
+        }
+      },
+    });
+    window.google.accounts.id.renderButton(
+      document.getElementById('googleSignIn'),
+      { theme: 'outline', size: 'large', text: 'continue_with', shape: 'pill' }
+    );
+  }, [onSignedIn]);
+
   const ok = /\S+@\S+\.\S+/.test(email) && name.trim().length >= 2;
 
   return (
@@ -56,13 +85,36 @@ function AuthGate({ onSignedIn }) {
         <div className="auth-title">Welcome 👋</div>
         <div className="auth-sub">Sign in to continue chatting with Shraddha</div>
 
-        <input className="auth-input" placeholder="Your name" autoComplete="name"
-              value={name} onChange={e => setName(e.target.value)} />
-        <input className="auth-input" placeholder="Email address" type="email" autoComplete="email"
-              value={email} onChange={e => setEmail(e.target.value)} />
+        {/* Google Sign-In button renders here */}
+        <div id="googleSignIn" style={{ marginBottom: 12 }} />
 
-        <button className="auth-btn" disabled={!ok}
-          onClick={() => onSignedIn({ name: name.trim(), email: email.trim().toLowerCase() })}>
+        <div style={{ opacity: .6, fontSize: 12, margin: '8px 0' }}>or use email</div>
+
+        <input
+          className="auth-input"
+          placeholder="Your name"
+          autoComplete="name"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+        />
+        <input
+          className="auth-input"
+          placeholder="Email address"
+          type="email"
+          autoComplete="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+        />
+
+        <button
+          className="auth-btn"
+          disabled={!ok}
+          onClick={() => onSignedIn({
+            name: name.trim(),
+            email: email.trim().toLowerCase(),
+            sub: null
+          })}
+        >
           Continue
         </button>
 
@@ -127,12 +179,13 @@ useEffect(() => saveAuto(autoRenew), [autoRenew]);
 const [user, setUser] = useState(loadUser());
 const [showWelcome, setShowWelcome] = useState(false);
 
-// Give +100 coins once per email on first sign-in
+// Give +100 coins once per unique id (prefer Google sub)
 useEffect(() => {
   if (!user) return;
-  const wk = welcomeKeyFor(user.email);
+  const id = user.sub || user.email;           // prefer sub, else email
+  const wk = welcomeKeyFor(id);
   if (!localStorage.getItem(wk)) {
-    setCoins(c => c + 100);              // add +100 once
+    setCoins(c => c + 100);
     localStorage.setItem(wk, '1');
     setShowWelcome(true);
   }
