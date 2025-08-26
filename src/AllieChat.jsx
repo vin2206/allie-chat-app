@@ -50,73 +50,66 @@ function ConfirmDialog({ open, title, message, onCancel, onConfirm }) {
 /* ---------- Sign-in: Google only (centered) ---------- */
 function AuthGate({ onSignedIn }) {
   useEffect(() => {
-  let cancelled = false;
+    let cancelled = false;
 
-  const ensureScript = () =>
-    new Promise((resolve, reject) => {
-      if (window.google?.accounts?.id) return resolve();
-      const existing = document.querySelector('script[src="https://accounts.google.com/gsi/client"]');
-      if (existing) {
-        existing.addEventListener('load', () => resolve());
-        existing.addEventListener('error', reject);
-        return;
-      }
-      const s = document.createElement('script');
-      s.src = 'https://accounts.google.com/gsi/client';
-      s.async = true;
-      s.defer = true;
-      s.onload = () => resolve();
-      s.onerror = reject;
-      document.head.appendChild(s);
-    });
-
-  ensureScript()
-    .then(() => {
-      if (cancelled) return;
-      window.google.accounts.id.initialize({
-        client_id: GOOGLE_CLIENT_ID,
-        callback: (res) => {
-          try {
-            const p = parseJwt(res.credential);
-            onSignedIn({
-              name: p.name || '',
-              email: (p.email || '').toLowerCase(),
-              sub: p.sub,
-              picture: p.picture || ''
-            });
-          } catch (e) {
-            console.error('GIS parse failed', e);
+    // NEW: wait until window.google.accounts.id actually exists
+    const waitForGoogle = () =>
+      new Promise((resolve, reject) => {
+        if (window.google?.accounts?.id) return resolve();
+        const start = Date.now();
+        const t = setInterval(() => {
+          if (window.google?.accounts?.id) {
+            clearInterval(t);
+            resolve();
+          } else if (Date.now() - start > 8000) {
+            clearInterval(t);
+            reject(new Error('GIS load timeout'));
           }
-        },
+        }, 50);
       });
-      const host = document.querySelector('.gbtn-wrap');
-const el = document.getElementById('googleSignIn');
 
-if (el && host) {
-  // Keep hidden until we finish rendering to avoid the “shrink → grow” flash
-  host.classList.remove('ready');     // ensure hidden
+    waitForGoogle()
+      .then(() => {
+        if (cancelled) return;
+        window.google.accounts.id.initialize({
+          client_id: GOOGLE_CLIENT_ID,
+          callback: (res) => {
+            try {
+              const p = parseJwt(res.credential);
+              onSignedIn({
+                name: p.name || '',
+                email: (p.email || '').toLowerCase(),
+                sub: p.sub,
+                picture: p.picture || ''
+              });
+            } catch (e) {
+              console.error('GIS parse failed', e);
+            }
+          },
+        });
 
-  // Wait a frame so layout is correct, then measure and render
-  requestAnimationFrame(() => {
-    const w = Math.min(320, Math.max(240, Math.floor((host.clientWidth || host.getBoundingClientRect().width) || 280)));
-    el.innerHTML = ''; // clear if re-rendered
-    window.google.accounts.id.renderButton(el, {
-      theme: 'outline',
-      size: 'large',
-      text: 'continue_with',
-      shape: 'pill',
-      width: w,                          // fixed width so no auto-resize
-    });
+        const host = document.querySelector('.gbtn-wrap');
+        const el = document.getElementById('googleSignIn');
+        if (el && host) {
+          host.classList.remove('ready'); // keep hidden
+          requestAnimationFrame(() => {
+            const w = Math.min(320, Math.max(240, Math.floor((host.clientWidth || host.getBoundingClientRect().width) || 280)));
+            el.innerHTML = '';
+            window.google.accounts.id.renderButton(el, {
+              theme: 'outline',
+              size: 'large',
+              text: 'continue_with',
+              shape: 'pill',
+              width: w,
+            });
+            requestAnimationFrame(() => host.classList.add('ready')); // reveal
+          });
+        }
+      })
+      .catch((e) => console.error('GIS load failed:', e));
 
-    // Reveal on the next frame so users only see the final button
-    requestAnimationFrame(() => host.classList.add('ready'));
-  });
-}
-    })
-    .catch((e) => console.error('GIS load failed:', e));
-
-  return () => { cancelled = true; };
-}, [onSignedIn]);
+    return () => { cancelled = true; };
+  }, [onSignedIn]);
 
   return (
     <div className="auth-backdrop">
