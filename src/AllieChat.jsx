@@ -89,12 +89,20 @@ function AuthGate({ onSignedIn }) {
           }
         },
       });
-      const el = document.getElementById('googleSignIn');
-      if (el) {
-        window.google.accounts.id.renderButton(el, {
-          theme: 'outline', size: 'large', text: 'continue_with', shape: 'pill'
-        });
-      }
+      const host = document.querySelector('.gbtn-wrap');
+const el = document.getElementById('googleSignIn');
+if (el && host) {
+  // Reserve a stable width so the button doesn’t “jump”
+  const w = Math.min(320, Math.max(240, Math.floor(host.getBoundingClientRect().width)));
+  el.innerHTML = ''; // clear if re-rendered
+  window.google.accounts.id.renderButton(el, {
+    theme: 'outline',
+    size: 'large',
+    text: 'continue_with',
+    shape: 'pill',
+    width: w,   // 👈 key line that stops the size change
+  });
+}
     })
     .catch((e) => console.error('GIS load failed:', e));
 
@@ -109,8 +117,10 @@ function AuthGate({ onSignedIn }) {
         <div className="auth-sub">Sign in to chat with a Realistic AI Girlfriend</div>
 
         <div className="google-row">
-          <div id="googleSignIn" />
-        </div>
+  <div className="gbtn-wrap">
+    <div id="googleSignIn" />
+  </div>
+</div>
       </div>
     </div>
   );
