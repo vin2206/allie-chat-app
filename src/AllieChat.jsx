@@ -709,10 +709,8 @@ if (shouldResetRef.current) { fetchRetryBody.reset = true; shouldResetRef.curren
 };
   
   useEffect(() => {
-  if (bottomRef.current) {
-    bottomRef.current.scrollIntoView({ behavior: 'smooth' });
-  }
-}, [messages, isTyping]);
+  bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+}, [messages.length, isTyping]);
 
   useEffect(() => {
   if (!showRoleMenu) return;
@@ -867,7 +865,6 @@ if (!user) {
 )}
 
       <div className="chat-container">
-        <div className="chat-spacer"></div>
         {displayedMessages.map((msg, index) => (
           <div key={index} className={`message ${msg.sender === 'user' ? 'user-message' : 'allie-message'}`}>
   <span className={`bubble-content ${msg.audioUrl ? 'has-audio' : ''}`}>
@@ -898,6 +895,7 @@ if (!user) {
     <span></span>
   </div>
 )}
+        <div className="chat-spacer"></div>
         <div ref={bottomRef}></div>
       </div>
 
