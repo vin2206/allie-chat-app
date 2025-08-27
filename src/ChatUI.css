@@ -99,15 +99,15 @@ backdrop-filter: blur(10px);
 
 /* Chat area */
 .chat-container {
+  position: relative;
   flex: 1;
-  margin-top: 80px;
-  /* use padding, not margin, so content stays above the fixed footer */
-  padding-bottom: calc(110px + env(safe-area-inset-bottom));
+  margin-top: 80px;                               /* space for fixed header */
+  padding: 12px 10px calc(140px + env(safe-area-inset-bottom)) 10px;  /* <— room above footer */
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  /* ensure scrollIntoView lands above the footer */
-  scroll-padding-bottom: calc(110px + env(safe-area-inset-bottom));
+  overscroll-behavior-y: contain;                 /* safer on mobile */
+  scroll-padding-bottom: calc(140px + env(safe-area-inset-bottom));
 }
 
 /* Message bubble layout */
