@@ -150,7 +150,7 @@ backdrop-filter: blur(10px);
 
 .user-message {
   align-self: flex-end;
-  margin-left: 24px;   /* WhatsApp's feel is 32–40px, so the bubble does not hug the edge */
+  margin-left: 18px;   /* WhatsApp's feel is 32–40px, so the bubble does not hug the edge */
   margin-right: 10px;  /* Add a bit more, usually 8–14px on mobile */
   margin-top: 3px;
   margin-bottom: 3px;
@@ -159,7 +159,7 @@ backdrop-filter: blur(10px);
 .allie-message {
   align-self: flex-start;
   margin-left: 10px;   /* WhatsApp uses 10–16px for breathing room */
-  margin-right: 24px;  /* Big gap on right so text never goes far right, matches left bubble */
+  margin-right: 18px;  /* Big gap on right so text never goes far right, matches left bubble */
   margin-top: 3px;
   margin-bottom: 3px;
 }
