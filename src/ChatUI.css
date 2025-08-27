@@ -109,6 +109,11 @@ backdrop-filter: blur(10px);
   overscroll-behavior-y: contain;                 /* safer on mobile */
   scroll-padding-bottom: calc(140px + env(safe-area-inset-bottom));
 }
+/* Reserve room so the last bubble is always above the fixed footer */
+.chat-spacer{
+  height: calc(130px + env(safe-area-inset-bottom));
+  flex: 0 0 auto;
+}
 
 /* Message bubble layout */
 .message {
