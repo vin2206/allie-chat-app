@@ -211,7 +211,8 @@ async function refreshWallet(){
   const data = await r.json();
   if (data?.ok) {
     setWallet(data.wallet);
-    setCoins(data.wallet.coins); // keep spending logic consistent
+    // Keep local welcome bonus if server wallet is still 0
+  setCoins(c => Math.max(c, Number(data.wallet.coins || 0)));
   }
 }
 
