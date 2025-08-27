@@ -109,10 +109,10 @@ backdrop-filter: blur(10px);
   overscroll-behavior-y: contain;                 /* safer on mobile */
   scroll-padding-bottom: calc(140px + env(safe-area-inset-bottom));
 }
-/* Reserve room so the last bubble is always above the fixed footer */
+/* Eats extra height so the first bubble sits above the footer */
 .chat-spacer{
-  height: calc(130px + env(safe-area-inset-bottom));
-  flex: 0 0 auto;
+  flex: 1 1 auto;                            /* grow to fill empty space */
+  min-height: calc(110px + env(safe-area-inset-bottom)); /* small floor = footer height */
 }
 
 /* Message bubble layout */
