@@ -24,7 +24,7 @@ body { background: linear-gradient(180deg, #fce7f3 0%, #ede9fe 100%); }
 
 /* Chat screen background — your original gradient + waves */
 .App.signed-in {
-  min-height: 100vh;
+  min-height: 100dvh;
   background:
     linear-gradient(to bottom, #ff99cc, #cc66cc, #9966cc),
     url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"><path fill="%23ff99cc" fill-opacity="0.3" d="M0,64L60,80C120,96,240,128,360,138.7C480,149,600,139,720,133.3C840,128,960,128,1080,117.3C1200,107,1320,85,1380,74.7L1440,64L1440,320L1380,320C1320,320,1200,320,1080,320C960,320,840,320,720,320C600,320,480,320,360,320C240,320,120,320,60,320L0,320Z"/></svg>');
@@ -97,22 +97,25 @@ backdrop-filter: blur(10px);
   box-shadow: 0 2px 6px rgba(0,0,0,.18);
 }
 
-/* Chat area */
+/* Chat area (keeps last bubble above the fixed footer, works with keyboard) */
 .chat-container {
   position: relative;
   flex: 1;
-  margin-top: 80px;                               /* space for fixed header */
-  padding: 12px 10px calc(140px + env(safe-area-inset-bottom)) 10px;  /* <— room above footer */
-  overflow-y: auto;
   display: flex;
   flex-direction: column;
-  overscroll-behavior-y: contain;                 /* safer on mobile */
-  scroll-padding-bottom: calc(140px + env(safe-area-inset-bottom));
+  min-height: 0;                       /* important inside flex parents */
+  margin-top: 80px;                    /* room for fixed header */
+  padding: 12px 10px;
+  padding-bottom: calc(96px + env(safe-area-inset-bottom)); /* ≈ footer height */
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  scroll-padding-bottom: calc(96px + env(safe-area-inset-bottom));
 }
-/* Eats extra height so the first bubble sits above the footer */
-.chat-spacer{
-  flex: 1 1 auto;                            /* grow to fill empty space */
-  min-height: calc(110px + env(safe-area-inset-bottom)); /* small floor = footer height */
+
+/* Spacer stays FLEX, not fixed height — lives at the TOP in JSX */
+.chat-spacer {
+  flex: 1 0 auto;
+  height: 0;
 }
 
 /* Message bubble layout */
@@ -309,10 +312,6 @@ backdrop-filter: blur(10px);
 .typing-bounce span {
   width: 7px;
   height: 7px;
-}
-
-.chat-spacer {
-  flex: 1 1 auto;
 }
 
 .bubble-content {
