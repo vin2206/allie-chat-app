@@ -101,10 +101,13 @@ backdrop-filter: blur(10px);
 .chat-container {
   flex: 1;
   margin-top: 80px;
-  margin-bottom: 90px;
+  /* use padding, not margin, so content stays above the fixed footer */
+  padding-bottom: calc(110px + env(safe-area-inset-bottom));
   overflow-y: auto;
   display: flex;
   flex-direction: column;
+  /* ensure scrollIntoView lands above the footer */
+  scroll-padding-bottom: calc(110px + env(safe-area-inset-bottom));
 }
 
 /* Message bubble layout */
