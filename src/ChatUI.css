@@ -106,7 +106,7 @@ backdrop-filter: blur(10px);
   min-height: 0;                       /* important inside flex parents */
   margin-top: 80px;                    /* room for fixed header */
   padding: 12px 10px;
-  padding-bottom: calc(88px + env(safe-area-inset-bottom)); /* ≈ footer height */
+  padding-bottom: calc(90px + env(safe-area-inset-bottom)); /* ≈ footer height */
   overflow-y: auto;
   overscroll-behavior-y: contain;
   scroll-padding-bottom: calc(88px + env(safe-area-inset-bottom));
@@ -150,7 +150,7 @@ backdrop-filter: blur(10px);
 
 .user-message {
   align-self: flex-end;
-  margin-left: 28px;   /* WhatsApp's feel is 32–40px, so the bubble does not hug the edge */
+  margin-left: 24px;   /* WhatsApp's feel is 32–40px, so the bubble does not hug the edge */
   margin-right: 10px;  /* Add a bit more, usually 8–14px on mobile */
   margin-top: 3px;
   margin-bottom: 3px;
@@ -159,7 +159,7 @@ backdrop-filter: blur(10px);
 .allie-message {
   align-self: flex-start;
   margin-left: 10px;   /* WhatsApp uses 10–16px for breathing room */
-  margin-right: 28px;  /* Big gap on right so text never goes far right, matches left bubble */
+  margin-right: 24px;  /* Big gap on right so text never goes far right, matches left bubble */
   margin-top: 3px;
   margin-bottom: 3px;
 }
