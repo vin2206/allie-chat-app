@@ -145,6 +145,21 @@ function WelcomeBonus({ open, onClose, amount = 100 }) {
 }
 
 function AllieChat() {
+  // NEW: auth + welcome
+const [user, setUser] = useState(loadUser());
+const [showWelcome, setShowWelcome] = useState(false);
+
+// Give +100 coins once per unique id (prefer Google sub)
+useEffect(() => {
+  if (!user) return;
+  const id = user.sub || user.email;           // prefer sub, else email
+  const wk = welcomeKeyFor(id);
+  if (!localStorage.getItem(wk)) {
+    setCoins(c => c + 100);
+    localStorage.setItem(wk, '1');
+    setShowWelcome(true);
+  }
+}, [user]);
   function getOpener(mode, type) {
   if (mode !== 'roleplay') return 'Hi… kaise ho aap? 😊';
 
@@ -175,25 +190,80 @@ useEffect(() => {
   const [isTyping, setIsTyping] = useState(false);
   // Coins + modal state
 const [coins, setCoins] = useState(loadCoins());
+  // server-driven wallet
+const [wallet, setWallet] = useState({ coins: loadCoins(), expires_at: 0 });
+const [ttl, setTtl] = useState(''); // formatted countdown
+
+function formatTTL(ms){
+  if (!ms || ms <= 0) return 'Expired';
+  const s = Math.floor(ms/1000);
+  const d = Math.floor(s/86400);
+  const h = Math.floor((s%86400)/3600);
+  const m = Math.floor((s%3600)/60);
+  return d ? `${d}d ${h}h` : `${h}h ${m}m`;
+}
+
+async function refreshWallet(){
+  if (!user) return;
+  const r = await fetch(
+  `${BACKEND_BASE}/wallet?email=${encodeURIComponent((user.email||'').toLowerCase())}&sub=${encodeURIComponent(user.sub||'')}`
+);
+  const data = await r.json();
+  if (data?.ok) {
+    setWallet(data.wallet);
+    setCoins(data.wallet.coins); // keep spending logic consistent
+  }
+}
+
+useEffect(() => { refreshWallet(); }, [user]);
+  async function maybeFinalizePayment(){
+  if (!window.location.pathname.includes('/payment/thanks')) return;
+  const qs = new URLSearchParams(window.location.search);
+  const link_id      = qs.get('razorpay_payment_link_id');
+  const payment_id   = qs.get('razorpay_payment_id');
+  const reference_id = qs.get('razorpay_payment_link_reference_id');
+  const status       = qs.get('razorpay_payment_link_status');
+  const signature    = qs.get('razorpay_signature');
+
+  if (!link_id || !payment_id || !reference_id || !status) return;
+
+  try {
+    const r = await fetch(`${BACKEND_BASE}/verify-payment-link`, {
+      method: 'POST',
+      headers: { 'Content-Type':'application/json' },
+      body: JSON.stringify({
+        link_id, payment_id, reference_id, status, signature,
+        userEmail: (user?.email || '').toLowerCase()
+      })
+    });
+    const data = await r.json();
+    if (data?.ok) {
+      setWallet(data.wallet);
+      setCoins(data.wallet.coins);
+      alert(`✅ Coins added: +${data.lastCredit.coins}. Valid till ${new Date(data.wallet.expires_at).toLocaleString()}`);
+      window.history.replaceState(null, '', '/');
+    } else {
+      alert('Payment not verified yet. If paid, it will reflect shortly.');
+    }
+  } catch (e) {
+    console.error(e);
+    alert('Verification failed. If you paid, coins will still auto-credit via webhook shortly.');
+  }
+}
+
+useEffect(() => { maybeFinalizePayment(); }, [user]);
+
+useEffect(() => {
+  const t = setInterval(() => {
+    const ms = (wallet.expires_at || 0) - Date.now();
+    setTtl(formatTTL(ms));
+  }, 30000);
+  return () => clearInterval(t);
+}, [wallet.expires_at]);
 const [showCoins, setShowCoins] = useState(false);
 const [autoRenew, setAutoRenew] = useState(loadAuto());
 useEffect(() => saveCoins(coins), [coins]);
 useEffect(() => saveAuto(autoRenew), [autoRenew]);
-  // NEW: auth + welcome
-const [user, setUser] = useState(loadUser());
-const [showWelcome, setShowWelcome] = useState(false);
-
-// Give +100 coins once per unique id (prefer Google sub)
-useEffect(() => {
-  if (!user) return;
-  const id = user.sub || user.email;           // prefer sub, else email
-  const wk = welcomeKeyFor(id);
-  if (!localStorage.getItem(wk)) {
-    setCoins(c => c + 100);
-    localStorage.setItem(wk, '1');
-    setShowWelcome(true);
-  }
-}, [user]);
   // Auto-unlock Owner mode if signed-in email matches
 useEffect(() => {
   if (!user) return;
@@ -207,6 +277,26 @@ const addCoins = (pack) => {
   closeCoins();
   setMessages(prev => [...prev, { text: `🪙 +${pack.coins} coins added`, sender: 'allie', time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }]);
 };
+  async function buyPack(pack){
+  if (!user) return;
+  try {
+    const resp = await fetch(`${BACKEND_BASE}/buy/${pack.id}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        userEmail: (user.email||'').toLowerCase(),
+        userSub: user.sub,
+        returnUrl: `${window.location.origin}/payment/thanks`
+      })
+    });
+    const data = await resp.json();
+    if (!data.ok) throw new Error(data.error || 'buy_failed');
+    window.location.href = data.short_url; // Razorpay hosted checkout
+  } catch (e) {
+    alert('Could not start payment. Try again.');
+    console.error(e);
+  }
+}
   const [cooldown, setCooldown] = useState(false);
   // --- Roleplay wiring (Step 1) ---
 const [roleMode, setRoleMode] = useState('stranger');
@@ -295,10 +385,13 @@ const askedForVoice = (text = "") => {
 const applyRoleChange = (mode, type) => {
   // premium gate for roleplay
   if (mode === 'roleplay' && roleplayNeedsPremium && !isOwner) {
-  setShowRoleMenu(false);
-  openCoins();               // ← show the new coins popup instead
-  return;
-}
+    const active = (wallet?.expires_at || 0) > Date.now();
+    if (!active) {
+      setShowRoleMenu(false);
+      openCoins();
+      return;
+    }
+  }
 
   // set state, but DO NOT save to localStorage
   setRoleMode(mode);
@@ -401,6 +494,7 @@ const sendVoiceBlob = async (blob) => {
     fd.append('audio', blob, 'note.webm');
     fd.append('messages', JSON.stringify(trimmed));
     fd.append('userEmail', (user?.email || '').toLowerCase());
+    fd.append('userSub', user?.sub || '');
     fd.append('clientTime', new Date().toLocaleTimeString('en-US', { hour12: false }));
     fd.append('clientDate', today());
     fd.append('session_id', sessionIdWithRole);
@@ -508,15 +602,16 @@ const sendVoiceBlob = async (blob) => {
 
       const now = new Date();
       const fetchBody = {
-        messages: trimmed,
-        clientTime: now.toLocaleTimeString('en-US', { hour12: false }),
-        clientDate: now.toLocaleDateString('en-GB'),
-        userEmail: (user?.email || '').toLowerCase(),
-        wantVoice: !!wantVoice,
-        session_id: sessionIdWithRole,
-        roleMode,
-        roleType: roleType || 'stranger',
-      };
+  messages: trimmed,
+  clientTime: now.toLocaleTimeString('en-US', { hour12: false }),
+  clientDate: now.toLocaleDateString('en-GB'),
+  userEmail: (user?.email || '').toLowerCase(),
+  userSub: user?.sub,                          // <— add this line
+  wantVoice: !!wantVoice,
+  session_id: sessionIdWithRole,
+  roleMode,
+  roleType: roleType || 'stranger',
+};
       if (shouldResetRef.current) { fetchBody.reset = true; shouldResetRef.current = false; }
 
       setCooldown(true);
@@ -586,6 +681,7 @@ const sendVoiceBlob = async (blob) => {
   clientTime: now.toLocaleTimeString('en-US', { hour12: false }),
   clientDate: now.toLocaleDateString('en-GB'),
   userEmail: (user?.email || '').toLowerCase(),  // ← add this
+  userSub: user?.sub,
   wantVoice: !!wantVoice,
   session_id: sessionIdWithRole,
   roleMode,
@@ -683,6 +779,11 @@ if (!user) {
 >
   🪙 {isOwner ? '∞' : coins}
 </button>
+  {!isOwner && wallet?.expires_at ? (
+  <span className="validity-ttl" style={{ marginLeft: 8, fontSize: 12, opacity: 0.8 }}>
+    ⏳ {ttl || formatTTL((wallet.expires_at||0) - Date.now())}
+  </span>
+) : null}
 
   <button
     className="role-btn"
@@ -814,7 +915,7 @@ if (!user) {
       </div>
 
       <div className="packs">
-        <button className="pack-btn" onClick={() => addCoins(DAILY_PACK)}>
+        <button className="pack-btn" onClick={() => buyPack(DAILY_PACK)}>
           <div className="pack-left">
             <div className="pack-title">Daily Recharge</div>
             <div className="pack-sub">+{DAILY_PACK.coins} coins</div>
@@ -824,7 +925,7 @@ if (!user) {
           </div>
         </button>
 
-        <button className="pack-btn secondary" onClick={() => addCoins(WEEKLY_PACK)}>
+        <button className="pack-btn secondary" onClick={() => buyPack(WEEKLY_PACK)}>
           <div className="pack-left">
             <div className="pack-title">Weekly Recharge</div>
             <div className="pack-sub">+{WEEKLY_PACK.coins} coins</div>
