@@ -3,6 +3,17 @@ import './ChatUI.css';
 // --- Google Sign-In (GIS) ---
 const GOOGLE_CLIENT_ID = '962465973550-2lhard334t8kvjpdhh60catlb1k6fpb6.apps.googleusercontent.com';
 const parseJwt = (t) => JSON.parse(atob(t.split('.')[1]));
+async function ensureRazorpay() {
+  if (window.Razorpay) return true;
+  await new Promise((resolve, reject) => {
+    const s = document.createElement('script');
+    s.src = 'https://checkout.razorpay.com/v1/checkout.js';
+    s.onload = resolve;
+    s.onerror = reject;
+    document.head.appendChild(s);
+  });
+  return true;
+}
 // --- backend base ---
 const BACKEND_BASE = 'https://allie-chat-proxy-production.up.railway.app';
 // === Coins config (Option A agreed) ===
@@ -281,29 +292,65 @@ const addCoins = (pack) => {
   async function buyPack(pack){
   if (!user) return;
   try {
-    const resp = await fetch(`${BACKEND_BASE}/buy/${pack.id}`, {
+    await ensureRazorpay();
+    const resp = await fetch(`${BACKEND_BASE}/order/${pack.id}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        userEmail: (user.email||'').toLowerCase(),
-        userSub: user.sub,
-        returnUrl: `${window.location.origin}/payment/thanks`
-      })
+      body: JSON.stringify({ userEmail: (user.email||'').toLowerCase(), userSub: user.sub })
     });
     const data = await resp.json();
-    if (!data.ok) {
-  const msg =
-    data?.details?.error?.description ||
-    data?.details?.description ||
-    data?.error ||
-    'buy_failed';
-  throw new Error(msg);
-}
-window.location.href = data.short_url; // Razorpay hosted checkout
-} catch (e) {
-  alert(`Could not start payment: ${e.message}`);
-  console.error('buyPack failed:', e);
-}
+    if (!data.ok) throw new Error(data?.error || 'order_failed');
+
+    const rzp = new window.Razorpay({
+      key: data.key_id,
+      amount: data.amount,
+      currency: data.currency,
+      name: 'BuddyBy',
+      description: `Shraddha ${pack.label}`,
+      order_id: data.order_id,
+      prefill: { email: (user.email||'') },
+      theme: { color: '#ff3fb0' },
+      handler: async (resp) => {
+        try {
+          const v = await fetch(`${BACKEND_BASE}/verify-order`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(resp) // { order_id, payment_id, signature }
+          });
+          const out = await v.json();
+          if (out?.ok) {
+            setWallet(out.wallet);
+            setCoins(out.wallet.coins);
+            alert(`✅ Coins added: +${out.lastCredit.coins}. Valid till ${new Date(out.wallet.expires_at).toLocaleString()}`);
+          } else {
+            alert('Paid, verifying… coins will reflect shortly.');
+          }
+        } catch {
+          alert('Could not verify yet; webhook will credit shortly.');
+        }
+      }
+    });
+    rzp.open();
+  } catch (e) {
+    console.error('Checkout failed, falling back to Payment Link:', e.message);
+    // Fallback to old Payment Link flow (already works)
+    try {
+      const resp = await fetch(`${BACKEND_BASE}/buy/${pack.id}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userEmail: (user.email||'').toLowerCase(),
+          userSub: user.sub,
+          returnUrl: `${window.location.origin}/payment/thanks`
+        })
+      });
+      const data = await resp.json();
+      if (data?.ok) window.location.href = data.short_url;
+      else alert('Could not start payment: ' + (data?.error || e.message));
+    } catch (e2) {
+      alert('Could not start payment: ' + e2.message);
+    }
+  }
 }
   const [cooldown, setCooldown] = useState(false);
   // --- Roleplay wiring (Step 1) ---
@@ -944,7 +991,7 @@ if (!user) {
       </div>
 
       <div className="renew-note">
-        Auto-renews daily/weekly via Razorpay. Cancel anytime from your account.
+        Recharge anytime with secure Razorpay Checkout.
       </div>
 
       <button onClick={closeCoins} className="cancel-btn" style={{marginTop:12}}>
