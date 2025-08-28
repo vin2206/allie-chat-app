@@ -291,12 +291,19 @@ const addCoins = (pack) => {
       })
     });
     const data = await resp.json();
-    if (!data.ok) throw new Error(data.error || 'buy_failed');
-    window.location.href = data.short_url; // Razorpay hosted checkout
-  } catch (e) {
-    alert('Could not start payment. Try again.');
-    console.error(e);
-  }
+    if (!data.ok) {
+  const msg =
+    data?.details?.error?.description ||
+    data?.details?.description ||
+    data?.error ||
+    'buy_failed';
+  throw new Error(msg);
+}
+window.location.href = data.short_url; // Razorpay hosted checkout
+} catch (e) {
+  alert(`Could not start payment: ${e.message}`);
+  console.error('buyPack failed:', e);
+}
 }
   const [cooldown, setCooldown] = useState(false);
   // --- Roleplay wiring (Step 1) ---
@@ -329,7 +336,7 @@ if (!sessionIdRef.current) {
   if (saved) {
     sessionIdRef.current = saved;
   } else {
-    const newId = (crypto?.randomUUID?.() || String(Date.now()));
+    const newId = (window.crypto?.randomUUID?.() || String(Date.now()));
     localStorage.setItem('chat_session_id', newId);
     sessionIdRef.current = newId;
   }
