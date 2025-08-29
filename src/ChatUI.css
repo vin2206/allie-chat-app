@@ -112,21 +112,26 @@ flex-wrap: nowrap;
 }
 
 /* Scroll area is pinned between header and footer: rock-solid on all phones */
-.chat-container {
+.chat-container{
   position: fixed;
   top: var(--hdr-h, 80px);
   left: 0;
   right: 0;
   bottom: calc(var(--ftr-h, 90px) + env(safe-area-inset-bottom));
+
+  /* Make messages anchor to bottom */
   display: flex;
   flex-direction: column;
+  justify-content: flex-end;
 
-  padding: 12px 10px;
-  padding-bottom: var(--ftr-h, 90px); /* fallback */
-  padding-bottom: calc(var(--ftr-h, 90px) + env(safe-area-inset-bottom)); /* supported */
+  /* only a small bottom padding now (no double space) */
+  padding: 12px 10px 12px;
+
   overflow-y: auto;
   overscroll-behavior-y: contain;
-  scroll-padding-bottom: calc(var(--ftr-h, 90px) + env(safe-area-inset-bottom));
+
+  /* keep a little gap when scrolling to bottom */
+  scroll-padding-bottom: 12px;
 }
 
 /* Spacer stays FLEX, not fixed height — lives at the TOP in JSX */
