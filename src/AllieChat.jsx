@@ -839,6 +839,7 @@ if (!user) {
 
   return (
     <div className={`App ${user ? 'signed-in' : 'auth'}`}>
+      <div className="bg-fixed" aria-hidden="true" />
       <div className="header">
         <div className="profile-pic">
           <img
