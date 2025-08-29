@@ -828,13 +828,20 @@ window.addEventListener('pageshow', setVars);
   window.removeEventListener('pageshow', setVars);
 };
 }, []);
-   // Lock the app to the real visible viewport height (works on very old Android too)
+  // Lock the app to the *exact* visible viewport height (older Android safe)
 useEffect(() => {
   const setAppH = () => {
-    const h = Math.round((window.visualViewport?.height || window.innerHeight) || 0);
+    const h = Math.round(
+      (window.visualViewport && window.visualViewport.height) ||
+      document.documentElement.clientHeight ||
+      window.innerHeight || 0
+    );
     if (h) document.documentElement.style.setProperty('--app-h', `${h}px`);
   };
+
+  // run immediately and also after load (some WebViews settle late)
   setAppH();
+  window.addEventListener('load', setAppH, { once: true });
 
   const vv = window.visualViewport;
   vv?.addEventListener('resize', setAppH);
