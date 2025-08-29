@@ -785,6 +785,49 @@ if (shouldResetRef.current) { fetchRetryBody.reset = true; shouldResetRef.curren
     document.removeEventListener('keydown', onEsc);
   };
 }, [showRoleMenu]);
+   // --- Measure header/footer and push sizes to CSS vars (prevents stretch/crop) ---
+useEffect(() => {
+  const root = document.documentElement;
+  const headerEl = document.querySelector('.header');
+  const footerEl = document.querySelector('.footer');
+
+  const setVars = () => {
+    const hdr = headerEl ? Math.round(headerEl.getBoundingClientRect().height) : 80;
+    const ftr = footerEl ? Math.round(footerEl.getBoundingClientRect().height) : 90;
+    root.style.setProperty('--hdr-h', `${hdr}px`);
+    root.style.setProperty('--ftr-h', `${ftr}px`);
+  };
+
+  setVars();
+
+  const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(setVars) : null;
+if (ro && headerEl) ro.observe(headerEl);
+if (ro && footerEl) ro.observe(footerEl);
+
+  // account for address bar / keyboard / visual viewport changes
+  const vv = window.visualViewport;
+  if (vv) vv.addEventListener('resize', setVars);
+
+  window.addEventListener('resize', setVars);
+  window.addEventListener('orientationchange', setVars);
+
+  // when fonts finish loading, header metrics can change
+  if (document.fonts?.ready) {
+    document.fonts.ready.then(() => { try { setVars(); } catch {} });
+  }
+  // keep sizes fresh when tab becomes visible or page is restored from bfcache
+document.addEventListener('visibilitychange', setVars);
+window.addEventListener('pageshow', setVars);
+
+  return () => {
+  if (ro) ro.disconnect();                       // if you applied the earlier null-guard
+  if (vv) vv.removeEventListener('resize', setVars);
+  window.removeEventListener('resize', setVars);
+  window.removeEventListener('orientationchange', setVars);
+  document.removeEventListener('visibilitychange', setVars);
+  window.removeEventListener('pageshow', setVars);
+};
+}, []);
 
   const displayedMessages = messages;
   // Block UI until user signs in
