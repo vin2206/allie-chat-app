@@ -26,17 +26,27 @@ html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 
 body { background: linear-gradient(180deg, #fce7f3 0%, #ede9fe 100%); }
 
-/* Chat screen background — your original gradient + waves */
-.App.signed-in {
-  min-height: 100dvh;
-  background:
-    linear-gradient(to bottom, #ff99cc, #cc66cc, #9966cc),
-    url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"><path fill="%23ff99cc" fill-opacity="0.3" d="M0,64L60,80C120,96,240,128,360,138.7C480,149,600,139,720,133.3C840,128,960,128,1080,117.3C1200,107,1320,85,1380,74.7L1440,64L1440,320L1380,320C1320,320,1200,320,1080,320C960,320,840,320,720,320C600,320,480,320,360,320C240,320,120,320,60,320L0,320Z"/></svg>');
-  background-repeat: no-repeat;
-  background-attachment: fixed;
+/* Chat screen background handled by a fixed layer (.bg-fixed) */
+.App.signed-in { min-height: 100dvh; }
+@supports (height: 100svh) { .App.signed-in { min-height: 100svh; } }
+@supports not (height: 100dvh) { .App.signed-in { min-height: 100vh; } }
+/* no background here anymore */
+/* Fixed, universal background layer to avoid Android WebView bugs */
+.bg-fixed{
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: linear-gradient(to bottom, #ff99cc, #cc66cc, #9966cc);
 }
-@supports not (height: 100dvh) {
-  .App.signed-in { min-height: 100vh; }
+
+/* same wave art as before, just on the fixed layer instead of the .App */
+.bg-fixed::after{
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"><path fill="%23ff99cc" fill-opacity="0.3" d="M0,64L60,80C120,96,240,128,360,138.7C480,149,600,139,720,133.3C840,128,960,128,1080,117.3C1200,107,1320,85,1380,74.7L1440,64L1440,320L1380,320C1320,320,1200,320,1080,320C960,320,840,320,720,320C600,320,480,320,360,320C240,320,120,320,60,320L0,320Z"/></svg>')
+              no-repeat center / cover;
 }
 /* Header (glassmorphism style) */
 .header {
