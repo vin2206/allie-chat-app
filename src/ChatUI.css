@@ -5,6 +5,10 @@ html, body, #root {
   padding: 0;
   height: 100%;
 }
+:root { --hdr-h: 80px; --ftr-h: 90px; }  /* measured at runtime */
+
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+.header, .footer { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 
 .App {
   display: flex;
@@ -31,7 +35,9 @@ body { background: linear-gradient(180deg, #fce7f3 0%, #ede9fe 100%); }
   background-repeat: no-repeat;
   background-attachment: fixed;
 }
-
+@supports not (height: 100dvh) {
+  .App.signed-in { min-height: 100vh; }
+}
 /* Header (glassmorphism style) */
 .header {
   position: fixed;
@@ -44,6 +50,8 @@ backdrop-filter: blur(10px);
   align-items: center;
   padding: 12px 20px;
   z-index: 100;
+  padding-top: calc(12px + env(safe-area-inset-top));
+flex-wrap: nowrap;
 }
 
 .profile-pic {
@@ -68,13 +76,16 @@ backdrop-filter: blur(10px);
   align-items: center;
   gap: 6px;
   flex: 1;
-  justify-content: flex-start; /* was space-between */
+  justify-content: flex-start;
+  flex-wrap: nowrap;   /* NEW */
+  min-width: 0;        /* NEW - allow ellipsis */
 }
 
 .name-wrap {
   display: flex;
   align-items: center;
   gap: 6px;        /* keeps badge next to name */
+  min-width: 0;
 }
 
 .username {
@@ -82,7 +93,12 @@ backdrop-filter: blur(10px);
   font-size: 22px;
   color: white;
   font-family: 'Lobster', cursive;
-  text-shadow: 0 1px 2px rgba(0,0,0,.45);  /* better contrast on light header */
+  text-shadow: 0 1px 2px rgba(0,0,0,.45);
+  white-space: nowrap;          /* NEW */
+  overflow: hidden;             /* NEW */
+  text-overflow: ellipsis;      /* NEW */
+  max-width: 46vw;              /* NEW: keeps pills on the row */
+  line-height: 1.15;            /* NEW: stable height */
 }
 
 .role-badge {
@@ -103,13 +119,13 @@ backdrop-filter: blur(10px);
   flex: 1;
   display: flex;
   flex-direction: column;
-  min-height: 0;                       /* important inside flex parents */
-  margin-top: 80px;                    /* room for fixed header */
+  min-height: 0;
+  margin-top: var(--hdr-h, 80px);                                   /* NEW */
   padding: 12px 10px;
-  padding-bottom: calc(90px + env(safe-area-inset-bottom)); /* ≈ footer height */
+  padding-bottom: calc(var(--ftr-h, 90px) + env(safe-area-inset-bottom)); /* NEW */
   overflow-y: auto;
   overscroll-behavior-y: contain;
-  scroll-padding-bottom: calc(90px + env(safe-area-inset-bottom));
+  scroll-padding-bottom: calc(var(--ftr-h, 90px) + env(safe-area-inset-bottom)); /* NEW */
 }
 
 /* Spacer stays FLEX, not fixed height — lives at the TOP in JSX */
@@ -167,14 +183,15 @@ backdrop-filter: blur(10px);
 /* Footer fixed input */
 .footer {
   position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
+  bottom: 0; left: 0; right: 0;
   background: rgba(50, 20, 60, 0.12);
-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
   display: flex;
-  padding: 15px 20px;
+  align-items: center;          /* NEW */
+  flex-wrap: nowrap;            /* NEW */
   gap: 12px;
+  padding: 15px 20px;
+  padding-bottom: calc(15px + env(safe-area-inset-bottom)); /* NEW */
   z-index: 100;
 }
 
@@ -187,6 +204,8 @@ backdrop-filter: blur(10px);
   border: none;
   outline: none;
   font-size: 16px;
+  min-height: 44px;              /* NEW: prevents autosize collapse */
+  line-height: 1.2;              /* NEW: stable vertical rhythm */
 }
 
 .footer button {
