@@ -8,7 +8,6 @@ html, body, #root {
 :root { --hdr-h: 80px; --ftr-h: 90px; }  /* measured at runtime */
 
 html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
-.header, .footer { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 
 .App {
   display: flex;
@@ -26,27 +25,19 @@ html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 
 body { background: linear-gradient(180deg, #fce7f3 0%, #ede9fe 100%); }
 
-/* Chat screen background handled by a fixed layer (.bg-fixed) */
-.App.signed-in { min-height: 100dvh; }
-@supports (height: 100svh) { .App.signed-in { min-height: 100svh; } }
-@supports not (height: 100dvh) { .App.signed-in { min-height: 100vh; } }
-/* no background here anymore */
-/* Fixed, universal background layer to avoid Android WebView bugs */
-.bg-fixed{
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  background: linear-gradient(to bottom, #ff99cc, #cc66cc, #9966cc);
+/* Chat screen background — gradient + waves directly on the app */
+.App.signed-in{
+  min-height: 100dvh;
+  background:
+    linear-gradient(to bottom, #ff99cc, #cc66cc, #9966cc),
+    url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"><path fill="%23ff99cc" fill-opacity="0.3" d="M0,64L60,80C120,96,240,128,360,138.7C480,149,600,139,720,133.3C840,128,960,128,1080,117.3C1200,107,1320,85,1380,74.7L1440,64L1440,320L1380,320C1320,320,1200,320,1080,320C960,320,840,320,720,320C600,320,480,320,360,320C240,320,120,320,60,320L0,320Z"/></svg>');
+  background-repeat: no-repeat, no-repeat;
+  background-size: auto, cover;       /* gradient auto; wave covers */
+  background-position: center, center; /* optional: keep centered */
 }
-
-/* same wave art as before, just on the fixed layer instead of the .App */
-.bg-fixed::after{
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"><path fill="%23ff99cc" fill-opacity="0.3" d="M0,64L60,80C120,96,240,128,360,138.7C480,149,600,139,720,133.3C840,128,960,128,1080,117.3C1200,107,1320,85,1380,74.7L1440,64L1440,320L1380,320C1320,320,1200,320,1080,320C960,320,840,320,720,320C600,320,480,320,360,320C240,320,120,320,60,320L0,320Z"/></svg>')
-              no-repeat center / cover;
+@supports (height: 100svh) { .App.signed-in { min-height: 100svh; } }
+@supports not (height: 100dvh) {
+  .App.signed-in { min-height: 100vh; }
 }
 /* Header (glassmorphism style) */
 .header {
@@ -56,6 +47,8 @@ body { background: linear-gradient(180deg, #fce7f3 0%, #ede9fe 100%); }
   right: 0;
   background: rgba(255, 105, 180, 0.15);
 backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
   display: flex;
   align-items: center;
   padding: 12px 20px;
@@ -76,7 +69,7 @@ flex-wrap: nowrap;
   width: 100%;
   height: 100%;
   border-radius: 50%;
-  object-fit: contain;
+  object-fit: cover;
   transform: scale(1.05);
 }
 
@@ -195,6 +188,8 @@ flex-wrap: nowrap;
   position: fixed;
   bottom: 0; left: 0; right: 0;
   background: rgba(50, 20, 60, 0.12);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   backdrop-filter: blur(10px);
   display: flex;
   align-items: center;          /* NEW */
@@ -338,11 +333,6 @@ flex-wrap: nowrap;
   }
 }
 
-.typing-bounce span {
-  width: 7px;
-  height: 7px;
-}
-
 .bubble-content {
   display: inline-block;      /* <- KEY! */
   padding: 8px 44px 16px 13px;
@@ -383,8 +373,6 @@ flex-wrap: nowrap;
   padding: 0;
   pointer-events: none;
 }
-
-/* ---- Voice & buttons (adds, won't break your current theme) ---- */
 
 /* Make sure generic .footer button rule doesn't force same look on both. */
 .footer .send-btn,
@@ -457,9 +445,6 @@ flex-wrap: nowrap;
 /* Fallback link only if the <audio> fails to have a src */
 .audio-fallback { margin-top: 4px; font-size: 12px; }
 .audio-player[src] + .audio-fallback { display: none; }
-
-/* Keep time badge clickable-safe */
-.msg-time { pointer-events: none; }
 
 /* --- custom confirm dialog --- */
 .confirm-backdrop{
