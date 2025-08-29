@@ -828,6 +828,27 @@ window.addEventListener('pageshow', setVars);
   window.removeEventListener('pageshow', setVars);
 };
 }, []);
+   // Lock the app to the real visible viewport height (works on very old Android too)
+useEffect(() => {
+  const setAppH = () => {
+    const h = Math.round((window.visualViewport?.height || window.innerHeight) || 0);
+    if (h) document.documentElement.style.setProperty('--app-h', `${h}px`);
+  };
+  setAppH();
+
+  const vv = window.visualViewport;
+  vv?.addEventListener('resize', setAppH);
+  window.addEventListener('resize', setAppH);
+  window.addEventListener('orientationchange', setAppH);
+  window.addEventListener('pageshow', setAppH);
+
+  return () => {
+    vv?.removeEventListener('resize', setAppH);
+    window.removeEventListener('resize', setAppH);
+    window.removeEventListener('orientationchange', setAppH);
+    window.removeEventListener('pageshow', setAppH);
+  };
+}, []);
 
   const displayedMessages = messages;
   // Block UI until user signs in
