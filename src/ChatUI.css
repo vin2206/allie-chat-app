@@ -118,10 +118,12 @@ flex-wrap: nowrap;
   left: 0;
   right: 0;
   bottom: calc(var(--ftr-h, 90px) + env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+
   padding: 12px 10px;
-   /* add these two lines just under your existing padding/bottom lines */
   padding-bottom: var(--ftr-h, 90px); /* fallback */
-  padding-bottom: calc(var(--ftr-h, 90px) + env(safe-area-inset-bottom)); /* override when supported */
+  padding-bottom: calc(var(--ftr-h, 90px) + env(safe-area-inset-bottom)); /* supported */
   overflow-y: auto;
   overscroll-behavior-y: contain;
   scroll-padding-bottom: calc(var(--ftr-h, 90px) + env(safe-area-inset-bottom));
