@@ -34,9 +34,6 @@ body { background: linear-gradient(180deg, #fce7f3 0%, #ede9fe 100%); }
   background-size: auto, cover;       /* gradient auto; wave covers */
   background-position: center, center; /* optional: keep centered */
 }
-/* === FORCE THE APP TO MATCH THE REAL VIEWPORT HEIGHT === */
-.App.signed-in, .App.auth { height: var(--app-h, 100svh) !important; }
-.App, .App.signed-in, .App.auth { min-height: 0 !important; }
 /* Header (glassmorphism style) */
 .header {
   position: fixed;
@@ -114,19 +111,20 @@ flex-wrap: nowrap;
   box-shadow: 0 2px 6px rgba(0,0,0,.18);
 }
 
-/* Chat area (keeps last bubble above the fixed footer, works with keyboard) */
+/* Scroll area is pinned between header and footer: rock-solid on all phones */
 .chat-container {
-  position: relative;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-  margin-top: var(--hdr-h, 80px);                                   /* NEW */
+  position: fixed;
+  top: var(--hdr-h, 80px);
+  left: 0;
+  right: 0;
+  bottom: calc(var(--ftr-h, 90px) + env(safe-area-inset-bottom));
   padding: 12px 10px;
-  padding-bottom: calc(var(--ftr-h, 90px) + env(safe-area-inset-bottom)); /* NEW */
+   /* add these two lines just under your existing padding/bottom lines */
+  padding-bottom: var(--ftr-h, 90px); /* fallback */
+  padding-bottom: calc(var(--ftr-h, 90px) + env(safe-area-inset-bottom)); /* override when supported */
   overflow-y: auto;
   overscroll-behavior-y: contain;
-  scroll-padding-bottom: calc(var(--ftr-h, 90px) + env(safe-area-inset-bottom)); /* NEW */
+  scroll-padding-bottom: calc(var(--ftr-h, 90px) + env(safe-area-inset-bottom));
 }
 
 /* Spacer stays FLEX, not fixed height — lives at the TOP in JSX */
