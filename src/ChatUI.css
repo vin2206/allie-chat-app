@@ -658,3 +658,55 @@ flex-wrap: nowrap;
   align-items: center;
   justify-content: center;
 }
+
+/* === Stable Layout Mode: no JS height math; works on all Androids === */
+.App.stable {
+  /* use dynamic viewport where available; fall back gracefully */
+  min-height: 100svh;
+  min-height: 100dvh;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Keep header/footer in normal flow so the center naturally fills the rest */
+.App.stable .header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.App.stable .footer {
+  position: sticky;
+  bottom: 0;
+  z-index: 100;
+  padding-bottom: calc(15px + env(safe-area-inset-bottom));
+}
+
+/* Center scroll area now just flexes; no fixed top/bottom, no --hdr-h/--ftr-h */
+.App.stable .chat-container {
+  position: relative;
+  top: 0; bottom: auto; left: 0; right: 0;
+  flex: 1 1 auto;
+  min-height: 0;              /* <- critical so it can actually shrink */
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  padding: 12px 10px 12px;    /* keep your current look */
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;  /* keep messages anchored to bottom */
+}
+/* Compact header when space is tight to prevent wrap/overlap */
+@media (max-width: 420px) {
+  .username        { font-size: clamp(18px, 5vw, 20px); max-width: 40vw; }
+  .username-container { gap: 4px; }
+  .coin-pill       { padding: 5px 10px; font-size: 11px; }
+  .role-btn        { padding: 6px 8px;  font-size: 11px; }
+}
+@media (max-width: 360px) {
+  .username { max-width: 36vw; }
+}
+
+/* Fallback for very old WebViews that lack sticky: layout still stable */
+@supports not (position: sticky) {
+  .App.stable .header, .App.stable .footer { position: static; }
+}
