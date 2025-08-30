@@ -126,7 +126,7 @@ flex-wrap: nowrap;
   justify-content: flex-end;
 
   /* only a small bottom padding now (no double space) */
-  padding: 12px 10px 10px;
+  padding: 12px 10px 16px;
 
   overflow-y: auto;
   overscroll-behavior-y: contain;
@@ -727,8 +727,8 @@ flex-wrap: nowrap;
   min-height: 0;                 /* allows it to shrink within the column */
   overflow-y: auto;
   overscroll-behavior-y: contain;
-  padding: 12px 10px 10px;            /* was: 12px 10px calc(24px + var(--ftr-h, 90px)) */
-  scroll-padding-bottom: 10px;
+  padding: 12px 10px 16px;            /* was: 12px 10px calc(24px + var(--ftr-h, 90px)) */
+  scroll-padding-bottom: 16px;
   display: flex;
   flex-direction: column;
   justify-content: flex-end;     /* anchor messages to the bottom edge */
