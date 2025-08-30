@@ -43,7 +43,6 @@ body { background: linear-gradient(180deg, #fce7f3 0%, #ede9fe 100%); }
   background: rgba(255, 105, 180, 0.15);
 backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
-  backdrop-filter: blur(10px);
   display: flex;
   align-items: center;
   padding: 12px 20px;
@@ -77,7 +76,10 @@ flex-wrap: nowrap;
   justify-content: flex-start;
   flex-wrap: nowrap;   /* NEW */
   min-width: 0;        /* NEW - allow ellipsis */
+  /* Make sure every child sits on the same vertical center */
 }
+/* Make sure every child sits on the same vertical center */
+.username-container > * { align-self: center; }
 
 .name-wrap {
   display: flex;
@@ -701,7 +703,7 @@ flex-wrap: nowrap;
   position: sticky;
   bottom: 0;
   z-index: 100;
-
+  overflow: visible; /* don’t clip the send button’s top edge */
   /* slightly tighter — fixes “stretchy” feel */
   padding: 12px 16px;
   padding-bottom: calc(12px + env(safe-area-inset-bottom));
@@ -726,11 +728,8 @@ flex-wrap: nowrap;
   min-height: 0;                 /* allows it to shrink within the column */
   overflow-y: auto;
   overscroll-behavior-y: contain;
-
-  /* keep bubbles clear of the sticky footer on *all* phones */
-  padding: 12px 10px calc(16px + var(--ftr-h, 90px));
-  scroll-padding-bottom: calc(16px + var(--ftr-h, 90px));
-
+  padding: 12px 10px calc(24px + var(--ftr-h, 90px));
+  scroll-padding-bottom: calc(24px + var(--ftr-h, 90px));
   display: flex;
   flex-direction: column;
   justify-content: flex-end;     /* anchor messages to the bottom edge */
@@ -742,20 +741,22 @@ flex-wrap: nowrap;
   .coin-pill       { padding: 5px 10px; font-size: 11px; }
   .role-btn        { padding: 6px 8px;  font-size: 11px; }
 }
-@media (max-width: 360px) {
-  .username { max-width: 36vw; }
-}
-
 /* Fallback for very old WebViews that lack sticky: layout still stable */
 @supports not (position: sticky) {
   .App.stable .header, .App.stable .footer { position: static; }
 }
-/* NEW — on extremely tight screens, allow a neat two-line header */
+/* Tiny devices – keep everything on ONE line, just shrink */
 @media (max-width: 360px) {
-  .App.stable .username-container { flex-wrap: wrap; }
+  /* keep header on one line and shrink */
+  .App.stable .username-container { flex-wrap: nowrap; }
   .App.stable .name-wrap { flex: 1 1 100%; max-width: 100%; }
-  .App.stable .username { max-width: 100%; }
-  .App.stable .coin-pill,
-  .App.stable .role-btn,
-  .App.stable .validity-ttl { margin-top: 6px; }
+  .username { max-width: 100%; font-size: clamp(17px, 5.2vw, 19px); }
+  .coin-pill, .role-btn, .validity-ttl { margin-top: 6px; }
+  .coin-pill, .role-btn { padding: 4px 7px; font-size: 10px; }
+
+  /* Footer tightening (this is the bit you asked about) */
+  .App.stable .footer { padding: 10px 12px; }
+  .App.stable .footer .send-btn,
+  .App.stable .footer .mic-btn { width: 46px; height: 46px; }
+  .App.stable .footer input { min-height: 38px; font-size: 15px; }
 }
