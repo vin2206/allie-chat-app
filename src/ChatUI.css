@@ -41,7 +41,6 @@ body { background: linear-gradient(180deg, #fce7f3 0%, #ede9fe 100%); }
   left: 0;
   right: 0;
   background: rgba(255, 105, 180, 0.15);
-backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   display: flex;
   align-items: center;
@@ -733,6 +732,8 @@ flex-wrap: nowrap;
   display: flex;
   flex-direction: column;
   justify-content: flex-end;     /* anchor messages to the bottom edge */
+  top: auto;
+  bottom: auto;
 }
 /* Compact header when space is tight to prevent wrap/overlap */
 @media (max-width: 420px) {
