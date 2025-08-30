@@ -761,3 +761,30 @@ flex-wrap: nowrap;
   .App.stable .footer .mic-btn { width: 46px; height: 46px; }
   .App.stable .footer input { min-height: 38px; font-size: 15px; }
 }
+
+/* ==== Realme 1 / legacy-Android sizing — header stays on one line ==== */
+@media (max-width: 380px), (max-height: 640px) {
+  .header { padding: 8px 10px; }
+  .profile-pic { width: 42px; height: 42px; margin-right: 8px; }
+
+  /* let name give up space first so Stranger/Coins/Mode never wrap */
+  .name-wrap { flex: 0 1 auto; min-width: 0; }
+  .username   { font-size: 18px; max-width: 32vw; }
+
+  .coin-pill, .role-btn { padding: 3px 7px; font-size: 10px; }
+  .role-btn { padding: 3px 7px; font-size: 10px; }
+}
+
+/* ==== Realme 1 / legacy-Android sizing — footer compact & safe ==== */
+@media (max-width: 380px), (max-height: 640px) {
+  .App.stable .footer { padding: 8px 10px; gap: 8px; }
+  .App.stable .footer input { min-height: 34px; font-size: 14px; min-width: 0; }
+
+  /* shrink mic/send just for tiny/short screens */
+  .App.stable .footer .send-btn,
+  .App.stable .footer .mic-btn {
+    width: 42px;
+    height: 42px;
+    transform: none; /* prevents any visual crop on old webviews */
+  }
+}
