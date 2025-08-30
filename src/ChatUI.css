@@ -468,6 +468,101 @@ flex-wrap: nowrap;
   padding:10px 14px; border:none; border-radius:10px; cursor:pointer;
   background: linear-gradient(135deg,#ff7ac2,#7a7aff); color:#fff; font-weight:700;
 }
+/* --- Modes Modal (matches coins modal vibe) --- */
+.role-modal{
+  position: fixed;
+  inset: 0;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;               /* start so it doesn't hide behind address bar */
+  padding: calc(10px + env(safe-area-inset-top)) 16px 16px;
+  background: rgba(0,0,0,.45);
+  backdrop-filter: blur(2px);
+  z-index: 1200;                         /* above header; below coins modal (9999) */
+}
+
+.role-card{
+  width: min(92vw, 420px);
+  margin-top: calc(var(--hdr-h, 80px) + 10px);
+  background: #fff;
+  color: #222;
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0,0,0,.25);
+  padding: 14px;
+  animation: pop .15s ease-out;
+}
+
+.role-card-header{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.role-card-title{
+  font-size: 20px;
+  font-weight: 900;
+  color: #ff0a85;
+}
+
+.role-close{
+  appearance: none;
+  border: none;
+  background: transparent;
+  font-size: 20px;
+  line-height: 1;
+  padding: 6px 8px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+@media (hover:hover){ .role-close:hover{ background: #f4f4f7; } }
+
+.role-section{ margin: 4px 0 10px; }
+.role-section-title{ font-weight: 800; color: #333; margin: 8px 0 6px; }
+
+.role-row{
+  width: 100%;
+  text-align: left;
+  padding: 10px 12px;
+  border: 1px solid #eee;
+  background: #f7f7fb;
+  border-radius: 10px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.role-grid{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.role-chip{
+  padding: 10px 12px;
+  border-radius: 999px;
+  border: 1px solid #e7e8ff;
+  background: #eff1ff;
+  font-weight: 700;
+  cursor: pointer;
+}
+.role-chip:active{ transform: translateY(1px); }
+@media (hover:hover){ .role-chip:hover{ filter: brightness(.98); } }
+
+.role-upsell{
+  margin-top: 10px;
+  font-size: 12px;
+  color: #666;
+  text-align: right;
+}
+
+/* tiny screens: tighten a bit */
+@media (max-width: 360px){
+  .role-card{ padding: 12px; }
+  .role-chip, .role-row{ padding: 9px 10px; }
+}
+
 .btn-secondary{
   padding:10px 14px; border:none; border-radius:10px; cursor:pointer;
   background:#f1f1f4; color:#333; font-weight:600;
