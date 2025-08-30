@@ -945,7 +945,7 @@ if (!user) {
     aria-label="Choose mode"
     title="Choose mode"
   >
-    <span className="role-btn-text">Mode</span>
+    <span className="role-btn-text">Modes</span>
   </button>
 </div>
   </div>
@@ -956,7 +956,7 @@ if (!user) {
     background: '#fff', color: '#222', borderRadius: 12, boxShadow: '0 10px 24px rgba(0,0,0,.2)',
     padding: 8, width: 220
   }}>
-    <div style={{ fontWeight: 700, marginBottom: 8 }}>Mode</div>
+    <div style={{ fontWeight: 700, marginBottom: 8 }}>Modes</div>
     <button
   style={{ width: '100%', padding: '8px 10px', textAlign: 'left', border: 'none', background: '#f7f7f7', borderRadius: 8, marginBottom: 8 }}
   onClick={() => {
