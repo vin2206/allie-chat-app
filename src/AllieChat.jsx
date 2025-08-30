@@ -417,8 +417,6 @@ function getAvatarSrc(mode, type) {
   useEffect(() => {
   Object.values(avatarMap).forEach(src => { const img = new Image(); img.src = src; });
 }, []);
-  
-  const chipStyle = { padding: '8px 10px', border: 'none', background: '#f0f0ff', borderRadius: 999, cursor: 'pointer' };
 
 // optional: simple day string
 const today = () => new Date().toLocaleDateString('en-GB');
@@ -769,6 +767,9 @@ if (shouldResetRef.current) { fetchRetryBody.reset = true; shouldResetRef.curren
   useEffect(() => {
   if (!showRoleMenu) return;
 
+  // Focus the close button when the modal opens
+  roleMenuRef.current?.querySelector('.role-close')?.focus();
+
   const onDocClick = (e) => {
     if (roleMenuRef.current && !roleMenuRef.current.contains(e.target)) {
       setShowRoleMenu(false);
@@ -956,12 +957,15 @@ if (!user) {
     onClick={() => setShowRoleMenu(false)}
   >
     <div
-      className="role-card"
-      ref={roleMenuRef}
-      onClick={(e) => e.stopPropagation()}
-    >
+  className="role-card"
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby="modesTitle"
+  ref={roleMenuRef}
+  onClick={(e) => e.stopPropagation()}
+>
       <div className="role-card-header">
-        <div className="role-card-title">Modes</div>
+        <div className="role-card-title" id="modesTitle">Modes</div>
         <button
           className="role-close"
           onClick={() => setShowRoleMenu(false)}
