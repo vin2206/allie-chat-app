@@ -951,70 +951,91 @@ if (!user) {
   </div>
 
     {showRoleMenu && (
-  <div ref={roleMenuRef} className="role-menu" style={{
-    position: 'fixed', top: 60, right: 16, zIndex: 1000,
-    background: '#fff', color: '#222', borderRadius: 12, boxShadow: '0 10px 24px rgba(0,0,0,.2)',
-    padding: 8, width: 220
-  }}>
-    <div style={{ fontWeight: 700, marginBottom: 8 }}>Modes</div>
-    <button
-  style={{ width: '100%', padding: '8px 10px', textAlign: 'left', border: 'none', background: '#f7f7f7', borderRadius: 8, marginBottom: 8 }}
-  onClick={() => {
-  openConfirm(
-    'Switch to Stranger?',
-    'This will start a fresh chat and clear current messages.',
-    () => { closeConfirm(); applyRoleChange('stranger', null); }
-  );
-}}
->
-  Stranger (default)
-</button>
+  <div
+    className="role-modal"
+    onClick={() => setShowRoleMenu(false)}
+  >
+    <div
+      className="role-card"
+      ref={roleMenuRef}
+      onClick={(e) => e.stopPropagation()}
+    >
+      <div className="role-card-header">
+        <div className="role-card-title">Modes</div>
+        <button
+          className="role-close"
+          onClick={() => setShowRoleMenu(false)}
+          aria-label="Close modes"
+          title="Close"
+        >✕</button>
+      </div>
 
-    <div style={{ fontWeight: 700, margin: '8px 0 6px' }}>Roleplay</div>
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-      <button
-  style={chipStyle}
-  onClick={() => {
-  openConfirm(
-    'Start as Shraddha (Wife)?',
-    'A fresh chat will begin and current messages will be cleared.',
-    () => { closeConfirm(); applyRoleChange('roleplay','wife'); }
-  );
-}}
->Wife</button>
+      <div className="role-section">
+        <div className="role-section-title">Default</div>
+        <button
+          className="role-row"
+          onClick={() => {
+            openConfirm(
+              'Switch to Stranger?',
+              'This will start a fresh chat and clear current messages.',
+              () => { closeConfirm(); applyRoleChange('stranger', null); }
+            );
+          }}
+        >
+          Stranger (default)
+        </button>
+      </div>
 
-<button
-  style={chipStyle}
-  onClick={() => {
-  openConfirm(
-    'Start as Shraddha (Bhabhi)?',
-    'A fresh chat will begin and current messages will be cleared.',
-    () => { closeConfirm(); applyRoleChange('roleplay','bhabhi'); }
-  );
-}}
->Bhabhi</button>
+      <div className="role-section-title">Roleplay</div>
+      <div className="role-grid">
+        <button
+          className="role-chip"
+          onClick={() => {
+            openConfirm(
+              'Start as Shraddha (Wife)?',
+              'A fresh chat will begin and current messages will be cleared.',
+              () => { closeConfirm(); applyRoleChange('roleplay','wife'); }
+            );
+          }}
+        >Wife</button>
 
-<button
-  style={chipStyle}
-  onClick={() => {
-  openConfirm(
-    'Start as Shraddha (Girlfriend)?',
-    'A fresh chat will begin and current messages will be cleared.',
-    () => { closeConfirm(); applyRoleChange('roleplay','girlfriend'); }
-  );
-}}
->Girlfriend</button>
+        <button
+          className="role-chip"
+          onClick={() => {
+            openConfirm(
+              'Start as Shraddha (Bhabhi)?',
+              'A fresh chat will begin and current messages will be cleared.',
+              () => { closeConfirm(); applyRoleChange('roleplay','bhabhi'); }
+            );
+          }}
+        >Bhabhi</button>
 
-<button
-  style={chipStyle}
-  onClick={() => {
-  openConfirm(
-    'Start as Shraddha (Cousin)?',
-    'A fresh chat will begin and current messages will be cleared.',
-    () => { closeConfirm(); applyRoleChange('roleplay','cousin'); }
-  );
-}}
->Cousin</button>
+        <button
+          className="role-chip"
+          onClick={() => {
+            openConfirm(
+              'Start as Shraddha (Girlfriend)?',
+              'A fresh chat will begin and current messages will be cleared.',
+              () => { closeConfirm(); applyRoleChange('roleplay','girlfriend'); }
+            );
+          }}
+        >Girlfriend</button>
+
+        <button
+          className="role-chip"
+          onClick={() => {
+            openConfirm(
+              'Start as Shraddha (Cousin)?',
+              'A fresh chat will begin and current messages will be cleared.',
+              () => { closeConfirm(); applyRoleChange('roleplay','cousin'); }
+            );
+          }}
+        >Cousin</button>
+      </div>
+
+      {(roleplayNeedsPremium && !isOwner && !(wallet?.expires_at > Date.now())) ? (
+        <div className="role-upsell">Roleplay requires recharge.</div>
+      ) : null}
     </div>
   </div>
 )}
