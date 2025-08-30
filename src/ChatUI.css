@@ -126,7 +126,7 @@ flex-wrap: nowrap;
   justify-content: flex-end;
 
   /* only a small bottom padding now (no double space) */
-  padding: 12px 10px 62px;
+  padding: 12px 10px 60px;
 
   overflow-y: auto;
   overscroll-behavior-y: contain;
@@ -727,8 +727,8 @@ flex-wrap: nowrap;
   min-height: 0;                 /* allows it to shrink within the column */
   overflow-y: auto;
   overscroll-behavior-y: contain;
-  padding: 12px 10px 62px;            /* was: 12px 10px calc(24px + var(--ftr-h, 90px)) */
-  scroll-padding-bottom: 62px;
+  padding: 12px 10px 60px;            /* was: 12px 10px calc(24px + var(--ftr-h, 90px)) */
+  scroll-padding-bottom: 60px;
   display: flex;
   flex-direction: column;
   justify-content: flex-end;     /* anchor messages to the bottom edge */
@@ -796,14 +796,13 @@ flex-wrap: nowrap;
   }
 }
 
-/* === Bubble width & padding tune (applies everywhere) === */
-.message { max-width: 88%; }   /* use 90% if you want even longer lines */
+/* === Bubble width & right-side padding (final overrides) === */
+.message { max-width: 92%; }         /* was 88% — lets lines run longer */
 
-/* base: even L/R padding */
-.bubble-content { padding: 10px 16px 18px 16px; }
+.bubble-content { padding: 10px 16px 18px 16px; }  /* even L/R base */
 
-/* leave a small gutter on the right for the time */
-.user-message .bubble-content  { padding: 10px 36px 18px 16px; }  /* was 8px 42px 16px 13px */
-.allie-message .bubble-content { padding: 10px 30px 18px 16px; }  /* was 8px 22px 16px 13px */
+/* tighter gutter for the time so text can go further right */
+.user-message .bubble-content  { padding-right: 28px; }  /* was 36px */
+.allie-message .bubble-content { padding-right: 24px; }  /* was 30px */
 
-.msg-time { right: 10px; bottom: 8px; }  /* keep the time off the edge */
+.msg-time { right: 6px; bottom: 8px; }               /* was right:10px */
