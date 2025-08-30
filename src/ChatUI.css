@@ -441,11 +441,6 @@ flex-wrap: nowrap;
   padding-right: 90px;        /* space for the time at right */
   overflow: visible;
 }
-
-.role-menu button:hover {
-  filter: brightness(0.96);
-}
-
 /* Fallback link only if the <audio> fails to have a src */
 .audio-fallback { margin-top: 4px; font-size: 12px; }
 .audio-player[src] + .audio-fallback { display: none; }
