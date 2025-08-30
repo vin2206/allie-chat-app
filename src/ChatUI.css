@@ -532,6 +532,22 @@ flex-wrap: nowrap;
   /* no border so it matches Wife/GF/Bhabhi/Cousin pills */
   box-shadow: 0 2px 6px rgba(0,0,0,.18); /* same depth as the main .role-badge */
 }
+/* Auto-compact header when content would wrap */
+.header.narrow .username { font-size: 20px; max-width: 42vw; }
+.header.tiny   .username { font-size: 18px; max-width: 38vw; }
+
+.header.narrow .coin-pill,
+.header.narrow .role-btn { padding: 5px 8px;  font-size: 11px; }
+
+.header.tiny .coin-pill,
+.header.tiny .role-btn { padding: 4px 7px; font-size: 10px; }
+
+/* shrink the red "Stranger" badge a bit when tight */
+.header.narrow .role-badge { font-size: 11px; padding: 2px 7px; }
+.header.tiny   .role-badge { font-size: 10px; padding: 1px 6px; }
+
+/* if a wrap still happens on ultra-small screens, keep it neat */
+.header .username-container { align-content: center; }
 /* —— Coins popup polishing —— */
 .coins-modal-title{
   margin: 0 0 4px;
@@ -685,21 +701,39 @@ flex-wrap: nowrap;
   position: sticky;
   bottom: 0;
   z-index: 100;
-  padding-bottom: calc(15px + env(safe-area-inset-bottom));
+
+  /* slightly tighter — fixes “stretchy” feel */
+  padding: 12px 16px;
+  padding-bottom: calc(12px + env(safe-area-inset-bottom));
+}
+
+/* smaller, non-shifting controls to avoid clipping in some webviews */
+.App.stable .footer .send-btn,
+.App.stable .footer .mic-btn {
+  width: 52px;
+  height: 52px;
+  transform: none;          /* was translateY(-2px) — can cause visual crop */
+}
+
+.App.stable .footer input {
+  min-height: 42px;
 }
 
 /* Center scroll area now just flexes; reserve space for the sticky footer */
 .App.stable .chat-container {
   position: relative;
   flex: 1 1 auto;
-  min-height: 0;                  /* allows it to shrink within the column */
+  min-height: 0;                 /* allows it to shrink within the column */
   overflow-y: auto;
   overscroll-behavior-y: contain;
-  /* add bottom padding equal to footer height so bubbles never sit under it */
-  padding: 12px 10px calc(12px + var(--ftr-h, 90px));
+
+  /* keep bubbles clear of the sticky footer on *all* phones */
+  padding: 12px 10px calc(16px + var(--ftr-h, 90px));
+  scroll-padding-bottom: calc(16px + var(--ftr-h, 90px));
+
   display: flex;
   flex-direction: column;
-  justify-content: flex-end;      /* anchor messages to the bottom edge */
+  justify-content: flex-end;     /* anchor messages to the bottom edge */
 }
 /* Compact header when space is tight to prevent wrap/overlap */
 @media (max-width: 420px) {
