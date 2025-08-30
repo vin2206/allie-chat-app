@@ -786,5 +786,12 @@ flex-wrap: nowrap;
     width: 42px;
     height: 42px;
     transform: none; /* prevents any visual crop on old webviews */
+  } 
+
+  /* micro-align header pills on legacy Android WebViews */
+  .username-container > .coin-pill,
+  .username-container > .role-btn {
+    position: relative;
+    top: -1.5px;   /* try -2px if Realme still shows a tiny drop */
   }
 }
