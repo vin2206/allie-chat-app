@@ -482,6 +482,12 @@ flex-wrap: nowrap;
   cursor:pointer; margin-left:auto; margin-right:8px;
 }
 .coin-pill:active{ transform: translateY(1px); }
+/* NEW — prevent header badges from shrinking on tiny/older WebViews */
+.username-container > .coin-pill,
+.username-container > .role-btn,
+.username-container > .validity-ttl {
+  flex-shrink: 0;
+}
 @media (hover:hover){ .coin-pill:hover{ background: rgba(255,255,255,.32); } }
 /* ——— header “Modes” pill ——— */
 .role-btn{
@@ -682,18 +688,18 @@ flex-wrap: nowrap;
   padding-bottom: calc(15px + env(safe-area-inset-bottom));
 }
 
-/* Center scroll area now just flexes; no fixed top/bottom, no --hdr-h/--ftr-h */
+/* Center scroll area now just flexes; reserve space for the sticky footer */
 .App.stable .chat-container {
   position: relative;
-  top: 0; bottom: auto; left: 0; right: 0;
   flex: 1 1 auto;
-  min-height: 0;              /* <- critical so it can actually shrink */
+  min-height: 0;                  /* allows it to shrink within the column */
   overflow-y: auto;
   overscroll-behavior-y: contain;
-  padding: 12px 10px 12px;    /* keep your current look */
+  /* add bottom padding equal to footer height so bubbles never sit under it */
+  padding: 12px 10px calc(12px + var(--ftr-h, 90px));
   display: flex;
   flex-direction: column;
-  justify-content: flex-end;  /* keep messages anchored to bottom */
+  justify-content: flex-end;      /* anchor messages to the bottom edge */
 }
 /* Compact header when space is tight to prevent wrap/overlap */
 @media (max-width: 420px) {
@@ -709,4 +715,13 @@ flex-wrap: nowrap;
 /* Fallback for very old WebViews that lack sticky: layout still stable */
 @supports not (position: sticky) {
   .App.stable .header, .App.stable .footer { position: static; }
+}
+/* NEW — on extremely tight screens, allow a neat two-line header */
+@media (max-width: 360px) {
+  .App.stable .username-container { flex-wrap: wrap; }
+  .App.stable .name-wrap { flex: 1 1 100%; max-width: 100%; }
+  .App.stable .username { max-width: 100%; }
+  .App.stable .coin-pill,
+  .App.stable .role-btn,
+  .App.stable .validity-ttl { margin-top: 6px; }
 }
