@@ -795,3 +795,15 @@ flex-wrap: nowrap;
     top: -1.5px;   /* try -2px if Realme still shows a tiny drop */
   }
 }
+
+/* === Bubble width & padding tune (applies everywhere) === */
+.message { max-width: 88%; }   /* use 90% if you want even longer lines */
+
+/* base: even L/R padding */
+.bubble-content { padding: 10px 16px 18px 16px; }
+
+/* leave a small gutter on the right for the time */
+.user-message .bubble-content  { padding: 10px 36px 18px 16px; }  /* was 8px 42px 16px 13px */
+.allie-message .bubble-content { padding: 10px 30px 18px 16px; }  /* was 8px 22px 16px 13px */
+
+.msg-time { right: 10px; bottom: 8px; }  /* keep the time off the edge */
