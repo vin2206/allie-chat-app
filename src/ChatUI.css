@@ -126,7 +126,7 @@ flex-wrap: nowrap;
   justify-content: flex-end;
 
   /* only a small bottom padding now (no double space) */
-  padding: 12px 10px 24px;
+  padding: 12px 10px 36px;
 
   overflow-y: auto;
   overscroll-behavior-y: contain;
@@ -173,7 +173,7 @@ flex-wrap: nowrap;
 
 .user-message {
   align-self: flex-end;
-  margin-left: 36px;   /* WhatsApp's feel is 32–40px, so the bubble does not hug the edge */
+  margin-left: 40px;   /* WhatsApp's feel is 32–40px, so the bubble does not hug the edge */
   margin-right: 1px;  /* Add a bit more, usually 8–14px on mobile */
   margin-top: 3px;
   margin-bottom: 3px;
@@ -182,7 +182,7 @@ flex-wrap: nowrap;
 .allie-message {
   align-self: flex-start;
   margin-left: 1px;   /* WhatsApp uses 10–16px for breathing room */
-  margin-right: 36px;  /* Big gap on right so text never goes far right, matches left bubble */
+  margin-right: 40px;  /* Big gap on right so text never goes far right, matches left bubble */
   margin-top: 3px;
   margin-bottom: 3px;
 }
@@ -727,8 +727,8 @@ flex-wrap: nowrap;
   min-height: 0;                 /* allows it to shrink within the column */
   overflow-y: auto;
   overscroll-behavior-y: contain;
-  padding: 12px 10px 24px;            /* was: 12px 10px calc(24px + var(--ftr-h, 90px)) */
-  scroll-padding-bottom: 24px;
+  padding: 12px 10px 36px;            /* was: 12px 10px calc(24px + var(--ftr-h, 90px)) */
+  scroll-padding-bottom: 36px;
   display: flex;
   flex-direction: column;
   justify-content: flex-end;     /* anchor messages to the bottom edge */
