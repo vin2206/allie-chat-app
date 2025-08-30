@@ -828,6 +828,36 @@ window.addEventListener('pageshow', setVars);
   window.removeEventListener('pageshow', setVars);
 };
 }, []);
+
+  // Auto-compact the header when contents overflow (enables .narrow / .tiny)
+useEffect(() => {
+  const header = document.querySelector('.header');
+  const container = header?.querySelector('.username-container');
+  if (!header || !container) return;
+
+  const clamp = () => {
+    header.classList.remove('narrow', 'tiny');
+    // If row is overflowing, step down sizes; if still overflowing, step down again
+    if (container.scrollWidth > container.clientWidth + 2) {
+      header.classList.add('narrow');
+      if (container.scrollWidth > container.clientWidth + 24) {
+        header.classList.add('tiny');
+      }
+    }
+  };
+
+  clamp();
+  const ro = new ResizeObserver(clamp);
+  ro.observe(container);
+  Array.from(container.children).forEach(el => ro.observe(el));
+  window.addEventListener('resize', clamp);
+
+  return () => {
+    ro.disconnect();
+    window.removeEventListener('resize', clamp);
+  };
+}, [user, coins, roleMode, roleType, ttl]);
+  
   // Lock the app to the *exact* visible viewport height (older Android safe)
 useEffect(() => {
   const setAppH = () => {
