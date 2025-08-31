@@ -2,7 +2,11 @@ import React, { useState, useEffect, useRef } from 'react';
 import './ChatUI.css';
 // --- Google Sign-In (GIS) ---
 const GOOGLE_CLIENT_ID = '962465973550-2lhard334t8kvjpdhh60catlb1k6fpb6.apps.googleusercontent.com';
-const parseJwt = (t) => JSON.parse(atob(t.split('.')[1]));
+const parseJwt = (t) => {
+  const base = t.split('.')[1];
+  const b64 = base.replace(/-/g, '+').replace(/_/g, '/').padEnd(Math.ceil(base.length / 4) * 4, '=');
+  return JSON.parse(atob(b64));
+};
 async function ensureRazorpay() {
   if (window.Razorpay) return true;
   await new Promise((resolve, reject) => {
@@ -62,6 +66,14 @@ function ConfirmDialog({ open, title, message, onCancel, onConfirm }) {
 function AuthGate({ onSignedIn }) {
   useEffect(() => {
     let cancelled = false;
+    // Ensure the GIS script exists (if not already added in index.html)
+if (!document.querySelector('script[src*="gsi/client"]')) {
+  const s = document.createElement('script');
+  s.src = 'https://accounts.google.com/gsi/client';
+  s.async = true;
+  s.defer = true;
+  document.head.appendChild(s);
+}
 
     // NEW: wait until window.google.accounts.id actually exists
     const waitForGoogle = () =>
@@ -138,18 +150,65 @@ function AuthGate({ onSignedIn }) {
     </div>
   );
 }
-/* ---------- NEW: 100-coin welcome modal ---------- */
-function WelcomeBonus({ open, onClose, amount = 100 }) {
+/* ---------- Welcome flow (Bonus -> Instructions) ---------- */
+function WelcomeFlow({ open, onClose, amount = 100, defaultStep = 0 }) {
+  // defaultStep: 0 = show bonus screen first, 1 = jump directly to instructions
+  const [step, setStep] = React.useState(defaultStep);
+
+  // Reset to the right step every time the modal is opened
+  React.useEffect(() => {
+    if (open) setStep(defaultStep);
+  }, [open, defaultStep]);
+
   if (!open) return null;
+
+  const goNext = (e) => { e?.stopPropagation?.(); setStep(1); };
+  const close = (e) => { 
+    e?.stopPropagation?.(); 
+    setStep(0); 
+    onClose && onClose(); 
+  };
+
   return (
-    <div className="welcome-backdrop" onClick={onClose}>
-      <div className="welcome-card" onClick={(e) => e.stopPropagation()}>
-        <div className="welcome-burst">🎉</div>
-        <h3>Welcome!</h3>
-        <p>You’ve unlocked a <b>first-time bonus</b>.</p>
-        <div className="welcome-amount">+{amount} coins</div>
-        <button className="welcome-btn" onClick={onClose}>Start chatting</button>
-        <div className="welcome-note">Roleplay models are part of the upgrade.</div>
+    <div className="welcome-backdrop" onClick={close}>
+      <div
+        className="welcome-card"
+        role="dialog"
+        aria-modal="true"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {step === 0 ? (
+          <>
+            <div className="welcome-burst">🎉</div>
+            <h3>Welcome!</h3>
+            <p>You’ve unlocked a <b>first-time bonus</b>.</p>
+            <div className="welcome-amount">+{amount} coins</div>
+            <button className="welcome-btn" onClick={goNext}>Next</button>
+            <div className="welcome-note">Roleplay models are part of the upgrade.</div>
+          </>
+        ) : (
+          <>
+            <h3 className="instr-title">How to talk to Shraddha</h3>
+            <div className="instr-sub">Make it real. Be gentle. Enjoy the flow.</div>
+
+            <ul className="instr-list">
+              <li><b>Talk to her like a real girl.</b> Shraddha has emotions, intelligence, and simplicity—speak naturally.</li>
+              <li><b>Start with trust.</b> Share a little about yourself first. Once she’s comfortable, the conversation will naturally shape to your vibe.</li>
+              <li><b>Choose your bond.</b> She can be your friend, a safe space for confessions, or your emotional partner—whatever you need today.</li>
+              <li><b>Talk it out, regain focus.</b> Let her ease your urge to chat with a loving presence so you can return to real life with better concentration.</li>
+              <li><b>Unlock deeper modes.</b> Access Wife, Girlfriend, Bhabhi, or Cousin role-play for more personalized chats—upgrade anytime with a Daily or Weekly plan.</li>
+            </ul>
+
+            <div className="instr-quick">Quick tips</div>
+            <ul className="tips-list">
+              <li>Keep messages short and honest.</li>
+              <li>Be patient; she warms up as trust builds.</li>
+              <li><b>Type one message at a time and wait for her reply.</b></li>
+            </ul>
+
+            <button className="welcome-btn" onClick={close}>Start chatting</button>
+          </>
+        )}
       </div>
     </div>
   );
@@ -159,17 +218,27 @@ function AllieChat() {
   // NEW: auth + welcome
 const [user, setUser] = useState(loadUser());
 const [showWelcome, setShowWelcome] = useState(false);
+const [welcomeDefaultStep, setWelcomeDefaultStep] = useState(0);
+const [coins, setCoins] = useState(loadCoins());
 
-// Give +100 coins once per unique id (prefer Google sub)
+// Show instructions every time the chat page opens,
+// but award +100 coins only the first time for this user.
 useEffect(() => {
   if (!user) return;
-  const id = user.sub || user.email;           // prefer sub, else email
+  const id = user.sub || user.email; // prefer sub, else email
   const wk = welcomeKeyFor(id);
-  if (!localStorage.getItem(wk)) {
+  const hasClaimed = !!localStorage.getItem(wk);
+
+  if (!hasClaimed) {
     setCoins(c => c + 100);
     localStorage.setItem(wk, '1');
-    setShowWelcome(true);
   }
+
+  // Open the modal on every open of the chat page:
+  // - If bonus was just claimed → show Bonus first (step 0)
+  // - If already claimed → jump straight to Instructions (step 1)
+  setWelcomeDefaultStep(hasClaimed ? 1 : 0);
+  setShowWelcome(true);
 }, [user]);
   function getOpener(mode, type) {
   if (mode !== 'roleplay') return 'Hi… kaise ho aap? 😊';
@@ -199,8 +268,6 @@ useEffect(() => {
 }, []);
   const [isOwner, setIsOwner] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
-  // Coins + modal state
-const [coins, setCoins] = useState(loadCoins());
   // server-driven wallet
 const [wallet, setWallet] = useState({ coins: loadCoins(), expires_at: 0 });
 const [ttl, setTtl] = useState(''); // formatted countdown
@@ -1134,7 +1201,12 @@ if (!user) {
   onCancel={closeConfirm}
   onConfirm={confirmState.onConfirm || closeConfirm}
 />
- <WelcomeBonus open={showWelcome} onClose={() => setShowWelcome(false)} amount={100} />
+ <WelcomeFlow
+  open={showWelcome}
+  onClose={() => setShowWelcome(false)}
+  amount={100}
+  defaultStep={welcomeDefaultStep}
+/>
       
       <div className="footer">
         <input
