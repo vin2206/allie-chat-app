@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './ChatUI.css';
+import { startVersionWatcher } from './versionWatcher';
 // --- Google Sign-In (GIS) ---
 const GOOGLE_CLIENT_ID = '962465973550-2lhard334t8kvjpdhh60catlb1k6fpb6.apps.googleusercontent.com';
 const parseJwt = (t) => {
