@@ -218,6 +218,10 @@ function WelcomeFlow({ open, onClose, amount = 100, defaultStep = 0 }) {
 function AllieChat() {
   // NEW: auth + welcome
 const [user, setUser] = useState(loadUser());
+  useEffect(() => {
+  const stop = startVersionWatcher(60000);
+  return stop;
+}, []);
 const [showWelcome, setShowWelcome] = useState(false);
 const [welcomeDefaultStep, setWelcomeDefaultStep] = useState(0);
 const [coins, setCoins] = useState(loadCoins());
