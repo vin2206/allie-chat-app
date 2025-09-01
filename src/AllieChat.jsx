@@ -274,6 +274,48 @@ useEffect(() => {
 }, []);
   const [isOwner, setIsOwner] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
+  // ——— Emoji picker state/refs ———
+const [showEmoji, setShowEmoji] = useState(false);
+const emojiPanelRef = useRef(null);
+const inputRef = useRef(null);
+
+const EMOJIS = [
+  "😀","😁","😂","😊","😍","😘","💦","🤔","😏","😎","😈","😭","😡","😴","🤩","😜","🤤",
+  "👍","👎","👨‍👩‍👦","🐍","🙏","💪","💖","💔","🔥","💯","🎉","✨","🌹","🥰"
+];
+
+function insertEmoji(emo) {
+  const el = inputRef.current;
+  if (!el) return;
+  const start = el.selectionStart ?? inputValue.length;
+  const end   = el.selectionEnd ?? inputValue.length;
+  const next  = inputValue.slice(0, start) + emo + inputValue.slice(end);
+  setInputValue(next);
+  // place caret after inserted emoji
+  requestAnimationFrame(() => {
+    el.focus();
+    const pos = start + emo.length;
+    el.setSelectionRange(pos, pos);
+  });
+}
+
+// close picker on outside click / ESC
+useEffect(() => {
+  if (!showEmoji) return;
+  const onDocClick = (e) => {
+    if (emojiPanelRef.current?.contains(e.target)) return;
+    const btn = document.querySelector('.emoji-btn');
+    if (btn && btn.contains(e.target)) return;
+    setShowEmoji(false);
+  };
+  const onEsc = (e) => { if (e.key === 'Escape') setShowEmoji(false); };
+  document.addEventListener('mousedown', onDocClick);
+  document.addEventListener('keydown', onEsc);
+  return () => {
+    document.removeEventListener('mousedown', onDocClick);
+    document.removeEventListener('keydown', onEsc);
+  };
+}, [showEmoji]);
   // server-driven wallet
 const [wallet, setWallet] = useState({ coins: loadCoins(), expires_at: 0 });
 const [ttl, setTtl] = useState(''); // formatted countdown
@@ -670,7 +712,8 @@ const sendVoiceBlob = async (blob) => {
   }
 };
   const handleSend = async () => {
-  if (inputValue.trim() === '' || isPaused || isTyping || cooldown) return;
+  setShowEmoji(false); // close emoji panel when sending
+  if (inputValue.trim() === '' || isPaused || isTyping || cooldown || isRecording) return;
 
   // Quick commands
   if (inputValue.trim().toLowerCase() === '#stranger') {
@@ -1252,27 +1295,63 @@ if (!user) {
 />
       
       <div className="footer">
+        {/* Emoji toggle button (left, like WhatsApp) */}
+        <button
+          type="button"
+          className="emoji-btn"
+          aria-label="Emoji"
+          title="Emoji"
+          onClick={() => setShowEmoji(v => !v)}
+        >
+          😊
+        </button>
+
+        {/* Text input */}
         <input
+          ref={inputRef}
           type="text"
           placeholder="Type a message..."
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+          onFocus={() => setShowEmoji(false)}
         />
+
+        {/* Mic */}
         <button
-  className={`mic-btn ${isRecording ? 'recording' : ''}`}
-  onClick={() => { if (!isRecording) { startRecording(); } else { stopRecording(); } }}
-  title={isRecording ? "Recording… tap to stop" : "Tap to record (5s)"}
-  aria-label={isRecording ? "Stop recording" : "Start recording"}
->
-  <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-    <path d="M12 14a3 3 0 0 0 3-3V6a3 3 0 1 0-6 0v5a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 14 0h-2zM11 19v3h2v-3h-2z"/>
-  </svg>
-</button>
-        
-        <button className="send-btn" onClick={handleSend}>➤</button>
-      </div>
-    </div>
+          type="button"
+          className={`mic-btn ${isRecording ? 'recording' : ''}`}
+          onClick={() => { if (!isRecording) { startRecording(); } else { stopRecording(); } }}
+          title={isRecording ? "Recording… tap to stop" : "Tap to record (5s)"}
+          aria-label={isRecording ? "Stop recording" : "Start recording"}
+        >
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M12 14a3 3 0 0 0 3-3V6a3 3 0 1 0-6 0v5a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 14 0h-2zM11 19v3h2v-3h-2z"/>
+          </svg>
+        </button>
+
+        {/* Send */}
+        <button type="button" className="send-btn" onClick={handleSend}>➤</button>
+
+        {/* Emoji panel (anchored to footer) */}
+        {showEmoji && (
+          <div className="emoji-panel" ref={emojiPanelRef} role="dialog" aria-label="Emoji picker">
+            <div className="emoji-grid">
+              {EMOJIS.map((e) => (
+                <button
+                  key={e}
+                  type="button"
+                  className="emoji-item"
+                  onClick={() => { insertEmoji(e); setShowEmoji(false); }}
+                >
+                  {e}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+      </div> {/* footer END */}
+    </div> {/* App END */}
   );
 }
 
