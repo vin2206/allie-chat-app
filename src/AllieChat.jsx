@@ -969,7 +969,7 @@ if (!user) {
 }
 
   return (
-    <div className={App fixed ${user ? 'signed-in' : 'auth'}}>
+    <div className={App stable ${user ? 'signed-in' : 'auth'}}>
       <div className="header">
         <div className="profile-pic">
           <img
