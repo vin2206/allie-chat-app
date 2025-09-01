@@ -576,7 +576,11 @@ const startRecording = async () => {
   try {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
 
-    const mr = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+    if (!window.MediaRecorder) {
+  window.alert('Voice notes are not supported in this browser.');
+  return;
+}
+const mr = new window.MediaRecorder(stream, { mimeType: 'audio/webm' });
     chunksRef.current = [];
 
     mr.ondataavailable = (e) => {
@@ -912,7 +916,9 @@ useEffect(() => {
 
   setVars();
 
-  const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(setVars) : null;
+  const ro = typeof window.ResizeObserver !== 'undefined'
+  ? new window.ResizeObserver(setVars)
+  : null;
 if (ro && headerEl) ro.observe(headerEl);
 if (ro && footerEl) ro.observe(footerEl);
 
@@ -996,9 +1002,13 @@ useEffect(() => {
   };
 
   clamp();
-  const ro = new ResizeObserver(clamp);
+  const ro = typeof window.ResizeObserver !== 'undefined'
+  ? new window.ResizeObserver(clamp)
+  : null;
+if (ro) {
   ro.observe(container);
   Array.from(container.children).forEach(el => ro.observe(el));
+}
   window.addEventListener('resize', clamp);
 
   return () => {
