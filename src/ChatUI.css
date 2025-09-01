@@ -798,8 +798,8 @@ body { background: linear-gradient(180deg, #fce7f3 0%, #ede9fe 100%); }
   overflow-y: auto;
   overscroll-behavior-y: contain;
 /* Reserve actual footer height + a tiny gap */
-  padding: 12px 10px calc(18px + env(safe-area-inset-bottom));
-  scroll-padding-bottom: 18px;
+  padding: 12px 10px calc(var(--ftr-h, 90px) + 12px + env(safe-area-inset-bottom));
+  scroll-padding-bottom: 12px;
   display: flex;
   flex-direction: column;
   justify-content: flex-end;     /* anchor messages to the bottom edge */
