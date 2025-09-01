@@ -796,8 +796,8 @@ flex-wrap: nowrap;
   overflow-y: auto;
   overscroll-behavior-y: contain;
 /* Reserve actual footer height + a tiny gap */
-  padding: 12px 10px calc(var(--ftr-h, 90px) + 12px + env(safe-area-inset-bottom));
-  scroll-padding-bottom: calc(var(--ftr-h, 90px) + 12px);
+  padding: 12px 10px calc(11px + env(safe-area-inset-bottom));
+  scroll-padding-bottom: 11px;
   display: flex;
   flex-direction: column;
   justify-content: flex-end;     /* anchor messages to the bottom edge */
