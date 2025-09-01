@@ -816,10 +816,14 @@ body { background: linear-gradient(180deg, #fce7f3 0%, #ede9fe 100%); }
   overflow-y: auto;
   overscroll-behavior-y: contain;
   padding: 12px 10px calc(12px + env(safe-area-inset-bottom));
-  scroll-padding-bottom: 0; /* important: container no longer reserves large space */
+  scroll-padding-bottom: calc(var(--ftr-h, 90px) + 8px);
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
+}
+/* Keep the invisible bottom anchor above the sticky footer (Chrome mobile) */
+.App.stable .chat-container > div:last-child {
+  scroll-margin-block-end: calc(var(--ftr-h, 90px) + 8px);
 }
 
 /* tell the browser how much space to keep above the footer when scrolling */
