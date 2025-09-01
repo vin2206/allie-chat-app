@@ -388,7 +388,7 @@ useEffect(() => {
   return () => clearInterval(t);
 }, [wallet.expires_at]);
 const [showCoins, setShowCoins] = useState(false);
-const [autoRenew, setAutoRenew] = useState(loadAuto());
+const [autoRenew] = useState(loadAuto()); // setter not needed
 useEffect(() => saveCoins(coins), [coins]);
 useEffect(() => saveAuto(autoRenew), [autoRenew]);
   // Auto-unlock Owner mode if signed-in email matches
@@ -399,11 +399,6 @@ useEffect(() => {
 
 const openCoins = () => setShowCoins(true);
 const closeCoins = () => setShowCoins(false);
-const addCoins = (pack) => {
-  setCoins(c => c + (pack?.coins || 0));
-  closeCoins();
-  setMessages(prev => [...prev, { text: `🪙 +${pack.coins} coins added`, sender: 'allie', time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }]);
-};
   async function buyPack(pack){
   if (!user) return;
   try {
