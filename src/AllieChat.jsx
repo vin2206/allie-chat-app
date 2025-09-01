@@ -1364,8 +1364,8 @@ if (!user) {
             </div>
           </div>
         )}
-      </div> {/* footer END */}
-    </div> {/* App END */}
+      </div>
+    </div>
   );
 }
 
