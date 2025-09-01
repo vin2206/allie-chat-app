@@ -126,7 +126,7 @@ flex-wrap: nowrap;
   justify-content: flex-end;
 
   /* only a small bottom padding now (no double space) */
-  padding: 12px 10px 60px;
+  padding: 12px 10px 80px;
 
   overflow-y: auto;
   overscroll-behavior-y: contain;
