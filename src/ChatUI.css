@@ -808,22 +808,25 @@ body { background: linear-gradient(180deg, #fce7f3 0%, #ede9fe 100%); }
 .App.stable .footer input {
   min-height: 42px;
 }
-
-/* Center scroll area with sticky footer — must reserve footer height */
+/* chat area: tiny breathing room only */
 .App.stable .chat-container{
   position: relative;
   flex: 1 1 auto;
   min-height: 0;
   overflow-y: auto;
   overscroll-behavior-y: contain;
-
-  /* only a tiny cushion; NO footer-height reservation here */
   padding: 12px 10px calc(12px + env(safe-area-inset-bottom));
-  scroll-padding-bottom: 15px; /* or 0 if you want it flush */
-  
+  scroll-padding-bottom: 0; /* important: container no longer reserves large space */
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
+}
+
+/* tell the browser how much space to keep above the footer when scrolling */
+:root { --ftr-h: 90px; } /* you'll set this from JS below */
+.message,
+.typing-bounce { 
+  scroll-margin-block-end: calc(var(--ftr-h, 90px) + 8px);
 }
 /* Compact header when space is tight to prevent wrap/overlap */
 @media (max-width: 420px) {
