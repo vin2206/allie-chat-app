@@ -228,7 +228,7 @@ const [user, setUser] = useState(loadUser());
 const [showWelcome, setShowWelcome] = useState(false);
 const [welcomeDefaultStep, setWelcomeDefaultStep] = useState(0);
 const [coins, setCoins] = useState(loadCoins());
-const [layoutClass, setLayoutClass] = useState('fixed');
+const [layoutClass, setLayoutClass] = useState('stable');
 
 // Show instructions every time the chat page opens,
 // but award +100 coins only the first time for this user.
@@ -1322,14 +1322,19 @@ if (!user) {
           />
 
           <button
-            type="button"
-            className="emoji-inside"
-            aria-label="Emoji"
-            title="Emoji"
-            onClick={() => setShowEmoji(v => !v)}
-          >
-            🙂
-          </button>
+  type="button"
+  className="emoji-inside"
+  aria-label="Emoji picker"
+  title="Emoji"
+  onClick={() => setShowEmoji(v => !v)}
+>
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+    <circle cx="12" cy="12" r="9.5" fill="none" stroke="currentColor" strokeWidth="1.5"/>
+    <circle cx="9" cy="10" r="1.2"/>
+    <circle cx="15" cy="10" r="1.2"/>
+    <path d="M8 14c1 1.3 2.4 2 4 2s3-.7 4-2" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+  </svg>
+</button>
 
           {/* Emoji panel (drops above the input) */}
           {showEmoji && (
