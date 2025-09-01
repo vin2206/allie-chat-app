@@ -809,19 +809,23 @@ body { background: linear-gradient(180deg, #fce7f3 0%, #ede9fe 100%); }
   min-height: 42px;
 }
 
-/* Center scroll area now just flexes; reserve space for the sticky footer */
+/* Center scroll area with sticky footer — must reserve footer height */
 .App.stable .chat-container {
   position: relative;
   flex: 1 1 auto;
-  min-height: 0;                 /* allows it to shrink within the column */
+  min-height: 0;
   overflow-y: auto;
   overscroll-behavior-y: contain;
-/* Reserve actual footer height + a tiny gap */
-  padding: 12px 10px calc(12px + env(safe-area-inset-bottom));
-  scroll-padding-bottom: 12px;
+
+  /* reserve footer height + a small gap + safe area */
+  padding: 12px 10px calc(var(--ftr-h, 90px) + 12px + env(safe-area-inset-bottom));
+
+  /* helps scrollIntoView land above the footer */
+  scroll-padding-bottom: calc(var(--ftr-h, 90px) + 12px);
+
   display: flex;
   flex-direction: column;
-  justify-content: flex-end;     /* anchor messages to the bottom edge */
+  justify-content: flex-end;
   top: auto;
   bottom: auto;
 }
