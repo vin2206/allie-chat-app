@@ -819,7 +819,7 @@ body { background: linear-gradient(180deg, #fce7f3 0%, #ede9fe 100%); }
 
   /* only a tiny cushion; NO footer-height reservation here */
   padding: 12px 10px calc(12px + env(safe-area-inset-bottom));
-  scroll-padding-bottom: 12px; /* or 0 if you want it flush */
+  scroll-padding-bottom: 15px; /* or 0 if you want it flush */
   
   display: flex;
   flex-direction: column;
