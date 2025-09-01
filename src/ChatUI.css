@@ -810,19 +810,20 @@ body { background: linear-gradient(180deg, #fce7f3 0%, #ede9fe 100%); }
 }
 
 /* Center scroll area with sticky footer — must reserve footer height */
-.App.stable .chat-container {
+.App.stable .chat-container{
   position: relative;
   flex: 1 1 auto;
   min-height: 0;
   overflow-y: auto;
   overscroll-behavior-y: contain;
-  padding: 12px 10px calc(var(--ftr-h, 90px) + 6px);   /* ← no env() here */
-  scroll-padding-bottom: calc(var(--ftr-h, 90px) + 6px);
+
+  /* only a tiny cushion; NO footer-height reservation here */
+  padding: 12px 10px calc(12px + env(safe-area-inset-bottom));
+  scroll-padding-bottom: 12px; /* or 0 if you want it flush */
+  
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
-  top: auto;
-  bottom: auto;
 }
 /* Compact header when space is tight to prevent wrap/overlap */
 @media (max-width: 420px) {
