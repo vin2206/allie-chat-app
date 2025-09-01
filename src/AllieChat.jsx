@@ -225,6 +225,7 @@ const [user, setUser] = useState(loadUser());
 const [showWelcome, setShowWelcome] = useState(false);
 const [welcomeDefaultStep, setWelcomeDefaultStep] = useState(0);
 const [coins, setCoins] = useState(loadCoins());
+const [layoutClass, setLayoutClass] = useState('fixed');
 
 // Show instructions every time the chat page opens,
 // but award +100 coins only the first time for this user.
@@ -902,6 +903,43 @@ window.addEventListener('pageshow', setVars);
 };
 }, []);
 
+  // Verify the footer isn't clipped; if it is, fall back to .stable on that device
+useEffect(() => {
+  const checkLayout = () => {
+    const footer = document.querySelector('.footer');
+    const chat   = document.querySelector('.chat-container');
+    if (!footer || !chat) return;
+
+    const vh = Math.round(
+      (window.visualViewport && window.visualViewport.height) ||
+      window.innerHeight || document.documentElement.clientHeight || 0
+    );
+    const fr = footer.getBoundingClientRect();
+    const cr = chat.getBoundingClientRect();
+
+    const footerCropped = Math.round(fr.bottom) > vh + 1;            // off-screen
+    const overlap       = Math.round(cr.bottom) > Math.round(fr.top) + 2; // chat under footer
+
+    if (footerCropped || overlap) setLayoutClass('stable');
+    else setLayoutClass('fixed');
+  };
+
+  // run now and whenever the viewport changes
+  checkLayout();
+  const vv = window.visualViewport;
+  vv?.addEventListener('resize', checkLayout);
+  window.addEventListener('resize', checkLayout);
+  window.addEventListener('orientationchange', checkLayout);
+  window.addEventListener('pageshow', checkLayout);
+
+  return () => {
+    vv?.removeEventListener('resize', checkLayout);
+    window.removeEventListener('resize', checkLayout);
+    window.removeEventListener('orientationchange', checkLayout);
+    window.removeEventListener('pageshow', checkLayout);
+  };
+}, []);
+
   // Auto-compact the header when contents overflow (enables .narrow / .tiny)
 useEffect(() => {
   const header = document.querySelector('.header');
@@ -969,7 +1007,7 @@ if (!user) {
 }
 
   return (
-    <div className={`App fixed ${user ? 'signed-in' : 'auth'}`}>
+    <div className={`App ${layoutClass} ${user ? 'signed-in' : 'auth'}`}>
       <div className="header">
         <div className="profile-pic">
           <img
