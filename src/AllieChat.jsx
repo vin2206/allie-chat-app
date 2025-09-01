@@ -1,5 +1,6 @@
 /* eslint-env browser */
-/* global atob, FormData */
+/* global atob, FormData, Image, URLSearchParams */
+/* eslint-disable no-console, no-alert, react-hooks/exhaustive-deps */
 import React, { useState, useEffect, useRef } from 'react';
 import './ChatUI.css';
 import { startVersionWatcher } from './versionWatcher';
@@ -165,12 +166,12 @@ function WelcomeFlow({ open, onClose, amount = 100, defaultStep = 0 }) {
 
   if (!open) return null;
 
-  const goNext = (e) => { e?.stopPropagation?.(); setStep(1); };
-  const close = (e) => { 
-    e?.stopPropagation?.(); 
-    setStep(0); 
-    onClose && onClose(); 
-  };
+const goNext = (e) => { if (e && typeof e.stopPropagation === 'function') e.stopPropagation(); setStep(1); };
+const close = (e) => {
+  if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
+  setStep(0);
+  onClose && onClose();
+};
 
   return (
     <div className="welcome-backdrop" onClick={close}>
@@ -305,7 +306,7 @@ function insertEmoji(emo) {
 useEffect(() => {
   if (!showEmoji) return;
   const onDocClick = (e) => {
-    if (emojiPanelRef.current?.contains(e.target)) return;
+    if (emojiPanelRef.current && emojiPanelRef.current.contains(e.target)) return;
     const btn = document.querySelector('.emoji-btn');
     if (btn && btn.contains(e.target)) return;
     setShowEmoji(false);
@@ -495,10 +496,12 @@ if (!sessionIdRef.current) {
   if (saved) {
     sessionIdRef.current = saved;
   } else {
-    const newId = (window.crypto?.randomUUID?.() || String(Date.now()));
-    localStorage.setItem('chat_session_id', newId);
-    sessionIdRef.current = newId;
-  }
+  const newId = (window.crypto && typeof window.crypto.randomUUID === 'function')
+    ? window.crypto.randomUUID()
+    : String(Date.now());
+  localStorage.setItem('chat_session_id', newId);
+  sessionIdRef.current = newId;
+}
 }
   // Tie the session to the chosen role to avoid context bleed
 const roleSuffix = roleMode === 'roleplay' && roleType ? `:${roleType}` : ':stranger';
@@ -878,14 +881,18 @@ if (shouldResetRef.current) { fetchRetryBody.reset = true; shouldResetRef.curren
 };
   
   useEffect(() => {
-  bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+  const el = bottomRef.current;
+  if (el && typeof el.scrollIntoView === 'function') {
+    el.scrollIntoView({ behavior: 'smooth', block: 'end' });
+  }
 }, [messages.length, isTyping]);
 
   useEffect(() => {
   if (!showRoleMenu) return;
 
   // Focus the close button when the modal opens
-  roleMenuRef.current?.querySelector('.role-close')?.focus();
+  const closeBtn = roleMenuRef.current && roleMenuRef.current.querySelector('.role-close');
+if (closeBtn && typeof closeBtn.focus === 'function') closeBtn.focus();
 
   const onDocClick = (e) => {
     if (roleMenuRef.current && !roleMenuRef.current.contains(e.target)) {
@@ -926,7 +933,7 @@ if (ro && footerEl) ro.observe(footerEl);
 
   // account for address bar / keyboard / visual viewport changes
   const vv = window.visualViewport;
-  if (vv) vv.addEventListener('resize', setVars);
+if (vv) vv.addEventListener('resize', setVars);
 
   window.addEventListener('resize', setVars);
   window.addEventListener('orientationchange', setVars);
@@ -973,13 +980,13 @@ useEffect(() => {
   // run now and whenever the viewport changes
   checkLayout();
   const vv = window.visualViewport;
-  vv?.addEventListener('resize', checkLayout);
+  if (vv) vv.addEventListener('resize', checkLayout);
   window.addEventListener('resize', checkLayout);
   window.addEventListener('orientationchange', checkLayout);
   window.addEventListener('pageshow', checkLayout);
 
   return () => {
-    vv?.removeEventListener('resize', checkLayout);
+    if (vv) vv.removeEventListener('resize', checkLayout);
     window.removeEventListener('resize', checkLayout);
     window.removeEventListener('orientationchange', checkLayout);
     window.removeEventListener('pageshow', checkLayout);
@@ -1035,13 +1042,13 @@ useEffect(() => {
   window.addEventListener('load', setAppH, { once: true });
 
   const vv = window.visualViewport;
-  vv?.addEventListener('resize', setAppH);
+  if (vv) vv.addEventListener('resize', setAppH);
   window.addEventListener('resize', setAppH);
   window.addEventListener('orientationchange', setAppH);
   window.addEventListener('pageshow', setAppH);
 
   return () => {
-    vv?.removeEventListener('resize', setAppH);
+    if (vv) vv.removeEventListener('resize', setAppH);
     window.removeEventListener('resize', setAppH);
     window.removeEventListener('orientationchange', setAppH);
     window.removeEventListener('pageshow', setAppH);
