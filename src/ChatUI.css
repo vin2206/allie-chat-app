@@ -779,6 +779,7 @@ body { background: linear-gradient(180deg, #fce7f3 0%, #ede9fe 100%); }
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
 /* Keep header/footer in normal flow so the center naturally fills the rest */
@@ -825,9 +826,9 @@ body { background: linear-gradient(180deg, #fce7f3 0%, #ede9fe 100%); }
 /* When the input is focused (keyboard up), keep the last bubble above the bar */
 @supports selector(:has(*)) {
   .App.stable:has(.footer :focus-within) .chat-container {
-    /* add visible space only while typing */
-    padding-bottom: calc(var(--ftr-h, 90px) + 12px + env(safe-area-inset-bottom));
-    /* and keep programmatic scrolls landing safely above the footer */
+    /* keep the same padding as idle state — no footer height here */
+    padding-bottom: calc(12px + env(safe-area-inset-bottom));
+    /* optional: you can omit this line; leaving it unchanged is fine too */
     scroll-padding-bottom: calc(var(--ftr-h, 90px) + 8px);
   }
 }
