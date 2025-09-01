@@ -125,11 +125,11 @@ body { background: linear-gradient(180deg, #fce7f3 0%, #ede9fe 100%); }
   justify-content: flex-end;
 
   /* ✅ small breathing room only */
-  padding: 12px 10px calc(12px + env(safe-area-inset-bottom));
+  padding: 12px 10px calc(10px + env(safe-area-inset-bottom));
 
   overflow-y: auto;
   overscroll-behavior-y: contain;
-  scroll-padding-bottom: 12px;
+  scroll-padding-bottom: 10px;
 }
 
 /* Spacer stays FLEX, not fixed height — lives at the TOP in JSX */
