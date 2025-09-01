@@ -400,7 +400,7 @@ body { background: linear-gradient(180deg, #fce7f3 0%, #ede9fe 100%); }
   animation-delay: 0.4s;
 }
 
-..allie-message.typing-bounce {
+.allie-message.typing-bounce {
   background: linear-gradient(135deg, #ffe3e3, #c2f0fc);
   padding: 12px 16px;
   border-radius: 8px 24px 24px 24px;   /* TL TR BR BL  ← small at top-left */
