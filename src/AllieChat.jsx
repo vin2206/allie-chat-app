@@ -307,7 +307,7 @@ useEffect(() => {
   if (!showEmoji) return;
   const onDocClick = (e) => {
     if (emojiPanelRef.current && emojiPanelRef.current.contains(e.target)) return;
-    const btn = document.querySelector('.emoji-btn');
+    const btn = document.querySelector('.emoji-inside');
     if (btn && btn.contains(e.target)) return;
     setShowEmoji(false);
   };
@@ -1309,27 +1309,46 @@ if (!user) {
 />
       
       <div className="footer">
-        {/* Emoji toggle button (left, like WhatsApp) */}
-        <button
-          type="button"
-          className="emoji-btn"
-          aria-label="Emoji"
-          title="Emoji"
-          onClick={() => setShowEmoji(v => !v)}
-        >
-          😊
-        </button>
+        {/* Input + tiny emoji inside (like WhatsApp) */}
+        <div className="input-wrap">
+          <input
+            ref={inputRef}
+            type="text"
+            placeholder="Type a message..."
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+            onFocus={() => setShowEmoji(false)}
+          />
 
-        {/* Text input */}
-        <input
-          ref={inputRef}
-          type="text"
-          placeholder="Type a message..."
-          value={inputValue}
-          onChange={(e) => setInputValue(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-          onFocus={() => setShowEmoji(false)}
-        />
+          <button
+            type="button"
+            className="emoji-inside"
+            aria-label="Emoji"
+            title="Emoji"
+            onClick={() => setShowEmoji(v => !v)}
+          >
+            🙂
+          </button>
+
+          {/* Emoji panel (drops above the input) */}
+          {showEmoji && (
+            <div className="emoji-panel" ref={emojiPanelRef} role="dialog" aria-label="Emoji picker">
+              <div className="emoji-grid">
+                {EMOJIS.map((e) => (
+                  <button
+                    key={e}
+                    type="button"
+                    className="emoji-item"
+                    onClick={() => { insertEmoji(e); setShowEmoji(false); }}
+                  >
+                    {e}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
 
         {/* Mic */}
         <button
@@ -1346,24 +1365,6 @@ if (!user) {
 
         {/* Send */}
         <button type="button" className="send-btn" onClick={handleSend}>➤</button>
-
-        {/* Emoji panel (anchored to footer) */}
-        {showEmoji && (
-          <div className="emoji-panel" ref={emojiPanelRef} role="dialog" aria-label="Emoji picker">
-            <div className="emoji-grid">
-              {EMOJIS.map((e) => (
-                <button
-                  key={e}
-                  type="button"
-                  className="emoji-item"
-                  onClick={() => { insertEmoji(e); setShowEmoji(false); }}
-                >
-                  {e}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );
