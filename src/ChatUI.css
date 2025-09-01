@@ -203,6 +203,27 @@ body { background: linear-gradient(180deg, #fce7f3 0%, #ede9fe 100%); }
   padding-bottom: calc(15px + env(safe-area-inset-bottom));
 }
 
+/* === Legacy/tiny screens: keep fixed layout but make footer compact === */
+@media (max-width: 380px), (max-height: 640px) {
+  .App.fixed .footer {
+    padding: 10px 12px;
+    gap: 8px;
+    /* keep safe-area if any */
+    padding-bottom: calc(10px + env(safe-area-inset-bottom));
+  }
+  .App.fixed .footer input {
+    min-height: 38px;
+    font-size: 15px;
+    min-width: 0;
+  }
+  .App.fixed .footer .send-btn,
+  .App.fixed .footer .mic-btn {
+    width: 46px;
+    height: 46px;
+    transform: none; /* avoids any visual crop on old webviews */
+  }
+}
+
 .footer input {
   flex: 1;
   padding: 15px 20px;
