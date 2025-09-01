@@ -1,3 +1,5 @@
+/* eslint-env browser */
+/* global atob, FormData */
 import React, { useState, useEffect, useRef } from 'react';
 import './ChatUI.css';
 import { startVersionWatcher } from './versionWatcher';
@@ -1012,9 +1014,9 @@ if (ro) {
   window.addEventListener('resize', clamp);
 
   return () => {
-    ro.disconnect();
-    window.removeEventListener('resize', clamp);
-  };
+  if (ro) ro.disconnect();             // <-- null-guard fixes CI crash
+  window.removeEventListener('resize', clamp);
+};
 }, [user, coins, roleMode, roleType, ttl]);
   
   // Lock the app to the *exact* visible viewport height (older Android safe)
@@ -1228,7 +1230,7 @@ if (!user) {
   </div>
 ))}
         {isTyping && (
-  <div className="message allie typing-bounce">
+  <div className="message allie-message typing-bounce">
     <span></span>
     <span></span>
     <span></span>
