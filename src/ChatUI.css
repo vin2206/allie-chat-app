@@ -117,20 +117,18 @@ body { background: linear-gradient(180deg, #fce7f3 0%, #ede9fe 100%); }
   top: var(--hdr-h, 80px);
   left: 0;
   right: 0;
-  bottom: calc(var(--ftr-h, 90px) + env(safe-area-inset-bottom));
+  /* ✅ reserve exactly the measured footer height — no extra env() */
+  bottom: var(--ftr-h, 90px);
 
-  /* Make messages anchor to bottom */
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
 
-  /* only a small bottom padding now (no double space) */
-  padding: 12px 10px 80px;
+  /* ✅ small breathing room only */
+  padding: 12px 10px calc(12px + env(safe-area-inset-bottom));
 
   overflow-y: auto;
   overscroll-behavior-y: contain;
-
-  /* keep a little gap when scrolling to bottom */
   scroll-padding-bottom: 12px;
 }
 
