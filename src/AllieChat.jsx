@@ -956,42 +956,8 @@ window.addEventListener('pageshow', setVars);
 };
 }, []);
 
-  // Verify the footer isn't clipped; if it is, fall back to .stable on that device
-useEffect(() => {
-  const checkLayout = () => {
-    const footer = document.querySelector('.footer');
-    const chat   = document.querySelector('.chat-container');
-    if (!footer || !chat) return;
-
-    const vh = Math.round(
-      (window.visualViewport && window.visualViewport.height) ||
-      window.innerHeight || document.documentElement.clientHeight || 0
-    );
-    const fr = footer.getBoundingClientRect();
-    const cr = chat.getBoundingClientRect();
-
-    const footerCropped = Math.round(fr.bottom) > vh + 1;            // off-screen
-    const overlap       = Math.round(cr.bottom) > Math.round(fr.top) + 2; // chat under footer
-
-    if (footerCropped || overlap) setLayoutClass('stable');
-    else setLayoutClass('fixed');
-  };
-
-  // run now and whenever the viewport changes
-  checkLayout();
-  const vv = window.visualViewport;
-  if (vv) vv.addEventListener('resize', checkLayout);
-  window.addEventListener('resize', checkLayout);
-  window.addEventListener('orientationchange', checkLayout);
-  window.addEventListener('pageshow', checkLayout);
-
-  return () => {
-    if (vv) vv.removeEventListener('resize', checkLayout);
-    window.removeEventListener('resize', checkLayout);
-    window.removeEventListener('orientationchange', checkLayout);
-    window.removeEventListener('pageshow', checkLayout);
-  };
-}, []);
+  // Hard-lock to "fixed" so only the middle scrolls.
+useEffect(() => { setLayoutClass('fixed'); }, []);
 
   // Auto-compact the header when contents overflow (enables .narrow / .tiny)
 useEffect(() => {
