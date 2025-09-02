@@ -957,45 +957,12 @@ window.addEventListener('pageshow', setVars);
 }, []);
 
   // Hard-lock to "fixed" so only the middle scrolls.
-useEffect(() => { setLayoutClass('fixed'); }, []);
-
-  // Keep layout fixed; only disable blur while the keyboard is open on Android
+// Android: use "stable" (sticky header/footer) to avoid the keyboard black screen.
+// iOS/desktop: keep "fixed".
 useEffect(() => {
   const isAndroid = /Android/i.test(navigator.userAgent);
-  if (!isAndroid) return;                   // do nothing on iOS/desktop
-
-  const root = document.documentElement;
-  const vv = window.visualViewport;
-
-  const apply = () => {
-    if (!vv) return;                        // focus/blur fallback handles old webviews
-    const H = window.innerHeight || document.documentElement.clientHeight || 0;
-    const kbOpen = H && vv.height && (H - vv.height) > 120;  // keyboard heuristic
-    root.classList.toggle('kb-open', !!kbOpen);               // CSS will remove blur
-  };
-
-  // visualViewport path
-  if (vv) {
-    apply();
-    vv.addEventListener('resize', apply);
-    window.addEventListener('resize', apply);
-  }
-
-  // focus/blur fallback for very old Android webviews
-  const el = inputRef.current;
-  const onFocus = () => root.classList.add('kb-open');
-  const onBlur  = () => root.classList.remove('kb-open');
-  if (el) { el.addEventListener('focus', onFocus); el.addEventListener('blur', onBlur); }
-
-  return () => {
-    if (vv) {
-      vv.removeEventListener('resize', apply);
-      window.removeEventListener('resize', apply);
-    }
-    if (el) { el.removeEventListener('focus', onFocus); el.removeEventListener('blur', onBlur); }
-    root.classList.remove('kb-open');
-  };
- }, [user]);
+  setLayoutClass(isAndroid ? 'stable' : 'fixed');
+}, []);
 
   // Auto-compact the header when contents overflow (enables .narrow / .tiny)
 useEffect(() => {
