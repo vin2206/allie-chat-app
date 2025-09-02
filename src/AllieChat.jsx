@@ -228,7 +228,8 @@ const [user, setUser] = useState(loadUser());
 const [showWelcome, setShowWelcome] = useState(false);
 const [welcomeDefaultStep, setWelcomeDefaultStep] = useState(0);
 const [coins, setCoins] = useState(loadCoins());
-const [layoutClass, setLayoutClass] = useState('fixed');
+const initialLayout = /Android/i.test(navigator.userAgent) ? 'stable' : 'fixed';
+const [layoutClass, setLayoutClass] = useState(initialLayout);
 
 // Show instructions every time the chat page opens,
 // but award +100 coins only the first time for this user.
@@ -956,14 +957,6 @@ window.addEventListener('pageshow', setVars);
 };
 }, []);
 
-  // Hard-lock to "fixed" so only the middle scrolls.
-// Android: use "stable" (sticky header/footer) to avoid the keyboard black screen.
-// iOS/desktop: keep "fixed".
-useEffect(() => {
-  const isAndroid = /Android/i.test(navigator.userAgent);
-  setLayoutClass(isAndroid ? 'stable' : 'fixed');
-}, []);
-
   // Auto-compact the header when contents overflow (enables .narrow / .tiny)
 useEffect(() => {
   const header = document.querySelector('.header');
@@ -999,6 +992,8 @@ if (ro) {
   
   // Lock the app to the *exact* visible viewport height (older Android safe)
 useEffect(() => {
+  if (layoutClass !== 'fixed') return;  // only run on iOS/desktop
+
   const setAppH = () => {
     const h = Math.round(
       (window.visualViewport && window.visualViewport.height) ||
@@ -1008,7 +1003,6 @@ useEffect(() => {
     if (h) document.documentElement.style.setProperty('--app-h', `${h}px`);
   };
 
-  // run immediately and also after load (some WebViews settle late)
   setAppH();
   window.addEventListener('load', setAppH, { once: true });
 
@@ -1024,7 +1018,7 @@ useEffect(() => {
     window.removeEventListener('orientationchange', setAppH);
     window.removeEventListener('pageshow', setAppH);
   };
-}, []);
+}, [layoutClass]);
 
   const displayedMessages = messages;
   // Block UI until user signs in
