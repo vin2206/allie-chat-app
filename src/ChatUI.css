@@ -15,6 +15,12 @@ html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
   display: flex;
   flex-direction: column;
 }
+/* Lock the app to the visible viewport so the page itself never scrolls */
+.App {
+  height: var(--app-h, 100dvh);
+  min-height: var(--app-h, 100dvh);
+  overflow: hidden; /* keep scrolling inside .chat-container */
+}
 
 /* 2) State-specific backgrounds (fixes the flicker) */
 
@@ -262,12 +268,9 @@ body { background: linear-gradient(180deg, #fce7f3 0%, #ede9fe 100%); }
   min-width: 0;
   display: flex;
 }
-.footer .input-wrap input {
-  width: 100%;
-  padding-left: 44px;           /* room for the emoji icon */
-}
+.footer .input-wrap input { width: 100%; padding-left: 52px; }
 
-/* the tiny emoji icon */
+/* tiny emoji button inside the input */
 .footer .emoji-inside {
   position: absolute;
   left: 14px;
@@ -277,18 +280,18 @@ body { background: linear-gradient(180deg, #fce7f3 0%, #ede9fe 100%); }
   border: 0;
   width: 22px;
   height: 22px;
-  font-size: 20px;
+  font-size: 0;        /* using SVG, no text metrics */
   line-height: 1;
+  color: #9aa0a6;      /* neutral icon tint */
   box-shadow: none;
   cursor: pointer;
-  color: inherit;               /* don’t force white */
 }
 .footer .emoji-inside:active { transform: translateY(-50%) scale(0.96); }
 
 /* compact on very small screens */
 @media (max-width: 360px) {
-  .footer .emoji-inside { left: 12px; width: 20px; height: 20px; font-size: 18px; }
-  .footer .input-wrap input { padding-left: 40px; }
+  .footer .emoji-inside { left: 12px; width: 20px; height: 20px; }
+  .footer .input-wrap input { padding-left: 52px; }
 }
 
 /* —— Emoji panel that drops above the input —— */
@@ -906,7 +909,6 @@ body { background: linear-gradient(180deg, #fce7f3 0%, #ede9fe 100%); }
 }
 
 /* tell the browser how much space to keep above the footer when scrolling */
-:root { --ftr-h: 90px; } /* you'll set this from JS below */
 .message,
 .typing-bounce { 
   scroll-margin-block-end: calc(var(--ftr-h, 90px) + 8px);
