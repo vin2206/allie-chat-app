@@ -1031,3 +1031,11 @@ body { background: linear-gradient(180deg, #fce7f3 0%, #ede9fe 100%); }
   box-shadow: 0 10px 22px rgba(0,0,0,.18);
 }
 .welcome-note{ margin-top: 8px; font-size: 12px; opacity: .75; }
+
+/* When the keyboard is open on Android, remove blur on fixed bars to prevent black overlay */
+.kb-open .header,
+.kb-open .footer {
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  background: rgba(50, 20, 60, 0.12) !important; /* same tint, no blur */
+}
