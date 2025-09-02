@@ -5,7 +5,8 @@ html, body, #root {
   padding: 0;
   height: 100%;
   width: 100%;
-  overflow: hidden;
+  /* allow a tiny window scroll so URL/tool bars can't cover header/footer */
+  overflow: auto;
 }
 :root { --hdr-h: 80px; --ftr-h: 90px; }  /* measured at runtime */
 
@@ -856,16 +857,21 @@ body { background: linear-gradient(180deg, #fce7f3 0%, #ede9fe 100%); }
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  /* allow a tiny page scroll to avoid header/footer being covered by browser UI */
+  overflow: auto;
 }
 
 /* Keep header/footer in normal flow so the center naturally fills the rest */
+/* keep them visible even when the window scrolls a tiny bit */
 .App.stable .header {
-  position: relative;           /* was sticky; normal flow is safer across browsers */
+  position: sticky;
+  top: 0;
   z-index: 100;
 }
+
 .App.stable .footer {
-  position: relative;           /* was sticky; keeps it in flow */
+  position: sticky;
+  bottom: 0;
   z-index: 100;
   overflow: visible;
   padding: 12px 16px;
@@ -884,27 +890,26 @@ body { background: linear-gradient(180deg, #fce7f3 0%, #ede9fe 100%); }
   min-height: 42px;
 }
 /* chat area: tiny breathing room only */
-.App.stable .chat-container{
+.App.stable .chat-container {
   position: relative;
   flex: 1 1 auto;
   min-height: 0;
   overflow-y: auto;
   overscroll-behavior-y: contain;
-  overflow-anchor: none; 
+  overflow-anchor: none;
+  /* keep a constant breathing room; footer is in flow (sticky) */
   padding: 12px 10px calc(12px + env(safe-area-inset-bottom));
-  scroll-padding-bottom: calc(var(--ftr-h, 90px) + 8px);
+  scroll-padding-bottom: 16px;
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
 }
-/* When the input is focused (keyboard up), keep the last bubble above the bar */
-@supports selector(:has(*)) {
-  .App.stable:has(.footer :focus-within) .chat-container {
-    /* keep the same padding as idle state — no footer height here */
-    padding-bottom: calc(12px + env(safe-area-inset-bottom));
-    /* optional: you can omit this line; leaving it unchanged is fine too */
-    scroll-padding-bottom: calc(var(--ftr-h, 90px) + 8px);
-  }
+
+/* keep last items comfortably above the footer */
+.message,
+.typing-bounce,
+.App.stable .chat-container > div:last-child {
+  scroll-margin-block-end: 16px;
 }
 /* Keep the invisible bottom anchor above the sticky footer (Chrome mobile) */
 .App.stable .chat-container > div:last-child {
