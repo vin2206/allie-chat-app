@@ -5,7 +5,7 @@ html, body, #root {
   padding: 0;
   height: 100%;
   width: 100%;
-  overflow-x: hidden;
+  overflow: hidden;
 }
 :root { --hdr-h: 80px; --ftr-h: 90px; }  /* measured at runtime */
 
