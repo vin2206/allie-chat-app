@@ -14,12 +14,13 @@ html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 .App {
   display: flex;
   flex-direction: column;
+  overflow: hidden; /* keep scrolling inside .chat-container */
 }
-/* Lock the app to the visible viewport so the page itself never scrolls */
-.App {
+
+/* Only the fixed layout is height-locked (iOS/desktop) */
+.App.fixed {
   height: var(--app-h, 100dvh);
   min-height: var(--app-h, 100dvh);
-  overflow: hidden; /* keep scrolling inside .chat-container */
 }
 
 /* 2) State-specific backgrounds (fixes the flicker) */
