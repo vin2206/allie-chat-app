@@ -1032,3 +1032,52 @@ body { background: linear-gradient(180deg, #fce7f3 0%, #ede9fe 100%); }
   box-shadow: 0 10px 22px rgba(0,0,0,.18);
 }
 .welcome-note{ margin-top: 8px; font-size: 12px; opacity: .75; }
+
+/* ---- fixed layout: header/footer always visible, middle scrolls ---- */
+
+html, body {
+  height: 100%;
+  overflow: hidden; /* prevent window scroll; only center scrolls */
+}
+
+.App.fixed {
+  position: relative;
+  height: var(--app-h, 100dvh); /* shrinks with keyboard thanks to visualViewport */
+  width: 100%;
+  overflow: hidden;
+}
+
+/* Header pinned */
+.App.fixed .header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  /* If you have a notch, this keeps it clear */
+  padding-top: max(env(safe-area-inset-top), 0px);
+}
+
+/* Footer pinned */
+.App.fixed .footer {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: max(env(safe-area-inset-bottom), 0px);
+  z-index: 50;
+}
+
+/* Middle area takes the remaining space and scrolls */
+.App.fixed .chat-container {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: var(--hdr-h, 64px);
+  bottom: calc(var(--ftr-h, 80px) + max(env(safe-area-inset-bottom), 0px));
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  min-height: 0; /* avoid flex overflow traps */
+}
+
+/* Optional: if .chat-spacer was relying on min-heights */
+.App.fixed .chat-spacer { min-height: 0; }
