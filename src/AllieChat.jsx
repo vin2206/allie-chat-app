@@ -228,7 +228,7 @@ const [user, setUser] = useState(loadUser());
 const [showWelcome, setShowWelcome] = useState(false);
 const [welcomeDefaultStep, setWelcomeDefaultStep] = useState(0);
 const [coins, setCoins] = useState(loadCoins());
-const [layoutClass, setLayoutClass] = useState('stable');
+const [layoutClass, setLayoutClass] = useState('fixed');
 
 // Show instructions every time the chat page opens,
 // but award +100 coins only the first time for this user.
