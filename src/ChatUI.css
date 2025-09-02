@@ -5,8 +5,8 @@ html, body, #root {
   padding: 0;
   height: 100%;
   width: 100%;
-  /* allow a tiny window scroll so URL/tool bars can't cover header/footer */
-  overflow: auto;
+  /* one scroller only = inside .chat-container */
+  overflow: hidden;
 }
 :root { --hdr-h: 80px; --ftr-h: 90px; }  /* measured at runtime */
 
@@ -857,21 +857,20 @@ body { background: linear-gradient(180deg, #fce7f3 0%, #ede9fe 100%); }
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  /* allow a tiny page scroll to avoid header/footer being covered by browser UI */
-  overflow: auto;
+/* no page scroll; only .chat-container scrolls */
+  overflow: hidden;
 }
 
-/* Keep header/footer in normal flow so the center naturally fills the rest */
-/* keep them visible even when the window scrolls a tiny bit */
+/* Android stable: header/footer stay in normal flow (not sticky) */
 .App.stable .header {
-  position: sticky;
-  top: 0;
+  position: relative;   /* was sticky */
+  top: auto;
   z-index: 100;
 }
 
 .App.stable .footer {
-  position: sticky;
-  bottom: 0;
+  position: relative;   /* was sticky */
+  bottom: auto;
   z-index: 100;
   overflow: visible;
   padding: 12px 16px;
@@ -889,15 +888,14 @@ body { background: linear-gradient(180deg, #fce7f3 0%, #ede9fe 100%); }
 .App.stable .footer input {
   min-height: 42px;
 }
-/* chat area: tiny breathing room only */
+/* Android stable: only the middle scrolls */
 .App.stable .chat-container {
   position: relative;
-  flex: 1 1 auto;
-  min-height: 0;
-  overflow-y: auto;
+  flex: 1 1 auto;       /* fills between header and footer */
+  min-height: 0;        /* allow child to shrink properly */
+  overflow-y: auto;     /* <-- the single scroller */
   overscroll-behavior-y: contain;
   overflow-anchor: none;
-  /* keep a constant breathing room; footer is in flow (sticky) */
   padding: 12px 10px calc(12px + env(safe-area-inset-bottom));
   scroll-padding-bottom: 16px;
   display: flex;
@@ -910,16 +908,6 @@ body { background: linear-gradient(180deg, #fce7f3 0%, #ede9fe 100%); }
 .typing-bounce,
 .App.stable .chat-container > div:last-child {
   scroll-margin-block-end: 16px;
-}
-/* Keep the invisible bottom anchor above the sticky footer (Chrome mobile) */
-.App.stable .chat-container > div:last-child {
-  scroll-margin-block-end: calc(var(--ftr-h, 90px) + 8px);
-}
-
-/* tell the browser how much space to keep above the footer when scrolling */
-.message,
-.typing-bounce { 
-  scroll-margin-block-end: calc(var(--ftr-h, 90px) + 8px);
 }
 /* Compact header when space is tight to prevent wrap/overlap */
 @media (max-width: 420px) {
