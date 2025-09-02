@@ -267,6 +267,12 @@ useEffect(() => {
 ]);
   const [inputValue, setInputValue] = useState('');
   const bottomRef = useRef(null);
+  const scrollToBottomNow = () => {
+  const el = bottomRef.current;
+  if (el && typeof el.scrollIntoView === 'function') {
+    el.scrollIntoView({ behavior: 'smooth', block: 'end' });
+  }
+};
   const [isPaused, setIsPaused] = useState(false);
   // Does roleplay require premium? (server-controlled)
 const [roleplayNeedsPremium, setRoleplayNeedsPremium] = useState(true);
@@ -1034,12 +1040,17 @@ useEffect(() => {
   let baseline = vv.height;
 
   const onResize = () => {
-    try {
-      const drop = baseline - vv.height; // height reduced by IME?
-      if (drop > 120) root.classList.add('ime-open');
-      else root.classList.remove('ime-open');
-    } catch {}
-  };
+  try {
+    const drop = baseline - vv.height; // height reduced by IME?
+    if (drop > 120) {
+      root.classList.add('ime-open');
+    } else {
+      root.classList.remove('ime-open');
+    }
+    // ensure last message stays visible whenever keyboard state changes
+    setTimeout(scrollToBottomNow, 0);
+  } catch {}
+};
 
   vv.addEventListener('resize', onResize);
   const onOrient = () => { baseline = vv.height; onResize(); };
@@ -1051,7 +1062,25 @@ useEffect(() => {
     root.classList.remove('ime-open');
   };
 }, [layoutClass]);
+  
+useEffect(() => {
+  if (layoutClass !== 'stable') return; // Android only
+  const root = document.documentElement;
+  const footerEl = document.querySelector('.footer');
+  if (!footerEl || typeof window.ResizeObserver === 'undefined') return;
 
+  const setFooterH = () => {
+    let f = Math.round(footerEl.getBoundingClientRect().height) || 90;
+    if (f < 40 || f > 160) f = 90; // sanity
+    root.style.setProperty('--ftr-h', f + 'px');
+  };
+
+  setFooterH();
+  const ro = new ResizeObserver(setFooterH);
+  ro.observe(footerEl);
+  return () => ro.disconnect();
+}, [layoutClass]);
+  
   const displayedMessages = messages;
   // Block UI until user signs in
 if (!user) {
@@ -1315,7 +1344,7 @@ if (!user) {
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-            onFocus={() => setShowEmoji(false)}
+            onFocus={() => { setShowEmoji(false); setTimeout(scrollToBottomNow, 0); }}
           />
 
           <button
