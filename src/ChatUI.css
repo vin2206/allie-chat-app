@@ -861,16 +861,13 @@ body { background: linear-gradient(180deg, #fce7f3 0%, #ede9fe 100%); }
 
 /* Keep header/footer in normal flow so the center naturally fills the rest */
 .App.stable .header {
-  position: sticky;
-  top: 0;
+  position: relative;           /* was sticky; normal flow is safer across browsers */
   z-index: 100;
 }
 .App.stable .footer {
-  position: sticky;
-  bottom: 0;
+  position: relative;           /* was sticky; keeps it in flow */
   z-index: 100;
-  overflow: visible; /* don’t clip the send button’s top edge */
-  /* slightly tighter — fixes “stretchy” feel */
+  overflow: visible;
   padding: 12px 16px;
   padding-bottom: calc(12px + env(safe-area-inset-bottom));
 }
