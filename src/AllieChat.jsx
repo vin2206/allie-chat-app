@@ -228,8 +228,8 @@ const [user, setUser] = useState(loadUser());
 const [showWelcome, setShowWelcome] = useState(false);
 const [welcomeDefaultStep, setWelcomeDefaultStep] = useState(0);
 const [coins, setCoins] = useState(loadCoins());
-// Single layout everywhere → STABLE (header & footer in flow; only middle scrolls)
-const [layoutClass] = useState('stable');   // no switching, no UA sniffing
+// Single layout everywhere → FIXED (header & footer pinned; middle is the only scroller)
+const [layoutClass] = useState('fixed');   // force fixed layout on all devices
 
 // Show instructions every time the chat page opens,
 // but award +100 coins only the first time for this user.
@@ -894,6 +894,31 @@ if (shouldResetRef.current) { fetchRetryBody.reset = true; shouldResetRef.curren
   useEffect(() => {
   scrollToBottomNow();
 }, [messages.length, isTyping]);
+  // Failsafe: if the fixed middle pane somehow isn't scrollable, allow page scroll
+useEffect(() => {
+  if (layoutClass !== 'fixed') return;
+  const scroller = document.querySelector('.chat-container');
+  const rootEl = document.getElementById('root');
+
+  const toggleFallback = () => {
+    if (!scroller) return;
+    // If chat area doesn't exceed its height, there's no scroll path
+    const needs = (scroller.scrollHeight - scroller.clientHeight) <= 2;
+    document.documentElement.classList.toggle('page-scroll-fallback', needs);
+    document.body.classList.toggle('page-scroll-fallback', needs);
+    if (rootEl) rootEl.classList.toggle('page-scroll-fallback', needs);
+  };
+
+  toggleFallback(); // on mount / render
+  const vv = window.visualViewport;
+  if (vv) vv.addEventListener('resize', toggleFallback); // re-check on IME open/close
+  window.addEventListener('orientationchange', toggleFallback);
+
+  return () => {
+    if (vv) vv.removeEventListener('resize', toggleFallback);
+    window.removeEventListener('orientationchange', toggleFallback);
+  };
+}, [layoutClass, messages.length, isTyping]);
 
   useEffect(() => {
   if (!showRoleMenu) return;
