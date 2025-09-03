@@ -941,24 +941,22 @@ if (shouldResetRef.current) { fetchRetryBody.reset = true; shouldResetRef.curren
   useEffect(() => {
   scrollToBottomNow();
 }, [messages.length, isTyping]);
-  // Failsafe: if the fixed middle pane somehow isn't scrollable, allow page scroll
+  // Failsafe: if the middle pane isn't scrollable, allow page scroll
 useEffect(() => {
-  if (layoutClass !== 'fixed') return;
   const scroller = document.querySelector('.chat-container');
   const rootEl = document.getElementById('root');
 
   const toggleFallback = () => {
     if (!scroller) return;
-    // If chat area doesn't exceed its height, there's no scroll path
     const needs = (scroller.scrollHeight - scroller.clientHeight) <= 2;
     document.documentElement.classList.toggle('page-scroll-fallback', needs);
     document.body.classList.toggle('page-scroll-fallback', needs);
     if (rootEl) rootEl.classList.toggle('page-scroll-fallback', needs);
   };
 
-  toggleFallback(); // on mount / render
+  toggleFallback();
   const vv = window.visualViewport;
-  if (vv) vv.addEventListener('resize', toggleFallback); // re-check on IME open/close
+  if (vv) vv.addEventListener('resize', toggleFallback);
   window.addEventListener('orientationchange', toggleFallback);
 
   return () => {
@@ -990,13 +988,8 @@ if (closeBtn && typeof closeBtn.focus === 'function') closeBtn.focus();
     document.removeEventListener('keydown', onEsc);
   };
 }, [showRoleMenu]);
-  // --- Measure header/footer (only for FIXED layout: iOS/desktop) ---
+  // --- Measure header/footer (both layouts; drives pinned scroller) ---
 useEffect(() => {
-  if (layoutClass !== 'fixed') {
-    // Android "stable" must not run this; keep defaults.
-    return;
-  }
-
   const root = document.documentElement;
   const headerEl = document.querySelector('.header');
   const footerEl = document.querySelector('.footer');
@@ -1037,7 +1030,7 @@ useEffect(() => {
     document.removeEventListener('visibilitychange', setVars);
     window.removeEventListener('pageshow', setVars);
   };
-}, [layoutClass]);
+}, [layoutClass, messages.length, isTyping]);
 
   // Auto-compact the header when contents overflow (enables .narrow / .tiny)
 useEffect(() => {
@@ -1130,24 +1123,6 @@ vv.addEventListener('resize', onResize);
     window.removeEventListener('orientationchange', onOrient);
     root.classList.remove('ime-open');
   };
-}, [layoutClass]);
-  
-useEffect(() => {
-  if (layoutClass !== 'stable') return; // Android only
-  const root = document.documentElement;
-  const footerEl = document.querySelector('.footer');
-  if (!footerEl || typeof window.ResizeObserver === 'undefined') return;
-
-  const setFooterH = () => {
-    let f = Math.round(footerEl.getBoundingClientRect().height) || 90;
-    if (f < 40 || f > 160) f = 90; // sanity
-    root.style.setProperty('--ftr-h', f + 'px');
-  };
-
-  setFooterH();
-  const ro = new ResizeObserver(setFooterH);
-  ro.observe(footerEl);
-  return () => ro.disconnect();
 }, [layoutClass]);
   
   const displayedMessages = messages;
