@@ -4,6 +4,14 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './ChatUI.css';
 import { startVersionWatcher } from './versionWatcher';
+// --- small utility ---
+function debounce(fn, wait = 120) {
+  let t;
+  return (...args) => {
+    clearTimeout(t);
+    t = setTimeout(() => fn(...args), wait);
+  };
+}
 // --- Google Sign-In (GIS) ---
 const GOOGLE_CLIENT_ID = '962465973550-2lhard334t8kvjpdhh60catlb1k6fpb6.apps.googleusercontent.com';
 const parseJwt = (t) => {
@@ -267,37 +275,45 @@ useEffect(() => {
 ]);
   const [inputValue, setInputValue] = useState('');
   const bottomRef = useRef(null);
-  // NEW: track if we should auto-stick to bottom
+  // NEW: track if we should auto-stick to bottom (strict, WhatsApp-like)
 const scrollerRef = useRef(null);      // points to .chat-container
-const stickToBottomRef = useRef(true); // true when user is at (or near) bottom
-  // Always scroll if force=true; otherwise only when user is already at bottom
+const stickToBottomRef = useRef(true); // true only when truly at bottom
+const readingUpRef = useRef(false);    // true when user scrolled up (locks auto-scroll)
+
+// Only scroll if user is not reading history, unless force=true
 const scrollToBottomNow = (force = false) => {
   const scroller = scrollerRef.current || document.querySelector('.chat-container');
   if (!scroller) return;
-  if (!force && !stickToBottomRef.current) return; // <- key change
+  if (!force && readingUpRef.current) return;
+  // Using the bottomRef keeps layout safe with typing indicator etc.
   bottomRef.current?.scrollIntoView({ behavior: 'auto', block: 'end' });
 };
 
-// NEW: keep stickToBottomRef updated based on user scroll position
+// Keep sentinel strictly based on USER SCROLL only (not viewport noise)
 useEffect(() => {
   const scroller = scrollerRef.current || document.querySelector('.chat-container');
   if (!scroller) return;
 
-  const updateStick = () => {
+  // When we reach bottom and stay there briefly, unlock auto-scroll
+  const releaseRead = () => { readingUpRef.current = false; };
+  const releaseReadDebounced = debounce(releaseRead, 150);
+
+  const onScroll = () => {
     const dist = scroller.scrollHeight - scroller.scrollTop - scroller.clientHeight;
-    stickToBottomRef.current = dist <= 6; // "near bottom" threshold
+    const atBottom = dist <= 2;           // tight bottom
+    stickToBottomRef.current = atBottom;
+
+    // If we are clearly away from bottom, enter "reading up" mode (lock)
+    if (dist > 40) readingUpRef.current = true;
+
+    // Only when truly back to bottom, and settled for a moment, release the lock
+    if (atBottom) releaseReadDebounced();
   };
 
-  updateStick(); // initialize
-  scroller.addEventListener('scroll', updateStick, { passive: true });
-
-  const vv = window.visualViewport;
-  if (vv) vv.addEventListener('resize', updateStick); // IME open/close
-
-  return () => {
-    scroller.removeEventListener('scroll', updateStick);
-    if (vv) vv.removeEventListener('resize', updateStick);
-  };
+  // Init + listen
+  requestAnimationFrame(onScroll);
+  scroller.addEventListener('scroll', onScroll, { passive: true });
+  return () => scroller.removeEventListener('scroll', onScroll);
 }, []);
   
   const [isPaused, setIsPaused] = useState(false);
@@ -606,6 +622,9 @@ const applyRoleChange = (mode, type) => {
   // show the correct opener
   const opener = getOpener(mode, type);
   setMessages([{ text: opener, sender: 'allie' }]);
+  readingUpRef.current = false;
+  stickToBottomRef.current = true;
+  setTimeout(() => scrollToBottomNow(true), 0);
 
   // clear server context on next request
   shouldResetRef.current = true;
@@ -761,11 +780,14 @@ const sendVoiceBlob = async (blob) => {
     return;
   }
   if (inputValue.trim().toLowerCase() === '#reset') {
-    shouldResetRef.current = true;
-    setMessages([{ text: 'Hi… kaise ho aap? ☺️', sender: 'allie' }]);
-    setInputValue('');
-    return;
-  }
+  shouldResetRef.current = true;
+  setMessages([{ text: 'Hi… kaise ho aap? ☺️', sender: 'allie' }]);
+  readingUpRef.current = false;
+  stickToBottomRef.current = true;
+  setInputValue('');
+  setTimeout(() => scrollToBottomNow(true), 0);
+  return;
+}
 
   // Decide cost before sending
   const wantVoiceNow = askedForVoice(inputValue);
@@ -795,6 +817,7 @@ const sendVoiceBlob = async (blob) => {
     const newMessage = { text: inputValue, sender: 'user', time: currentTime, seen: false };
     const updatedMessages = [...messages, newMessage];
     setMessages(updatedMessages);
+    scrollToBottomNow(true); // user expects to be at bottom after sending
     setInputValue('');
     setIsTyping(true);
 
@@ -1088,17 +1111,17 @@ useEffect(() => {
 
   let baseline = vv.height;
 
-  const onResize = () => {
+  const onResize = debounce(() => {
   try {
-    baseline = Math.max(baseline, vv.height);     // <— add this line
-    const drop = baseline - vv.height;            // existing line
+    baseline = Math.max(baseline, vv.height);
+    const drop = baseline - vv.height;
     if (drop > 80) { root.classList.add('ime-open'); }
     else { root.classList.remove('ime-open'); }
-    setTimeout(scrollToBottomNow, 0);
+    // No auto-scroll here. Sentinel decides.
   } catch {}
-};
+}, 120);
 
-  vv.addEventListener('resize', onResize);
+vv.addEventListener('resize', onResize);
   const onOrient = () => { baseline = vv.height; onResize(); };
   window.addEventListener('orientationchange', onOrient);
 
@@ -1392,7 +1415,7 @@ if (!user) {
   onKeyDown={(e) => e.key === 'Enter' && handleSend()}
   onFocus={() => {
   setShowEmoji(false);
-  setTimeout(() => scrollToBottomNow(true), 0); // force scroll on focus
+  setTimeout(() => scrollToBottomNow(false), 0); // respect sentinel
 }}
 />
 
