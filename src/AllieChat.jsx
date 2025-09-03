@@ -266,13 +266,15 @@ useEffect(() => {
 ]);
   const [inputValue, setInputValue] = useState('');
   const bottomRef = useRef(null);
-  const scrollToBottomNow = () => {
+  // Always scroll if force=true (used on input focus); otherwise keep 80px guard
+const scrollToBottomNow = (force = false) => {
   const scroller = document.querySelector('.chat-container');
   if (!scroller) return;
-  const dist = scroller.scrollHeight - scroller.scrollTop - scroller.clientHeight;
-  if (dist < 80) {   // only if already near the bottom
-    bottomRef.current?.scrollIntoView({ behavior: 'auto', block: 'end' });
+  if (!force) {
+    const dist = scroller.scrollHeight - scroller.scrollTop - scroller.clientHeight;
+    if (dist > 80) return;
   }
+  bottomRef.current?.scrollIntoView({ behavior: 'auto', block: 'end' });
 };
   const [isPaused, setIsPaused] = useState(false);
   // Does roleplay require premium? (server-controlled)
@@ -1340,9 +1342,9 @@ if (!user) {
   onChange={(e) => setInputValue(e.target.value)}
   onKeyDown={(e) => e.key === 'Enter' && handleSend()}
   onFocus={() => {
-    setShowEmoji(false);
-    setTimeout(scrollToBottomNow, 0);
-  }}
+  setShowEmoji(false);
+  setTimeout(() => scrollToBottomNow(true), 0); // force scroll on focus
+}}
 />
 
           <button
