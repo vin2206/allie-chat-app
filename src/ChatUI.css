@@ -852,7 +852,7 @@ body { background: linear-gradient(180deg, #fce7f3 0%, #ede9fe 100%); }
   justify-content: center;
 }
 
-/* REPLACE the entire .App.stable block */
+/* === Android (stable) — pinned middle scroller, same model as iOS === */
 .App.stable {
   height: 100vh;   /* fallback */
   height: 100svh;  /* Safari stable viewport */
@@ -862,57 +862,73 @@ body { background: linear-gradient(180deg, #fce7f3 0%, #ede9fe 100%); }
   overflow: hidden; /* only the middle scroller scrolls */
 }
 
-/* Android stable: header/footer stay in normal flow (not sticky) */
+/* Header fixed on top */
 .App.stable .header {
-  position: relative;   /* was sticky */
-  top: auto;
+  position: fixed;
+  top: 0; left: 0; right: 0;
   z-index: 100;
+  padding: 12px 20px;
+  padding-top: calc(12px + env(safe-area-inset-top));
+  background: rgba(255, 105, 180, 0.15);  /* keep same look, no heavy blur */
 }
 
-/* Footer in normal flow (no fixed) */
+/* Footer fixed at bottom */
 .App.stable .footer {
-  position: static;            /* was fixed */
-  overflow: visible;
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  z-index: 100;
   padding: 12px 16px;
   padding-bottom: calc(12px + env(safe-area-inset-bottom));
+  background: rgba(50, 20, 60, 0.12);
 }
 
-/* smaller, non-shifting controls to avoid clipping in some webviews */
-.App.stable .footer .send-btn,
-.App.stable .footer .mic-btn {
-  width: 52px;
-  height: 52px;
-  transform: none;          /* was translateY(-2px) — can cause visual crop */
-}
-
-.App.stable .footer input {
-  min-height: 42px;
-}
-/* Android stable: only the middle scrolls */
+/* Middle scroller pinned between header & footer */
 .App.stable .chat-container {
-  position: relative;
-  flex: 1 1 0%;             
-  height: 0;                 /* give flex child a definite basis */
-  min-height: 0;               /* allow child to shrink properly */
-  overflow-y: auto;            /* <-- the single scroller */
-  overscroll-behavior-y: contain;
-  overflow-anchor: none;
-  padding: 12px 10px calc(12px + env(safe-area-inset-bottom));
-  scroll-padding-bottom: 16px;
+  position: fixed;
+  top: var(--hdr-h, 80px);
+  left: 0; right: 0;
+  bottom: var(--ftr-h, 90px);
+
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
 
-  /* NEW */
-  touch-action: pan-y;
+  padding: 12px 10px calc(10px + env(safe-area-inset-bottom));
+
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
   -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+
+  /* Opaque layer to avoid black sampling behind footer */
+  background: linear-gradient(to bottom, #ff99cc, #cc66cc, #9966cc);
 }
+
+/* Smaller, non-shifting controls on Android pinned layout */
+.App.stable .footer .send-btn,
+.App.stable .footer .mic-btn { width: 52px; height: 52px; transform: none; }
+
+.App.stable .footer input { min-height: 42px; }
 
 /* keep last items comfortably above the footer */
 .message,
 .typing-bounce,
-.App.stable .chat-container > div:last-child {
-  scroll-margin-block-end: 16px;
+.App.stable .chat-container > div:last-child { scroll-margin-block-end: 16px; }
+
+/* Tiny/short screens – keep controls compact */
+@media (max-width: 360px) {
+  .App.stable .footer { padding: 10px 12px; }
+  .App.stable .footer .send-btn,
+  .App.stable .footer .mic-btn { width: 46px; height: 46px; }
+  .App.stable .footer input { min-height: 38px; font-size: 15px; }
+}
+
+/* Legacy/very small screens */
+@media (max-width: 380px), (max-height: 640px) {
+  .App.stable .footer { padding: 8px 10px; gap: 8px; }
+  .App.stable .footer input { min-height: 34px; font-size: 14px; min-width: 0; }
+  .App.stable .footer .send-btn,
+  .App.stable .footer .mic-btn { width: 50px; height: 50px; transform: none; }
 }
 /* Compact header when space is tight to prevent wrap/overlap */
 @media (max-width: 420px) {
