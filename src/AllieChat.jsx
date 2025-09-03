@@ -267,9 +267,11 @@ useEffect(() => {
   const [inputValue, setInputValue] = useState('');
   const bottomRef = useRef(null);
   const scrollToBottomNow = () => {
-  const el = bottomRef.current;
-  if (el && typeof el.scrollIntoView === 'function') {
-    el.scrollIntoView({ behavior: 'auto', block: 'end' }); // was 'smooth'
+  const scroller = document.querySelector('.chat-container');
+  if (!scroller) return;
+  const dist = scroller.scrollHeight - scroller.scrollTop - scroller.clientHeight;
+  if (dist < 80) {   // only if already near the bottom
+    bottomRef.current?.scrollIntoView({ behavior: 'auto', block: 'end' });
   }
 };
   const [isPaused, setIsPaused] = useState(false);
