@@ -5,8 +5,8 @@ html, body, #root {
   padding: 0;
   height: 100%;
   width: 100%;
-  /* one scroller only = inside .chat-container */
-  overflow: hidden;
+  /* DO NOT lock the page height for the stable layout; let URL bar collapse */
+  overflow: visible; /* was hidden */
 }
 :root { --hdr-h: 80px; --ftr-h: 90px; }  /* measured at runtime */
 
