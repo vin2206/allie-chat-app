@@ -1040,13 +1040,10 @@ useEffect(() => {
 
   const onResize = () => {
   try {
-    const drop = baseline - vv.height; // height reduced by IME?
-    if (drop > 120) {
-      root.classList.add('ime-open');
-    } else {
-      root.classList.remove('ime-open');
-    }
-    // ensure last message stays visible whenever keyboard state changes
+    baseline = Math.max(baseline, vv.height);     // <— add this line
+    const drop = baseline - vv.height;            // existing line
+    if (drop > 80) { root.classList.add('ime-open'); }
+    else { root.classList.remove('ime-open'); }
     setTimeout(scrollToBottomNow, 0);
   } catch {}
 };
@@ -1337,14 +1334,23 @@ if (!user) {
         {/* Input + tiny emoji inside (like WhatsApp) */}
         <div className="input-wrap">
           <input
-            ref={inputRef}
-            type="text"
-            placeholder="Type a message..."
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-            onFocus={() => { setShowEmoji(false); setTimeout(scrollToBottomNow, 0); }}
-          />
+  ref={inputRef}
+  type="text"
+  placeholder="Type a message..."
+  value={inputValue}
+  onChange={(e) => setInputValue(e.target.value)}
+  onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+  onFocus={() => {
+    setShowEmoji(false);
+    // Immediately apply IME-safe layout so the first bubble never hides
+    document.documentElement.classList.add('ime-open');
+    setTimeout(scrollToBottomNow, 0);
+  }}
+  onBlur={() => {
+    // Remove IME class when keyboard closes
+    document.documentElement.classList.remove('ime-open');
+  }}
+/>
 
           <button
   type="button"
