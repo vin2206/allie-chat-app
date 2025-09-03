@@ -228,8 +228,9 @@ const [user, setUser] = useState(loadUser());
 const [showWelcome, setShowWelcome] = useState(false);
 const [welcomeDefaultStep, setWelcomeDefaultStep] = useState(0);
 const [coins, setCoins] = useState(loadCoins());
-// Single layout everywhere → FIXED (header & footer pinned; middle is the only scroller)
-const [layoutClass] = useState('fixed');   // force fixed layout on all devices
+// Layout chooser: Android → 'stable' (scrollable, no black band); others → 'fixed'
+const IS_ANDROID = /Android/i.test(navigator.userAgent);
+const [layoutClass] = useState(IS_ANDROID ? 'stable' : 'fixed');
 
 // Show instructions every time the chat page opens,
 // but award +100 coins only the first time for this user.
