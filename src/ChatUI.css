@@ -5,8 +5,7 @@ html, body, #root {
   padding: 0;
   height: 100%;
   width: 100%;
-  /* DO NOT lock the page height for the stable layout; let URL bar collapse */
-  overflow: visible; /* was hidden */
+  overflow: hidden;
 }
 :root { --hdr-h: 80px; --ftr-h: 90px; }  /* measured at runtime */
 
@@ -849,16 +848,14 @@ body { background: linear-gradient(180deg, #fce7f3 0%, #ede9fe 100%); }
   justify-content: center;
 }
 
-/* === Stable Layout Mode: no JS height math; works on all Androids === */
+/* REPLACE the entire .App.stable block */
 .App.stable {
-  /* use dynamic viewport where available; fall back gracefully */
-  min-height: 100svh;
-  min-height: 100dvh;
-  min-height: 100vh;
+  height: 100vh;   /* fallback */
+  height: 100svh;  /* Safari stable viewport */
+  height: 100dvh;  /* modern Android/Chrome visual viewport */
   display: flex;
   flex-direction: column;
-/* no page scroll; only .chat-container scrolls */
-  overflow: hidden;
+  overflow: hidden; /* only the middle scroller scrolls */
 }
 
 /* Android stable: header/footer stay in normal flow (not sticky) */
@@ -901,6 +898,9 @@ body { background: linear-gradient(180deg, #fce7f3 0%, #ede9fe 100%); }
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
+  scrollbar-gutter: stable both-edges;
+  transition: padding-bottom 120ms ease-out;
+  contain: layout paint;
 }
 
 /* keep last items comfortably above the footer */
