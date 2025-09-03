@@ -139,7 +139,9 @@ body { background: linear-gradient(180deg, #fce7f3 0%, #ede9fe 100%); }
   /* ✅ small breathing room only */
   padding: 12px 10px calc(10px + env(safe-area-inset-bottom));
 
-  overflow-y: auto;
+  overflow-y: scroll;                 /* force a real scroller */
+  -webkit-overflow-scrolling: touch;  /* smooth iOS scrolling */
+  touch-action: pan-y;
   overscroll-behavior-y: contain;
   scroll-padding-bottom: 10px;
 }
@@ -869,7 +871,7 @@ body { background: linear-gradient(180deg, #fce7f3 0%, #ede9fe 100%); }
   z-index: 100;
   padding: 12px 20px;
   padding-top: calc(12px + env(safe-area-inset-top));
-  background: rgba(255, 105, 180, 0.15);  /* keep same look, no heavy blur */
+  background: rgba(255, 105, 180, 0.15);
 }
 
 /* Footer fixed at bottom */
@@ -895,19 +897,19 @@ body { background: linear-gradient(180deg, #fce7f3 0%, #ede9fe 100%); }
 
   padding: 12px 10px calc(10px + env(safe-area-inset-bottom));
 
-  overflow-y: auto;
-  overscroll-behavior-y: contain;
-  -webkit-overflow-scrolling: touch;
+  /* 🔒 The important bits */
+  overflow-y: scroll;                 /* force a real scroller */
+  -webkit-overflow-scrolling: touch;  /* smooth Android WebView scrolling */
   touch-action: pan-y;
+  overscroll-behavior-y: contain;
 
-  /* Opaque layer to avoid black sampling behind footer */
+  /* opaque so no black shows behind footer */
   background: linear-gradient(to bottom, #ff99cc, #cc66cc, #9966cc);
 }
 
 /* Smaller, non-shifting controls on Android pinned layout */
 .App.stable .footer .send-btn,
 .App.stable .footer .mic-btn { width: 52px; height: 52px; transform: none; }
-
 .App.stable .footer input { min-height: 42px; }
 
 /* keep last items comfortably above the footer */
@@ -915,7 +917,7 @@ body { background: linear-gradient(180deg, #fce7f3 0%, #ede9fe 100%); }
 .typing-bounce,
 .App.stable .chat-container > div:last-child { scroll-margin-block-end: 16px; }
 
-/* Tiny/short screens – keep controls compact */
+/* Tiny/short screens */
 @media (max-width: 360px) {
   .App.stable .footer { padding: 10px 12px; }
   .App.stable .footer .send-btn,
