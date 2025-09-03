@@ -267,16 +267,39 @@ useEffect(() => {
 ]);
   const [inputValue, setInputValue] = useState('');
   const bottomRef = useRef(null);
-  // Always scroll if force=true (used on input focus); otherwise keep 80px guard
+  // NEW: track if we should auto-stick to bottom
+const scrollerRef = useRef(null);      // points to .chat-container
+const stickToBottomRef = useRef(true); // true when user is at (or near) bottom
+  // Always scroll if force=true; otherwise only when user is already at bottom
 const scrollToBottomNow = (force = false) => {
-  const scroller = document.querySelector('.chat-container');
+  const scroller = scrollerRef.current || document.querySelector('.chat-container');
   if (!scroller) return;
-  if (!force) {
-    const dist = scroller.scrollHeight - scroller.scrollTop - scroller.clientHeight;
-    if (dist > 80) return;
-  }
+  if (!force && !stickToBottomRef.current) return; // <- key change
   bottomRef.current?.scrollIntoView({ behavior: 'auto', block: 'end' });
 };
+
+// NEW: keep stickToBottomRef updated based on user scroll position
+useEffect(() => {
+  const scroller = scrollerRef.current || document.querySelector('.chat-container');
+  if (!scroller) return;
+
+  const updateStick = () => {
+    const dist = scroller.scrollHeight - scroller.scrollTop - scroller.clientHeight;
+    stickToBottomRef.current = dist <= 6; // "near bottom" threshold
+  };
+
+  updateStick(); // initialize
+  scroller.addEventListener('scroll', updateStick, { passive: true });
+
+  const vv = window.visualViewport;
+  if (vv) vv.addEventListener('resize', updateStick); // IME open/close
+
+  return () => {
+    scroller.removeEventListener('scroll', updateStick);
+    if (vv) vv.removeEventListener('resize', updateStick);
+  };
+}, []);
+  
   const [isPaused, setIsPaused] = useState(false);
   // Does roleplay require premium? (server-controlled)
 const [roleplayNeedsPremium, setRoleplayNeedsPremium] = useState(true);
@@ -1260,7 +1283,7 @@ if (!user) {
   </div>
 )}
 
-      <div className="chat-container">
+      <div className="chat-container" ref={scrollerRef}>
         <div className="chat-spacer"></div>
         {displayedMessages.map((msg, index) => (
           <div key={index} className={`message ${msg.sender === 'user' ? 'user-message' : 'allie-message'}`}>
