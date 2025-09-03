@@ -269,7 +269,7 @@ useEffect(() => {
   const scrollToBottomNow = () => {
   const el = bottomRef.current;
   if (el && typeof el.scrollIntoView === 'function') {
-    el.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    el.scrollIntoView({ behavior: 'auto', block: 'end' }); // was 'smooth'
   }
 };
   const [isPaused, setIsPaused] = useState(false);
@@ -888,10 +888,7 @@ if (shouldResetRef.current) { fetchRetryBody.reset = true; shouldResetRef.curren
 };
   
   useEffect(() => {
-  const el = bottomRef.current;
-  if (el && typeof el.scrollIntoView === 'function') {
-    el.scrollIntoView({ behavior: 'smooth', block: 'end' });
-  }
+  scrollToBottomNow();
 }, [messages.length, isTyping]);
 
   useEffect(() => {
@@ -1342,13 +1339,7 @@ if (!user) {
   onKeyDown={(e) => e.key === 'Enter' && handleSend()}
   onFocus={() => {
     setShowEmoji(false);
-    // Immediately apply IME-safe layout so the first bubble never hides
-    document.documentElement.classList.add('ime-open');
     setTimeout(scrollToBottomNow, 0);
-  }}
-  onBlur={() => {
-    // Remove IME class when keyboard closes
-    document.documentElement.classList.remove('ime-open');
   }}
 />
 
