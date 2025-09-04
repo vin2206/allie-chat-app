@@ -6,7 +6,7 @@ html, body, #root {
   height: 100%;
   width: 100%;
   /* allow descendants to receive scroll gestures */
-  overflow: visible;
+  overflow: hidden;
 }
 :root { --hdr-h: 80px; --ftr-h: 90px; }  /* measured at runtime */
 
@@ -128,9 +128,9 @@ body { background: linear-gradient(180deg, #fce7f3 0%, #ede9fe 100%); }
   min-height: 0;
 
   /* clear the fixed header/footer */
-  margin-top: var(--hdr-h, 80px);
+  margin-top: 0;
   padding: 12px 10px;
-  padding-bottom: calc(var(--ftr-h, 90px) + env(safe-area-inset-bottom));
+  padding-bottom: 12px;
 
   display: flex;
   flex-direction: column;
@@ -141,13 +141,23 @@ body { background: linear-gradient(180deg, #fce7f3 0%, #ede9fe 100%); }
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-y: contain;
   scroll-padding-bottom: 10px;
+  touch-action: pan-y; 
 
   /* keep the same opaque gradient to avoid black sampling */
   background: linear-gradient(to bottom, #ff99cc, #cc66cc, #9966cc);
 }
-/* Opaque scroll layer — prevents black sampling behind the footer on Android */
-.App.fixed .chat-container,
-.App.stable .chat-container {
+/* make the chat list a fixed, top/bottom anchored scroller */
+.App.stable .chat-container,
+.App.fixed  .chat-container {
+  position: fixed;
+  top: var(--hdr-h);
+  bottom: var(--ftr-h);
+  left: 0; right: 0;
+  margin: 0 !important;
+  padding: 12px 10px 12px 10px;   /* small inner padding is enough */
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  z-index: 1;                     /* below header/footer (z:100) */
   background: linear-gradient(to bottom, #ff99cc, #cc66cc, #9966cc);
 }
 
