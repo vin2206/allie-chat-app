@@ -123,27 +123,36 @@ body { background: linear-gradient(180deg, #fce7f3 0%, #ede9fe 100%); }
   box-shadow: 0 2px 6px rgba(0,0,0,.18);
 }
 
-/* Scroll area is pinned between header and footer: rock-solid on all phones */
-.App.fixed .chat-container{
+/* NEW: pinned viewport between header & footer (shared for both layouts) */
+.scroll-wrap {
   position: fixed;
   top: var(--hdr-h, 80px);
-  left: 0;
-  right: 0;
-  /* ✅ reserve exactly the measured footer height — no extra env() */
+  left: 0; right: 0;
   bottom: var(--ftr-h, 90px);
+  z-index: 1; /* sits under header/footer (which are z-index:100) */
+}
+
+/* Real scroller lives absolutely inside the fixed viewport */
+.scroll-wrap .chat-container {
+  position: absolute;
+  inset: 0; /* top:0; right:0; bottom:0; left:0 */
 
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
 
-  /* ✅ small breathing room only */
+  /* small breathing room only */
   padding: 12px 10px calc(10px + env(safe-area-inset-bottom));
 
-  overflow-y: scroll;                 /* force a real scroller */
-  -webkit-overflow-scrolling: touch;  /* smooth iOS scrolling */
+  /* ✅ this is the ONLY scrollable element */
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   touch-action: pan-y;
   overscroll-behavior-y: contain;
   scroll-padding-bottom: 10px;
+
+  /* Opaque layer — prevents black sampling behind the footer */
+  background: linear-gradient(to bottom, #ff99cc, #cc66cc, #9966cc);
 }
 /* Opaque scroll layer — prevents black sampling behind the footer on Android */
 .App.fixed .chat-container,
@@ -882,29 +891,6 @@ body { background: linear-gradient(180deg, #fce7f3 0%, #ede9fe 100%); }
   padding: 12px 16px;
   padding-bottom: calc(12px + env(safe-area-inset-bottom));
   background: rgba(50, 20, 60, 0.12);
-}
-
-/* Middle scroller pinned between header & footer */
-.App.stable .chat-container {
-  position: fixed;
-  top: var(--hdr-h, 80px);
-  left: 0; right: 0;
-  bottom: var(--ftr-h, 90px);
-
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-
-  padding: 12px 10px calc(10px + env(safe-area-inset-bottom));
-
-  /* 🔒 The important bits */
-  overflow-y: scroll;                 /* force a real scroller */
-  -webkit-overflow-scrolling: touch;  /* smooth Android WebView scrolling */
-  touch-action: pan-y;
-  overscroll-behavior-y: contain;
-
-  /* opaque so no black shows behind footer */
-  background: linear-gradient(to bottom, #ff99cc, #cc66cc, #9966cc);
 }
 
 /* Smaller, non-shifting controls on Android pinned layout */
