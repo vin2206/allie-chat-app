@@ -1281,40 +1281,40 @@ if (!user) {
   </div>
 )}
 
-      <div className="chat-container" ref={scrollerRef}>
-        <div className="chat-spacer"></div>
-        {displayedMessages.map((msg, index) => (
-          <div key={index} className={`message ${msg.sender === 'user' ? 'user-message' : 'allie-message'}`}>
-  <span className={`bubble-content ${msg.audioUrl ? 'has-audio' : ''}`}>
-  {msg.audioUrl ? (
-    <div className="audio-wrapper">
-      <audio
-        className="audio-player"
-        controls
-        preload="none"
-        src={msg.audioUrl}
-        onError={(e) => console.warn('audio failed:', e.currentTarget.src)}
-      />
-      <div className="audio-fallback">
-        <a href={msg.audioUrl} target="_blank" rel="noreferrer">Open audio</a>
+      <div className="scroll-wrap">{/* fixed viewport between header & footer */}
+  <div className="chat-container" ref={scrollerRef}>
+    <div className="chat-spacer"></div>
+    {displayedMessages.map((msg, index) => (
+      <div key={index} className={`message ${msg.sender === 'user' ? 'user-message' : 'allie-message'}`}>
+        <span className={`bubble-content ${msg.audioUrl ? 'has-audio' : ''}`}>
+          {msg.audioUrl ? (
+            <div className="audio-wrapper">
+              <audio
+                className="audio-player"
+                controls
+                preload="none"
+                src={msg.audioUrl}
+                onError={(e) => console.warn('audio failed:', e.currentTarget.src)}
+              />
+              <div className="audio-fallback">
+                <a href={msg.audioUrl} target="_blank" rel="noreferrer">Open audio</a>
+              </div>
+            </div>
+          ) : (
+            msg.text
+          )}
+          <span className="msg-time">{msg.time}</span>
+        </span>
       </div>
-    </div>
-  ) : (
-    msg.text
-  )}
-  <span className="msg-time">{msg.time}</span>
-</span>
-  </div>
-))}
-        {isTyping && (
-  <div className="message allie-message typing-bounce">
-    <span></span>
-    <span></span>
-    <span></span>
-  </div>
-)}
-        <div ref={bottomRef}></div>
+    ))}
+    {isTyping && (
+      <div className="message allie-message typing-bounce">
+        <span></span><span></span><span></span>
       </div>
+    )}
+    <div ref={bottomRef}></div>
+  </div>
+</div>
 
       {showCoins && (
   <div className="premium-modal" onClick={closeCoins}>
