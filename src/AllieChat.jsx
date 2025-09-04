@@ -946,22 +946,45 @@ useEffect(() => {
   const scroller = document.querySelector('.chat-container');
   const rootEl = document.getElementById('root');
 
-  const toggleFallback = () => {
+  const testScrollability = () => {
     if (!scroller) return;
-    const needs = (scroller.scrollHeight - scroller.clientHeight) <= 2;
-    document.documentElement.classList.toggle('page-scroll-fallback', needs);
-    document.body.classList.toggle('page-scroll-fallback', needs);
-    if (rootEl) rootEl.classList.toggle('page-scroll-fallback', needs);
+
+    // Is there enough content to need inner scrolling?
+    const needsInner = (scroller.scrollHeight - scroller.clientHeight) > 2;
+
+    // If we need inner scroll, actively check it can actually move
+    let broken = false;
+    if (needsInner) {
+      const before = scroller.scrollTop;
+      scroller.scrollTop = before + 1;
+      const after = scroller.scrollTop;
+      scroller.scrollTop = before;
+      broken = (after === before);
+    }
+
+    // Enable page scroll when content is short OR inner scroll is broken
+    const enablePageScroll = !needsInner || broken;
+
+    document.documentElement.classList.toggle('page-scroll-fallback', enablePageScroll);
+    document.body.classList.toggle('page-scroll-fallback', enablePageScroll);
+    if (rootEl) rootEl.classList.toggle('page-scroll-fallback', enablePageScroll);
   };
 
-  toggleFallback();
+  testScrollability(); // on mount
+
   const vv = window.visualViewport;
-  if (vv) vv.addEventListener('resize', toggleFallback);
-  window.addEventListener('orientationchange', toggleFallback);
+  vv?.addEventListener('resize', testScrollability);
+  window.addEventListener('orientationchange', testScrollability);
+  window.addEventListener('resize', testScrollability);
+
+  // re-check shortly after mount
+  const t = setTimeout(testScrollability, 300);
 
   return () => {
-    if (vv) vv.removeEventListener('resize', toggleFallback);
-    window.removeEventListener('orientationchange', toggleFallback);
+    clearTimeout(t);
+    vv?.removeEventListener('resize', testScrollability);
+    window.removeEventListener('orientationchange', testScrollability);
+    window.removeEventListener('resize', testScrollability);
   };
 }, [layoutClass, messages.length, isTyping]);
 
