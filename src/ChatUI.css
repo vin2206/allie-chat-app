@@ -1027,3 +1027,40 @@ body { background: linear-gradient(180deg, #fce7f3 0%, #ede9fe 100%); }
   box-shadow: 0 10px 22px rgba(0,0,0,.18);
 }
 .welcome-note{ margin-top: 8px; font-size: 12px; opacity: .75; }
+
+/* ===== Page-scroll Fallback (runtime toggle via .page-scroll-fallback) ===== */
+/* Allow the page to scroll when middle container cannot */
+html.page-scroll-fallback,
+body.page-scroll-fallback,
+#root.page-scroll-fallback {
+  overflow-x: hidden;
+  overflow-y: auto;
+  height: auto;
+  min-height: 100%;
+}
+
+/* The app itself must not clip in fallback */
+.page-scroll-fallback .App {
+  overflow: visible;
+}
+
+/* In fallback, the chat becomes normal flow content with padding to clear header/footer */
+.page-scroll-fallback .chat-container {
+  position: static;
+  top: auto;
+  bottom: auto;
+  height: auto;
+  min-height: calc(100dvh - var(--hdr-h, 80px) - var(--ftr-h, 90px));
+  overflow: visible;
+  padding-top: calc(var(--hdr-h, 80px) + 12px);
+  padding-bottom: calc(var(--ftr-h, 90px) + 12px);
+  /* keep same background so there’s no black sampling */
+  background: linear-gradient(to bottom, #ff99cc, #cc66cc, #9966cc);
+}
+
+/* Keep the last items comfortably above the fixed footer when page-scroll is active */
+.page-scroll-fallback .message,
+.page-scroll-fallback .typing-bounce,
+.page-scroll-fallback .chat-container > div:last-child {
+  scroll-margin-block-end: 16px;
+}
