@@ -11,6 +11,10 @@ html, body, #root {
 html.page-scroll-fallback,
 body.page-scroll-fallback,
 #root.page-scroll-fallback { overflow: auto !important; }
+/* Release inner wrapper so the PAGE can scroll when fallback is on */
+html.page-scroll-fallback .scroll-wrap { position: static; }
+html.page-scroll-fallback .scroll-wrap .chat-container { position: static; overflow: visible; }
+html.page-scroll-fallback .App { overflow: auto; }
 :root { --hdr-h: 80px; --ftr-h: 90px; }  /* measured at runtime */
 
 html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
