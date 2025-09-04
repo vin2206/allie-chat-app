@@ -941,52 +941,55 @@ if (shouldResetRef.current) { fetchRetryBody.reset = true; shouldResetRef.curren
   useEffect(() => {
   scrollToBottomNow();
 }, [messages.length, isTyping]);
-  // Failsafe: if the middle pane isn't scrollable, allow page scroll
+  // Failsafe (safe version): only allow PAGE scroll when content is actually short.
+// Never flip modes while any overlay is open, and never run the "+1 px" probe.
 useEffect(() => {
-  const scroller = document.querySelector('.chat-container');
+  const scroller = scrollerRef.current || document.querySelector('.chat-container');
   const rootEl = document.getElementById('root');
 
-  const testScrollability = () => {
-    if (!scroller) return;
+  const update = () => {
+    // If any overlay is open, keep inner scroll model and do not toggle page fallback.
+    const overlayOpen = showCoins || showRoleMenu || confirmState.open || showWelcome;
+    const els = [document.documentElement, document.body, rootEl];
 
-    // Is there enough content to need inner scrolling?
-    const needsInner = (scroller.scrollHeight - scroller.clientHeight) > 2;
-
-    // If we need inner scroll, actively check it can actually move
-    let broken = false;
-    if (needsInner) {
-      const before = scroller.scrollTop;
-      scroller.scrollTop = before + 1;
-      const after = scroller.scrollTop;
-      scroller.scrollTop = before;
-      broken = (after === before);
+    if (!scroller || overlayOpen) {
+      els.forEach(el => el && el.classList.remove('page-scroll-fallback'));
+      return;
     }
 
-    // Enable page scroll when content is short OR inner scroll is broken
-    const enablePageScroll = !needsInner || broken;
+    // Only use page scroll when the chat is SHORT (no need for inner scroll).
+    const needsInner = (scroller.scrollHeight - scroller.clientHeight) > 2;
+    const enablePageScroll = !needsInner;
 
-    document.documentElement.classList.toggle('page-scroll-fallback', enablePageScroll);
-    document.body.classList.toggle('page-scroll-fallback', enablePageScroll);
-    if (rootEl) rootEl.classList.toggle('page-scroll-fallback', enablePageScroll);
+    els.forEach(el => {
+      if (!el) return;
+      if (enablePageScroll) el.classList.add('page-scroll-fallback');
+      else el.classList.remove('page-scroll-fallback');
+    });
   };
 
-  testScrollability(); // on mount
-
+  update();
   const vv = window.visualViewport;
-  vv?.addEventListener('resize', testScrollability);
-  window.addEventListener('orientationchange', testScrollability);
-  window.addEventListener('resize', testScrollability);
-
-  // re-check shortly after mount
-  const t = setTimeout(testScrollability, 300);
+  vv?.addEventListener('resize', update);
+  window.addEventListener('orientationchange', update);
+  window.addEventListener('resize', update);
+  const t = setTimeout(update, 300);
 
   return () => {
     clearTimeout(t);
-    vv?.removeEventListener('resize', testScrollability);
-    window.removeEventListener('orientationchange', testScrollability);
-    window.removeEventListener('resize', testScrollability);
+    vv?.removeEventListener('resize', update);
+    window.removeEventListener('orientationchange', update);
+    window.removeEventListener('resize', update);
   };
-}, [layoutClass, messages.length, isTyping]);
+}, [
+  layoutClass,
+  messages.length,
+  isTyping,
+  showCoins,
+  showRoleMenu,
+  confirmState.open,
+  showWelcome
+]);
 
   useEffect(() => {
   if (!showRoleMenu) return;
