@@ -15,6 +15,7 @@ html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
   display: flex;
   flex-direction: column;
   overflow: hidden; /* keep scrolling inside .chat-container */
+  position: relative; 
 }
 
 /* Only the fixed layout is height-locked (iOS/desktop) */
@@ -119,30 +120,29 @@ body { background: linear-gradient(180deg, #fce7f3 0%, #ede9fe 100%); }
   box-shadow: 0 2px 6px rgba(0,0,0,.18);
 }
 
-/* Single, fixed scroll owner pinned between header & footer */
+/* Single scroll owner pinned between header & footer (absolute) */
 .chat-container {
-  position: fixed;
+  position: absolute;                 /* ← was fixed */
   top: var(--hdr-h, 80px);
   left: 0;
   right: 0;
   bottom: var(--ftr-h, 90px);
-  z-index: 1; /* sits under header/footer */
+  z-index: 1;                         /* sits under header/footer */
 
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
 
-  /* small breathing room */
   padding: 12px 10px;
 
-  /* ✅ this is the ONLY scrollable element */
+  /* sole scrollable area */
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   touch-action: pan-y;
   overscroll-behavior-y: contain;
   scroll-padding-bottom: 10px;
 
-  /* Opaque layer — prevents black sampling behind the footer */
+  /* opaque layer (prevents black sampling) */
   background: linear-gradient(to bottom, #ff99cc, #cc66cc, #9966cc);
 }
 /* Opaque scroll layer — prevents black sampling behind the footer on Android */
