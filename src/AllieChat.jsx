@@ -301,21 +301,13 @@ useEffect(() => {
 }, []);
   const [isOwner, setIsOwner] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
-  // Keep sentinel based on the *actual* scroll owner (container OR page in fallback)
+  // Keep sentinel based on the *actual* scroll owner — the chat container only
 useEffect(() => {
   const scroller = scrollerRef.current || document.querySelector('.chat-container');
+  if (!scroller) return;
 
-  const isFallback = () =>
-    document.documentElement.classList.contains('page-scroll-fallback');
-
-  const getDist = () => {
-    if (isFallback()) {
-      const doc = document.documentElement;
-      return doc.scrollHeight - (window.scrollY + doc.clientHeight);
-    }
-    if (!scroller) return 0;
-    return scroller.scrollHeight - scroller.scrollTop - scroller.clientHeight;
-  };
+  const getDist = () =>
+    scroller.scrollHeight - scroller.scrollTop - scroller.clientHeight;
 
   const releaseRead = () => { readingUpRef.current = false; };
   const releaseReadDebounced = debounce(releaseRead, 150);
@@ -328,13 +320,9 @@ useEffect(() => {
     if (atBottom) releaseReadDebounced();
   };
 
-  // Init + listen on the correct target
   requestAnimationFrame(onScroll);
-  const target = isFallback() ? window : scroller;
-  if (!target) return;
-
-  target.addEventListener('scroll', onScroll, { passive: true });
-  return () => target.removeEventListener('scroll', onScroll);
+  scroller.addEventListener('scroll', onScroll, { passive: true });
+  return () => scroller.removeEventListener('scroll', onScroll);
 }, [messages.length, isTyping]);
   
   // ——— Emoji picker state/refs ———
@@ -948,53 +936,6 @@ if (shouldResetRef.current) { fetchRetryBody.reset = true; shouldResetRef.curren
   useEffect(() => {
   scrollToBottomNow();
 }, [messages.length, isTyping]);
-  
-  // Runtime scrollability probe → toggles page-scroll fallback only when needed
-useEffect(() => {
-  const rootEl  = document.documentElement;
-  const bodyEl  = document.body;
-  const appRoot = document.getElementById('root');
-  const scroller = scrollerRef.current || document.querySelector('.chat-container');
-
-  const setFallback = (on) => {
-    [rootEl, bodyEl, appRoot].forEach(el => el && el.classList.toggle('page-scroll-fallback', !!on));
-  };
-
-  const probe = () => {
-    if (!scroller) return;
-
-    // Do we have more content than the scroller’s viewport?
-    const overflows = (scroller.scrollHeight - scroller.clientHeight) > 8;
-
-    // Can the scroller actually scrollTop?
-    const prev = scroller.scrollTop;
-    scroller.scrollTop = prev + 1;
-    const moved = scroller.scrollTop !== prev;
-    scroller.scrollTop = prev;
-
-    const needFallback = overflows && !moved; // content is long but container cannot scroll
-    setFallback(needFallback);
-  };
-
-  // Run now and whenever viewport/layout/content may change
-  probe();
-
-  const vv = window.visualViewport;
-  const onResize = debounce(probe, 120);
-  window.addEventListener('resize', onResize);
-  if (vv) vv.addEventListener('resize', onResize);
-
-  // Also re-probe after render changes that affect height
-  const ro = (typeof ResizeObserver !== 'undefined' && scroller)
-    ? new ResizeObserver(onResize) : null;
-  if (ro) ro.observe(scroller);
-
-  return () => {
-    window.removeEventListener('resize', onResize);
-    if (vv) vv.removeEventListener('resize', onResize);
-    if (ro) ro.disconnect();
-  };
-}, [messages.length, layoutClass, isTyping]);
 
   useEffect(() => {
   if (!showRoleMenu) return;
