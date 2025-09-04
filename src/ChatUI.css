@@ -7,10 +7,6 @@ html, body, #root {
   width: 100%;
   overflow: hidden;
 }
-/* Fallback: when JS adds this class, unlock page scroll so user is never stuck */
-html.page-scroll-fallback,
-body.page-scroll-fallback,
-#root.page-scroll-fallback { overflow: auto !important; }
 :root { --hdr-h: 80px; --ftr-h: 90px; }  /* measured at runtime */
 
 html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
