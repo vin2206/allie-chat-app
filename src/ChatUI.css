@@ -119,26 +119,21 @@ body { background: linear-gradient(180deg, #fce7f3 0%, #ede9fe 100%); }
   box-shadow: 0 2px 6px rgba(0,0,0,.18);
 }
 
-/* NEW: pinned viewport between header & footer (shared for both layouts) */
-.scroll-wrap {
+/* Single, fixed scroll owner pinned between header & footer */
+.chat-container {
   position: fixed;
   top: var(--hdr-h, 80px);
-  left: 0; right: 0;
+  left: 0;
+  right: 0;
   bottom: var(--ftr-h, 90px);
-  z-index: 1; /* sits under header/footer (which are z-index:100) */
-}
-
-/* Real scroller lives absolutely inside the fixed viewport */
-.scroll-wrap .chat-container {
-  position: absolute;
-  inset: 0; /* top:0; right:0; bottom:0; left:0 */
+  z-index: 1; /* sits under header/footer */
 
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
 
-  /* small breathing room only */
-  padding: 12px 10px calc(10px + env(safe-area-inset-bottom));
+  /* small breathing room */
+  padding: 12px 10px;
 
   /* ✅ this is the ONLY scrollable element */
   overflow-y: auto;
