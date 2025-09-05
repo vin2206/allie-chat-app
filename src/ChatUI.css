@@ -4,11 +4,9 @@ html, body, #root {
   margin: 0;
   padding: 0;
   width: 100%;
-  /* let the PAGE scroll */
-  overflow-x: hidden;
-  overflow-y: auto;
-  height: auto;
+  height: 100%;
   min-height: 100%;
+  overflow: hidden;            /* ← page doesn't scroll anymore */
 }
 :root { --hdr-h: 80px; --ftr-h: 90px; }  /* measured at runtime */
 
@@ -875,6 +873,8 @@ body { background: linear-gradient(180deg, #fce7f3 0%, #ede9fe 100%); }
   padding-top: calc(12px + env(safe-area-inset-top));
   background: rgba(255, 105, 180, 0.15);
 }
+-webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
 
 /* Footer fixed at bottom */
 .App.stable .footer {
@@ -885,6 +885,8 @@ body { background: linear-gradient(180deg, #fce7f3 0%, #ede9fe 100%); }
   padding-bottom: calc(12px + env(safe-area-inset-bottom));
   background: rgba(50, 20, 60, 0.12);
 }
+-webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
 
 /* Smaller, non-shifting controls on Android pinned layout */
 .App.stable .footer .send-btn,
