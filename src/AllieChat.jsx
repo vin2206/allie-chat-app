@@ -280,13 +280,12 @@ const scrollerRef = useRef(null);
 const stickToBottomRef = useRef(true); // true only when truly at bottom
 const readingUpRef = useRef(false);    // true when user scrolled up (locks auto-scroll)
 
-// Only scroll if user is not reading history, unless force=true
 const scrollToBottomNow = (force = false) => {
-  const scroller = document.scrollingElement || document.documentElement;
+  const scroller = scrollerRef.current;              // ← the .chat-container
   if (!scroller) return;
   if (!force && readingUpRef.current) return;
-  // Using the bottomRef keeps layout safe with typing indicator etc.
-  bottomRef.current?.scrollIntoView({ behavior: 'auto', block: 'end' });
+  // snap to bottom of the chat pane
+  scroller.scrollTop = scroller.scrollHeight;
 };
   
   const [isPaused, setIsPaused] = useState(false);
