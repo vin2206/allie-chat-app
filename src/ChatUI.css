@@ -138,6 +138,7 @@ body { background: linear-gradient(180deg, #fce7f3 0%, #ede9fe 100%); }
   justify-content: flex-end;
 
   /* sole scrollable area */
+   height: calc(var(--app-h, 100dvh) - var(--hdr-h, 80px) - var(--ftr-h, 90px));
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-y: contain;
@@ -884,8 +885,6 @@ body { background: linear-gradient(180deg, #fce7f3 0%, #ede9fe 100%); }
   padding-bottom: calc(12px + env(safe-area-inset-bottom));
   background: rgba(50, 20, 60, 0.12);
 }
--webkit-backdrop-filter: blur(10px);
-  backdrop-filter: blur(10px);
 
 /* Smaller, non-shifting controls on Android pinned layout */
 .App.stable .footer .send-btn,
