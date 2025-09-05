@@ -149,6 +149,13 @@ body { background: linear-gradient(180deg, #fce7f3 0%, #ede9fe 100%); }
   background: linear-gradient(to bottom, #ff99cc, #cc66cc, #9966cc);
 }
 
+/* Make room for fixed header & footer in both layouts */
+.App.stable .chat-container,
+.App.fixed  .chat-container {
+  padding-top: calc(var(--hdr-h, 80px) + 12px);
+  padding-bottom: calc(var(--ftr-h, 90px) + 12px);
+}
+
 /* Spacer stays FLEX, not fixed height — lives at the TOP in JSX */
 .chat-spacer { flex: 1 0 auto; height: 0; }
 
