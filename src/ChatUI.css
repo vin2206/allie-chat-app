@@ -142,6 +142,7 @@ body { background: linear-gradient(180deg, #fce7f3 0%, #ede9fe 100%); }
   touch-action: pan-y;
 
   padding: 0 10px;                 /* horizontal only */
+  padding-top: var(--top-pad, 0px);
   background: linear-gradient(to bottom, #ff99cc, #cc66cc, #9966cc);
 }
 
