@@ -277,6 +277,17 @@ useEffect(() => {
   const bottomRef = useRef(null);
   // NEW: track if we should auto-stick to bottom (strict, WhatsApp-like)
 const scrollerRef = useRef(null);      // points to .chat-container
+  // --- Page-scroll fallback toggler (uses CSS you already added) ---
+const pageScrollFallbackRef = useRef(false);
+const setPageScrollFallback = React.useCallback((on) => {
+  if (pageScrollFallbackRef.current === on) return;
+  pageScrollFallbackRef.current = on;
+  const cls = 'page-scroll-fallback';
+  const rootEl = document.getElementById('root');
+  [document.documentElement, document.body, rootEl].forEach(
+    n => n && n.classList.toggle(cls, !!on)
+  );
+}, []);
 const stickToBottomRef = useRef(true); // true only when truly at bottom
 const readingUpRef = useRef(false);    // true when user scrolled up (locks auto-scroll)
 
@@ -936,6 +947,29 @@ if (shouldResetRef.current) { fetchRetryBody.reset = true; shouldResetRef.curren
   useEffect(() => {
   scrollToBottomNow();
 }, [messages.length, isTyping]);
+  // If Android/Chrome blocks scrolling in the fixed middle pane, enable fallback
+useEffect(() => {
+  const el = scrollerRef.current || document.querySelector('.chat-container');
+  if (!el) return;
+
+  const probe = () => {
+    try {
+      const canScroll = el.scrollHeight > el.clientHeight + 2;
+      const before = el.scrollTop;
+      el.scrollTop = before + 1;           // try to move 1px
+      const moved = el.scrollTop !== before;
+      const locked = canScroll && !moved;  // can scroll but refuses -> bug
+      setPageScrollFallback(locked);
+    } catch { /* ignore */ }
+  };
+
+  // run now and after layout settles
+  requestAnimationFrame(probe);
+  const t = setTimeout(probe, 350);
+  return () => clearTimeout(t);
+}, [messages.length, layoutClass, setPageScrollFallback]);
+
+  useEffect(() => () => setPageScrollFallback(false), [setPageScrollFallback]);
 
   useEffect(() => {
   if (!showRoleMenu) return;
