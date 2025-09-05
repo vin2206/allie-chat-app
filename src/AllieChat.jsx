@@ -302,7 +302,8 @@ useEffect(() => {
   const [isOwner, setIsOwner] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
   useEffect(() => {
-  const scroller = document.scrollingElement || document.documentElement;
+  const scroller = scrollerRef.current || document.querySelector('.chat-container');
+  if (!scroller) return;
 
   const getDist = () =>
     scroller.scrollHeight - scroller.scrollTop - scroller.clientHeight;
@@ -319,8 +320,8 @@ useEffect(() => {
   };
 
   requestAnimationFrame(onScroll);
-  window.addEventListener('scroll', onScroll, { passive: true });
-  return () => window.removeEventListener('scroll', onScroll);
+  scroller.addEventListener('scroll', onScroll, { passive: true });
+  return () => scroller.removeEventListener('scroll', onScroll);
 }, [messages.length, isTyping]);
   
   // ——— Emoji picker state/refs ———
