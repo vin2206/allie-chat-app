@@ -123,37 +123,26 @@ body { background: linear-gradient(180deg, #fce7f3 0%, #ede9fe 100%); }
 }
 
 /* Chat scroller: flex child between fixed header/footer */
-.chat-container {
-  position: relative;
-  flex: 1 1 auto;
-  min-height: 0;
-
-  /* clear the fixed header/footer */
-  margin-top: 0;
-  padding: 12px 10px;
-  padding-bottom: 12px;
+/* Chat scroller: pinned between header and footer (no fixed height) */
+.chat-container{
+  position: absolute;
+  left: 0;
+  right: 0;
+  top:    calc(var(--hdr-h, 80px) + 12px);
+  bottom: calc(var(--ftr-h, 90px) + 12px);
 
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
 
-  /* sole scrollable area */
-   height: calc(var(--app-h, 100dvh) - var(--hdr-h, 80px) - var(--ftr-h, 90px));
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-y: contain;
   scroll-padding-bottom: 10px;
-  touch-action: pan-y; 
+  touch-action: pan-y;
 
-  /* keep the same opaque gradient to avoid black sampling */
+  padding: 0 10px;                 /* horizontal only */
   background: linear-gradient(to bottom, #ff99cc, #cc66cc, #9966cc);
-}
-
-/* Make room for fixed header & footer in both layouts */
-.App.stable .chat-container,
-.App.fixed  .chat-container {
-  padding-top: calc(var(--hdr-h, 80px) + 12px);
-  padding-bottom: calc(var(--ftr-h, 90px) + 12px);
 }
 
 /* Spacer stays FLEX, not fixed height — lives at the TOP in JSX */
