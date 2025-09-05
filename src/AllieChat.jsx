@@ -276,24 +276,13 @@ useEffect(() => {
   const [inputValue, setInputValue] = useState('');
   const bottomRef = useRef(null);
   // NEW: track if we should auto-stick to bottom (strict, WhatsApp-like)
-const scrollerRef = useRef(null);      // points to .chat-container
-  // --- Page-scroll fallback toggler (uses CSS you already added) ---
-const pageScrollFallbackRef = useRef(false);
-const setPageScrollFallback = React.useCallback((on) => {
-  if (pageScrollFallbackRef.current === on) return;
-  pageScrollFallbackRef.current = on;
-  const cls = 'page-scroll-fallback';
-  const rootEl = document.getElementById('root');
-  [document.documentElement, document.body, rootEl].forEach(
-    n => n && n.classList.toggle(cls, !!on)
-  );
-}, []);
+const scrollerRef = useRef(null);
 const stickToBottomRef = useRef(true); // true only when truly at bottom
 const readingUpRef = useRef(false);    // true when user scrolled up (locks auto-scroll)
 
 // Only scroll if user is not reading history, unless force=true
 const scrollToBottomNow = (force = false) => {
-  const scroller = scrollerRef.current || document.querySelector('.chat-container');
+  const scroller = document.scrollingElement || document.documentElement;
   if (!scroller) return;
   if (!force && readingUpRef.current) return;
   // Using the bottomRef keeps layout safe with typing indicator etc.
@@ -312,10 +301,8 @@ useEffect(() => {
 }, []);
   const [isOwner, setIsOwner] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
-  // Keep sentinel based on the *actual* scroll owner — the chat container only
-useEffect(() => {
-  const scroller = scrollerRef.current || document.querySelector('.chat-container');
-  if (!scroller) return;
+  useEffect(() => {
+  const scroller = document.scrollingElement || document.documentElement;
 
   const getDist = () =>
     scroller.scrollHeight - scroller.scrollTop - scroller.clientHeight;
@@ -332,8 +319,8 @@ useEffect(() => {
   };
 
   requestAnimationFrame(onScroll);
-  scroller.addEventListener('scroll', onScroll, { passive: true });
-  return () => scroller.removeEventListener('scroll', onScroll);
+  window.addEventListener('scroll', onScroll, { passive: true });
+  return () => window.removeEventListener('scroll', onScroll);
 }, [messages.length, isTyping]);
   
   // ——— Emoji picker state/refs ———
@@ -947,29 +934,6 @@ if (shouldResetRef.current) { fetchRetryBody.reset = true; shouldResetRef.curren
   useEffect(() => {
   scrollToBottomNow();
 }, [messages.length, isTyping]);
-  // If Android/Chrome blocks scrolling in the fixed middle pane, enable fallback
-useEffect(() => {
-  const el = scrollerRef.current || document.querySelector('.chat-container');
-  if (!el) return;
-
-  const probe = () => {
-    try {
-      const canScroll = el.scrollHeight > el.clientHeight + 2;
-      const before = el.scrollTop;
-      el.scrollTop = before + 1;           // try to move 1px
-      const moved = el.scrollTop !== before;
-      const locked = canScroll && !moved;  // can scroll but refuses -> bug
-      setPageScrollFallback(locked);
-    } catch { /* ignore */ }
-  };
-
-  // run now and after layout settles
-  requestAnimationFrame(probe);
-  const t = setTimeout(probe, 350);
-  return () => clearTimeout(t);
-}, [messages.length, layoutClass, setPageScrollFallback]);
-
-  useEffect(() => () => setPageScrollFallback(false), [setPageScrollFallback]);
 
   useEffect(() => {
   if (!showRoleMenu) return;
