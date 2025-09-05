@@ -1001,6 +1001,12 @@ useEffect(() => {
     window.removeEventListener('pageshow', setVars);
   };
 }, [layoutClass, messages.length, isTyping]);
+  useEffect(() => {
+  const c = scrollerRef.current;
+  if (!c) return;
+  const needPad = c.scrollHeight <= c.clientHeight + 1; // no overflow yet
+  c.style.setProperty('--top-pad', needPad ? '420px' : '0px'); // force a bar, then remove
+}, [messages.length, isTyping, layoutClass]);
 
   // Auto-compact the header when contents overflow (enables .narrow / .tiny)
 useEffect(() => {
