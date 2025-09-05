@@ -145,9 +145,6 @@ body { background: linear-gradient(180deg, #fce7f3 0%, #ede9fe 100%); }
   background: linear-gradient(to bottom, #ff99cc, #cc66cc, #9966cc);
 }
 
-/* Spacer stays FLEX, not fixed height — lives at the TOP in JSX */
-.chat-spacer { flex: 1 0 auto; height: 0; }
-
 /* Message bubble layout */
 .message {
   max-width: 92%;
