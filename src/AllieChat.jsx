@@ -12,6 +12,15 @@ function debounce(fn, wait = 120) {
     t = setTimeout(() => fn(...args), wait);
   };
 }
+// Toggle page-scroll fallback by adding/removing a class on html/body/#root
+function setPageScrollFallback(on) {
+  const nodes = [
+    document.documentElement,
+    document.body,
+    document.getElementById('root')
+  ];
+  nodes.forEach(n => n && n.classList[on ? 'add' : 'remove']('page-scroll-fallback'));
+}
 // --- Google Sign-In (GIS) ---
 const GOOGLE_CLIENT_ID = '962465973550-2lhard334t8kvjpdhh60catlb1k6fpb6.apps.googleusercontent.com';
 const parseJwt = (t) => {
@@ -1006,8 +1015,29 @@ useEffect(() => {
   useEffect(() => {
   const c = scrollerRef.current;
   if (!c) return;
-  const hasOverflow = c.scrollHeight > c.clientHeight + 1;
-  setForceSpacer(!hasOverflow);   // if no overflow, turn spacer ON
+
+  // Should this inner scroller overflow?
+  const shouldOverflow = c.scrollHeight > c.clientHeight + 1;
+  setForceSpacer(!shouldOverflow);   // when short, keep spacer ON
+
+  if (shouldOverflow) {
+    // Test whether the inner scroller actually scrolls
+    const before = c.scrollTop;
+    c.scrollTop = before + 1;                 // nudge 1px
+    const canScroll = c.scrollTop !== before; // if unchanged → broken
+    c.scrollTop = before;
+
+    // If inner scroll is broken, enable page-scroll fallback
+    setPageScrollFallback(!canScroll);
+    if (!canScroll) {
+      requestAnimationFrame(() => {
+        try { window.scrollTo(0, document.body.scrollHeight); } catch {}
+      });
+    }
+  } else {
+    // No overflow → keep normal mode
+    setPageScrollFallback(false);
+  }
 }, [messages.length, isTyping, layoutClass, showWelcome]);
 
   // Auto-compact the header when contents overflow (enables .narrow / .tiny)
