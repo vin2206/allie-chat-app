@@ -289,6 +289,19 @@ const scrollerRef = useRef(null);
 const stickToBottomRef = useRef(true); // true only when truly at bottom
 const readingUpRef = useRef(false);    // true when user scrolled up (locks auto-scroll)
 const imeLockRef = useRef(false); // ignore scroll logic during IME open/close animation
+// Latch page-scroll fallback once enabled (prevents mode flapping)
+const fallbackLatchedRef = useRef(false);
+const enablePageFallback = React.useCallback(() => {
+  if (!fallbackLatchedRef.current) {
+    setPageScrollFallback(true);
+    fallbackLatchedRef.current = true;   // once on, keep it for this visit
+  }
+}, []);
+const disablePageFallback = React.useCallback(() => {
+  if (!fallbackLatchedRef.current) {
+    setPageScrollFallback(false);
+  }
+}, []);
 
 const scrollToBottomNow = (force = false) => {
   const scroller = scrollerRef.current;              // ← the .chat-container
@@ -1025,28 +1038,29 @@ useEffect(() => {
   useEffect(() => {
   const c = scrollerRef.current;
   if (!c) return;
-  if (document.documentElement.classList.contains('ime-open')) return; // don't flip modes during IME
+  if (document.documentElement.classList.contains('ime-open')) return;
 
-  // Should this inner scroller overflow?
   const shouldOverflow = c.scrollHeight > c.clientHeight + 1;
 
   if (shouldOverflow) {
-    // Test whether the inner scroller actually scrolls
     const before = c.scrollTop;
-    c.scrollTop = before + 1;                 // nudge 1px
-    const canScroll = c.scrollTop !== before; // if unchanged → broken
+    c.scrollTop = before + 1;
+    const canScroll = c.scrollTop !== before;
     c.scrollTop = before;
 
-    // If inner scroll is broken, enable page-scroll fallback
-    setPageScrollFallback(!canScroll);
     if (!canScroll) {
+      // Inner scroller ineffective → latch fallback
+      enablePageFallback();
       requestAnimationFrame(() => {
         try { window.scrollTo(0, document.body.scrollHeight); } catch {}
       });
+    } else {
+      // Inner scroller works → only disable if never latched
+      disablePageFallback();
     }
   } else {
-    // No overflow → keep normal mode
-    setPageScrollFallback(false);
+    // No overflow → only disable if never latched
+    disablePageFallback();
   }
 }, [messages.length, isTyping, layoutClass, showWelcome]);
 
