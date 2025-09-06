@@ -145,6 +145,12 @@ body { background: linear-gradient(180deg, #fce7f3 0%, #ede9fe 100%); }
   padding: 0 10px calc(max(var(--ftr-h, 90px), var(--kb-h, 0px)) + env(safe-area-inset-bottom));
   background: linear-gradient(to bottom, #ff99cc, #cc66cc, #9966cc);
 }
+/* Android IME open: remove extra keyboard padding to kill purple gap */
+html.ime-open:not(.page-scroll-fallback) .chat-container {
+  /* use only footer height while keyboard is open */
+  padding-bottom: calc(var(--ftr-h, 90px) + env(safe-area-inset-bottom)) !important;
+}
+
 .chat-container::before{
   content:"";
   flex: 1 0 auto;   /* eats leftover height ABOVE the messages */
