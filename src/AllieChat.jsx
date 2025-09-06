@@ -288,6 +288,7 @@ useEffect(() => {
 const scrollerRef = useRef(null);
 const stickToBottomRef = useRef(true); // true only when truly at bottom
 const readingUpRef = useRef(false);    // true when user scrolled up (locks auto-scroll)
+const imeLockRef = useRef(false); // ignore scroll logic during IME open/close animation
 
 const scrollToBottomNow = (force = false) => {
   const scroller = scrollerRef.current;              // ← the .chat-container
@@ -320,12 +321,16 @@ useEffect(() => {
   const releaseReadDebounced = debounce(releaseRead, 150);
 
   const onScroll = () => {
-    const dist = getDist();
-    const atBottom = dist <= 2;
-    stickToBottomRef.current = atBottom;
+  const dist = getDist();
+  const atBottom = dist <= 2;
+  stickToBottomRef.current = atBottom;
+
+  // Android IME fires synthetic scrolls; don't treat those as "user scrolled up"
+  if (!imeLockRef.current) {
     if (dist > 40) readingUpRef.current = true;
     if (atBottom) releaseReadDebounced();
-  };
+  }
+};
 
   requestAnimationFrame(onScroll);
   scroller.addEventListener('scroll', onScroll, { passive: true });
@@ -945,6 +950,12 @@ if (shouldResetRef.current) { fetchRetryBody.reset = true; shouldResetRef.curren
 }, [messages.length, isTyping]);
 
   useEffect(() => {
+  if (isTyping && !readingUpRef.current) {
+    requestAnimationFrame(() => scrollToBottomNow(true));
+  }
+}, [isTyping]);
+
+  useEffect(() => {
   if (!showRoleMenu) return;
 
   // Focus the close button when the modal opens
@@ -1014,6 +1025,7 @@ useEffect(() => {
   useEffect(() => {
   const c = scrollerRef.current;
   if (!c) return;
+  if (document.documentElement.classList.contains('ime-open')) return; // don't flip modes during IME
 
   // Should this inner scroller overflow?
   const shouldOverflow = c.scrollHeight > c.clientHeight + 1;
@@ -1109,13 +1121,25 @@ useEffect(() => {
   if (!vv) return;
 
   let baseline = vv.height; // largest height (no IME)
+  let lastDrop = 0;
 
   const setKbVars = () => {
     baseline = Math.max(baseline, vv.height);
     const drop = Math.max(0, Math.round(baseline - vv.height)); // px
+
     if (drop > 80) root.classList.add('ime-open'); else root.classList.remove('ime-open');
-    // Expose keyboard height for CSS to reserve bottom space
     root.style.setProperty('--kb-h', drop ? `${drop}px` : '0px');
+
+    // If keyboard height changed, treat it as a layout change (not a user scroll)
+    if (drop !== lastDrop) {
+      readingUpRef.current = false;          // don't lock auto-stick
+      imeLockRef.current = true;             // suppress scroll handler for a moment
+      setTimeout(() => { imeLockRef.current = false; }, 380);
+      if (stickToBottomRef.current) {
+        requestAnimationFrame(() => scrollToBottomNow(true)); // keep last bubble visible
+      }
+      lastDrop = drop;
+    }
   };
 
   const onResize = debounce(setKbVars, 60);
