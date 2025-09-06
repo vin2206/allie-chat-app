@@ -131,25 +131,21 @@ body { background: linear-gradient(180deg, #fce7f3 0%, #ede9fe 100%); }
   left: 0;
   right: 0;
   top:    calc(var(--hdr-h, 80px) + 12px);
-  bottom: calc(var(--ftr-h, 90px) + 12px);
+  bottom: 0;
   display: flex;
   flex-direction: column;
-  justify-content: flex-end;
+  justify-content: flex-start;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-y: contain;
   scroll-padding-bottom: 10px;
   touch-action: pan-y;
-  padding: 0 10px;                 /* horizontal only */
+  padding: 0 10px calc(var(--ftr-h, 90px) + env(safe-area-inset-bottom) + 12px);
   background: linear-gradient(to bottom, #ff99cc, #cc66cc, #9966cc);
 }
-/* TOP filler so there is NO gap under the last message */
-.force-scroll-spacer {
-  order: -1;          /* move spacer to the TOP of the column */
-  flex: 1 1 auto;     /* eat leftover height above the messages */
-  height: 1px;        /* don't leave a tall block under bubbles */
-  min-height: 1px;
-  pointer-events: none;
+.chat-container::before{
+  content:"";
+  flex: 1 0 auto;   /* eats leftover height ABOVE the messages */
 }
 
 /* Message bubble layout */
@@ -1079,12 +1075,6 @@ html, body, #root { background-color: #7a4bd1; }            /* page base */
 
 .App.stable .footer,
 .App.fixed  .footer { background: rgba(40,20,55,.92); }      /* was .12 */
-
-/* 3) Make sure the chat really reaches under the footer with the exact height */
-.App.stable .chat-container,
-.App.fixed  .chat-container {
-  bottom: calc(var(--ftr-h, 90px) + env(safe-area-inset-bottom) + 0px);
-}
 
 /* 4) Nudge GPU to keep these layers in their own surface (reduces flashing) */
 .App.signed-in, .chat-container { transform: translateZ(0); backface-visibility: hidden; }
