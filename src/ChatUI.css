@@ -9,6 +9,8 @@ html, body, #root {
   overflow-x: hidden;         /* keep only horizontal lock */
   /* no overflow-y here */
 }
+/* stop browser pull-to-refresh; our chat scroller will handle it */
+html, body { overscroll-behavior-y: none; }
 :root { --hdr-h: 80px; --ftr-h: 90px; }  /* measured at runtime */
 
 html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
@@ -130,20 +132,22 @@ body { background: linear-gradient(180deg, #fce7f3 0%, #ede9fe 100%); }
   right: 0;
   top:    calc(var(--hdr-h, 80px) + 12px);
   bottom: calc(var(--ftr-h, 90px) + 12px);
-
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
-
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-y: contain;
   scroll-padding-bottom: 10px;
   touch-action: pan-y;
-
   padding: 0 10px;                 /* horizontal only */
-  padding-top: var(--top-pad, 0px);
   background: linear-gradient(to bottom, #ff99cc, #cc66cc, #9966cc);
+}
+/* Real spacer to guarantee overflow when chat is short */
+.force-scroll-spacer {
+  height: calc(100% + 1px); /* always > container height */
+  flex: 0 0 auto;
+  pointer-events: none;
 }
 
 /* Message bubble layout */
