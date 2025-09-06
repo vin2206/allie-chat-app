@@ -286,7 +286,6 @@ useEffect(() => {
   const bottomRef = useRef(null);
   // NEW: track if we should auto-stick to bottom (strict, WhatsApp-like)
 const scrollerRef = useRef(null);
-const [forceSpacer, setForceSpacer] = useState(false);
 const stickToBottomRef = useRef(true); // true only when truly at bottom
 const readingUpRef = useRef(false);    // true when user scrolled up (locks auto-scroll)
 
@@ -1018,7 +1017,6 @@ useEffect(() => {
 
   // Should this inner scroller overflow?
   const shouldOverflow = c.scrollHeight > c.clientHeight + 1;
-  setForceSpacer(!shouldOverflow);   // when short, keep spacer ON
 
   if (shouldOverflow) {
     // Test whether the inner scroller actually scrolls
@@ -1290,7 +1288,6 @@ if (!user) {
 )}
 
       <div className="chat-container" ref={scrollerRef}>
-      {forceSpacer && <div className="force-scroll-spacer" aria-hidden="true" />}
   {displayedMessages.map((msg, index) => (
     <div key={index} className={`message ${msg.sender === 'user' ? 'user-message' : 'allie-message'}`}>
       <span className={`bubble-content ${msg.audioUrl ? 'has-audio' : ''}`}>
