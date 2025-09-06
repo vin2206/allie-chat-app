@@ -277,6 +277,7 @@ useEffect(() => {
   const bottomRef = useRef(null);
   // NEW: track if we should auto-stick to bottom (strict, WhatsApp-like)
 const scrollerRef = useRef(null);
+const [forceSpacer, setForceSpacer] = useState(false);
 const stickToBottomRef = useRef(true); // true only when truly at bottom
 const readingUpRef = useRef(false);    // true when user scrolled up (locks auto-scroll)
 
@@ -1001,12 +1002,13 @@ useEffect(() => {
     window.removeEventListener('pageshow', setVars);
   };
 }, [layoutClass, messages.length, isTyping]);
+
   useEffect(() => {
   const c = scrollerRef.current;
   if (!c) return;
-  const needPad = c.scrollHeight <= c.clientHeight + 1; // no overflow yet
-  c.style.setProperty('--top-pad', needPad ? '420px' : '0px'); // force a bar, then remove
-}, [messages.length, isTyping, layoutClass]);
+  const hasOverflow = c.scrollHeight > c.clientHeight + 1;
+  setForceSpacer(!hasOverflow);   // if no overflow, turn spacer ON
+}, [messages.length, isTyping, layoutClass, showWelcome]);
 
   // Auto-compact the header when contents overflow (enables .narrow / .tiny)
 useEffect(() => {
@@ -1258,6 +1260,7 @@ if (!user) {
 )}
 
       <div className="chat-container" ref={scrollerRef}>
+      {forceSpacer && <div className="force-scroll-spacer" aria-hidden="true" />}
   {displayedMessages.map((msg, index) => (
     <div key={index} className={`message ${msg.sender === 'user' ? 'user-message' : 'allie-message'}`}>
       <span className={`bubble-content ${msg.audioUrl ? 'has-audio' : ''}`}>
