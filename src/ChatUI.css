@@ -1086,3 +1086,7 @@ html, body, #root { background-color: #7a4bd1; }            /* page base */
 
 /* 4) Nudge GPU to keep these layers in their own surface (reduces flashing) */
 .App.signed-in, .chat-container { transform: translateZ(0); backface-visibility: hidden; }
+
+/* While the keyboard is open, keep bars opaque to avoid dark sampling */
+html.ime-open .App.stable .header { background: rgba(255,105,180,.92); }
+html.ime-open .App.stable .footer { background: rgba(40,20,55,.92); }
