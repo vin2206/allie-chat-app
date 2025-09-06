@@ -1030,6 +1030,7 @@ body.page-scroll-fallback,
   overflow-y: auto;
   height: auto;
   min-height: 100%;
+  overscroll-behavior-y: auto;
 }
 
 /* The app itself must not clip in fallback */
