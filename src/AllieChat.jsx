@@ -1101,33 +1101,34 @@ useEffect(() => {
   };
 }, [layoutClass]);
 
-  // Android: flag when the keyboard (IME) is open
+  // Android: flag when the keyboard (IME) is open + expose height to CSS
 useEffect(() => {
   if (layoutClass !== 'stable') return; // Android only
   const root = document.documentElement;
   const vv = window.visualViewport;
   if (!vv) return;
 
-  let baseline = vv.height;
+  let baseline = vv.height; // largest height (no IME)
 
-  const onResize = debounce(() => {
-  try {
+  const setKbVars = () => {
     baseline = Math.max(baseline, vv.height);
-    const drop = baseline - vv.height;
-    if (drop > 80) { root.classList.add('ime-open'); }
-    else { root.classList.remove('ime-open'); }
-    // No auto-scroll here. Sentinel decides.
-  } catch {}
-}, 120);
+    const drop = Math.max(0, Math.round(baseline - vv.height)); // px
+    if (drop > 80) root.classList.add('ime-open'); else root.classList.remove('ime-open');
+    // Expose keyboard height for CSS to reserve bottom space
+    root.style.setProperty('--kb-h', drop ? `${drop}px` : '0px');
+  };
 
-vv.addEventListener('resize', onResize);
-  const onOrient = () => { baseline = vv.height; onResize(); };
-  window.addEventListener('orientationchange', onOrient);
+  const onResize = debounce(setKbVars, 60);
+  vv.addEventListener('resize', onResize);
+  window.addEventListener('orientationchange', () => { baseline = vv.height; setKbVars(); });
+
+  // initial pass
+  setKbVars();
 
   return () => {
     vv.removeEventListener('resize', onResize);
-    window.removeEventListener('orientationchange', onOrient);
     root.classList.remove('ime-open');
+    root.style.removeProperty('--kb-h');
   };
 }, [layoutClass]);
   
