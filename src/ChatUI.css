@@ -1058,3 +1058,9 @@ body.page-scroll-fallback,
 .page-scroll-fallback .chat-container > div:last-child {
   scroll-margin-block-end: 16px;
 }
+/* IMPORTANT: when fallback is active, let the page grow */
+.page-scroll-fallback .App.stable,
+.page-scroll-fallback .App.fixed {
+  height: auto !important;
+  min-height: 100%;
+}
