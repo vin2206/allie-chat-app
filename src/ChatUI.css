@@ -143,10 +143,12 @@ body { background: linear-gradient(180deg, #fce7f3 0%, #ede9fe 100%); }
   padding: 0 10px;                 /* horizontal only */
   background: linear-gradient(to bottom, #ff99cc, #cc66cc, #9966cc);
 }
-/* Real spacer to guarantee overflow when chat is short */
+/* TOP filler so there is NO gap under the last message */
 .force-scroll-spacer {
-  height: calc(100% + 1px); /* always > container height */
-  flex: 0 0 auto;
+  order: -1;          /* move spacer to the TOP of the column */
+  flex: 1 1 auto;     /* eat leftover height above the messages */
+  height: 1px;        /* don't leave a tall block under bubbles */
+  min-height: 1px;
   pointer-events: none;
 }
 
