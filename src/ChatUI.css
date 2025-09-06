@@ -145,10 +145,9 @@ body { background: linear-gradient(180deg, #fce7f3 0%, #ede9fe 100%); }
   padding: 0 10px calc(max(var(--ftr-h, 90px), var(--kb-h, 0px)) + env(safe-area-inset-bottom));
   background: linear-gradient(to bottom, #ff99cc, #cc66cc, #9966cc);
 }
-/* Android IME open: remove extra keyboard padding to kill purple gap */
 html.ime-open:not(.page-scroll-fallback) .chat-container {
-  /* use only footer height while keyboard is open */
-  padding-bottom: calc(var(--ftr-h, 90px) + env(safe-area-inset-bottom)) !important;
+  /* keep exactly the same spacing rule as default to avoid “purple blink” */
+  padding-bottom: calc(max(var(--ftr-h, 90px), var(--kb-h, 0px)) + env(safe-area-inset-bottom)) !important;
 }
 
 .chat-container::before{
@@ -1077,16 +1076,14 @@ html, body, #root { background-color: #7a4bd1; }            /* page base */
 .App.signed-in       { background-color: #7a4bd1; }          /* app layer */
 .chat-container      { background-color: #7a4bd1; }          /* scroll layer */
 
-/* Use heavier opacity only when page-scroll fallback is active (old WebViews) */
 .page-scroll-fallback .App.stable .header,
-.page-scroll-fallback .App.fixed  .header { background: rgba(255,105,180,.92); }
+.page-scroll-fallback .App.fixed  .header { background: rgba(255,105,180,0.15); }
 
 .page-scroll-fallback .App.stable .footer,
-.page-scroll-fallback .App.fixed  .footer { background: rgba(40,20,55,.92); }
+.page-scroll-fallback .App.fixed  .footer { background: rgba(50,20,60,0.12); }
 
 /* 4) Nudge GPU to keep these layers in their own surface (reduces flashing) */
 .App.signed-in, .chat-container { transform: translateZ(0); backface-visibility: hidden; }
 
-/* While the keyboard is open, keep bars opaque to avoid dark sampling */
-html.ime-open .App.stable .header { background: rgba(255,105,180,.92); }
-html.ime-open .App.stable .footer { background: rgba(40,20,55,.92); }
+html.ime-open .App.stable .header { background: rgba(255,105,180,0.15); }
+html.ime-open .App.stable .footer { background: rgba(50,20,60,0.12); }
