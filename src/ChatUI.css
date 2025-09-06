@@ -1064,3 +1064,25 @@ body.page-scroll-fallback,
   height: auto !important;
   min-height: 100%;
 }
+
+/* --- Kill the black-gap paint bug on old Android WebViews --- */
+/* 1) Give every layer a solid fallback color behind gradients */
+html, body, #root { background-color: #7a4bd1; }            /* page base */
+.App.signed-in       { background-color: #7a4bd1; }          /* app layer */
+.chat-container      { background-color: #7a4bd1; }          /* scroll layer */
+
+/* 2) Make header/footer more opaque so nothing "shows through" as black */
+.App.stable .header,
+.App.fixed  .header { background: rgba(255,105,180,.92); }   /* was .15 */
+
+.App.stable .footer,
+.App.fixed  .footer { background: rgba(40,20,55,.92); }      /* was .12 */
+
+/* 3) Make sure the chat really reaches under the footer with the exact height */
+.App.stable .chat-container,
+.App.fixed  .chat-container {
+  bottom: calc(var(--ftr-h, 90px) + env(safe-area-inset-bottom) + 0px);
+}
+
+/* 4) Nudge GPU to keep these layers in their own surface (reduces flashing) */
+.App.signed-in, .chat-container { transform: translateZ(0); backface-visibility: hidden; }
