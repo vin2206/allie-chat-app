@@ -310,13 +310,6 @@ const enablePageFallback = React.useCallback(() => {
   }
 }, []);
 
-// --- OPTION A: force page-only scroll (always use fallback = page) ---
-useEffect(() => {
-  setPageScrollFallback(true);        // add class on <html>, <body>, #root
-  fallbackLatchedRef.current = true;  // don't allow code to turn it off
-  setFallbackOn(true);
-}, []);
-
 const scrollToBottomNow = (force = false) => {
   if (!force && readingUpRef.current) return;
   const anchor = bottomRef.current;
