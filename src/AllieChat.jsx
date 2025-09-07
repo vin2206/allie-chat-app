@@ -289,26 +289,33 @@ const scrollerRef = useRef(null);
 const stickToBottomRef = useRef(true); // true only when truly at bottom
 const readingUpRef = useRef(false);    // true when user scrolled up (locks auto-scroll)
 const imeLockRef = useRef(false); // ignore scroll logic during IME open/close animation
-// Latch page-scroll fallback once enabled (prevents mode flapping)
+// --- Scroll model bridge ---
+const [fallbackOn, setFallbackOn] = useState(false);  // tracks which scroller is active
+
+const isFallback = () =>
+  document.documentElement.classList.contains('page-scroll-fallback');
+
 const fallbackLatchedRef = useRef(false);
 const enablePageFallback = React.useCallback(() => {
   if (!fallbackLatchedRef.current) {
     setPageScrollFallback(true);
     fallbackLatchedRef.current = true;   // once on, keep it for this visit
+    setFallbackOn(true);
   }
 }, []);
 const disablePageFallback = React.useCallback(() => {
   if (!fallbackLatchedRef.current) {
     setPageScrollFallback(false);
+    setFallbackOn(false);
   }
 }, []);
 
 const scrollToBottomNow = (force = false) => {
-  const scroller = scrollerRef.current;              // ← the .chat-container
-  if (!scroller) return;
   if (!force && readingUpRef.current) return;
-  // snap to bottom of the chat pane
-  scroller.scrollTop = scroller.scrollHeight;
+  const anchor = bottomRef.current;
+  if (!anchor) return;
+  // Let the browser scroll the *active* container (inner or page)
+  anchor.scrollIntoView({ block: 'end', inline: 'nearest', behavior: 'auto' });
 };
   
   const [isPaused, setIsPaused] = useState(false);
@@ -324,31 +331,49 @@ useEffect(() => {
   const [isOwner, setIsOwner] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
   useEffect(() => {
-  const scroller = scrollerRef.current || document.querySelector('.chat-container');
-  if (!scroller) return;
-
-  const getDist = () =>
-    scroller.scrollHeight - scroller.scrollTop - scroller.clientHeight;
+  // Listen on the correct scroller: window (fallback) or .chat-container (normal)
+  const targetIsWindow = isFallback();
+  const el = targetIsWindow
+    ? window
+    : (scrollerRef.current || document.querySelector('.chat-container'));
+  if (!el) return;
 
   const releaseRead = () => { readingUpRef.current = false; };
   const releaseReadDebounced = debounce(releaseRead, 150);
 
   const onScroll = () => {
-  const dist = getDist();
-  const atBottom = dist <= 2;
-  stickToBottomRef.current = atBottom;
+    // Android IME fires synthetic scrolls; don’t treat those as user scrolls
+    if (imeLockRef.current) return;
 
-  // Android IME fires synthetic scrolls; don't treat those as "user scrolled up"
-  if (!imeLockRef.current) {
-    if (dist > 40) readingUpRef.current = true;
-    if (atBottom) releaseReadDebounced();
-  }
-};
+    if (targetIsWindow) {
+      const root = document.scrollingElement || document.documentElement;
+      const dist = root.scrollHeight - window.scrollY - window.innerHeight;
+      const atBottom = dist <= 2;
+      stickToBottomRef.current = atBottom;
+      if (dist > 40) readingUpRef.current = true;
+      if (atBottom) releaseReadDebounced();
+    } else {
+      const s = scrollerRef.current || document.querySelector('.chat-container');
+      if (!s) return;
+      const dist = s.scrollHeight - s.scrollTop - s.clientHeight;
+      const atBottom = dist <= 2;
+      stickToBottomRef.current = atBottom;
+      if (dist > 40) readingUpRef.current = true;
+      if (atBottom) releaseReadDebounced();
+    }
+  };
 
+  // seed once
   requestAnimationFrame(onScroll);
-  scroller.addEventListener('scroll', onScroll, { passive: true });
-  return () => scroller.removeEventListener('scroll', onScroll);
-}, [messages.length, isTyping]);
+
+  if (targetIsWindow) {
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  } else {
+    el.addEventListener('scroll', onScroll, { passive: true });
+    return () => el.removeEventListener('scroll', onScroll);
+  }
+}, [fallbackOn, layoutClass]); // rebind when model changes
   
   // ——— Emoji picker state/refs ———
 const [showEmoji, setShowEmoji] = useState(false);
@@ -1036,35 +1061,36 @@ useEffect(() => {
 }, [layoutClass, messages.length, isTyping]);
 
   useEffect(() => {
-  const c = scrollerRef.current;
-  if (!c) return;
+  // Run rarely: on mount + orientation/resize; skip during IME
+  const probe = () => {
+    if (imeLockRef.current) return;
+    const c = scrollerRef.current || document.querySelector('.chat-container');
+    if (!c) return;
 
-  // Skip checks during IME open/close animation
-  if (imeLockRef.current) return;
+    const shouldOverflow = c.scrollHeight > c.clientHeight + 1;
+    if (!shouldOverflow) { disablePageFallback(); return; }
 
-  // Wait one frame + a tiny delay so measurements are stable
-  const raf = requestAnimationFrame(() => {
-    setTimeout(() => {
-      const shouldOverflow = c.scrollHeight > c.clientHeight + 1;
+    const before = c.scrollTop;
+    c.scrollTop = before + 1;
+    const canScroll = c.scrollTop !== before;
+    c.scrollTop = before;
 
-      if (shouldOverflow) {
-        const before = c.scrollTop;
-        c.scrollTop = before + 1;
-        const canScroll = c.scrollTop !== before;
-        c.scrollTop = before;
+    if (!canScroll) enablePageFallback();
+    else disablePageFallback();
+  };
 
-        if (!canScroll) {
-          enablePageFallback();  // latch-on once if inner scroll is truly dead
-        } else {
-          disablePageFallback(); // inner scroller works → keep normal model
-        }
-      } else {
-        disablePageFallback();
-      }
-    }, 120);
-  });
-  return () => cancelAnimationFrame(raf);
-}, [messages.length, isTyping, layoutClass, showWelcome]);
+  const raf = requestAnimationFrame(() => setTimeout(probe, 120));
+  const onOrient = () => setTimeout(probe, 150);
+
+  window.addEventListener('orientationchange', onOrient);
+  window.addEventListener('resize', onOrient);
+
+  return () => {
+    cancelAnimationFrame(raf);
+    window.removeEventListener('orientationchange', onOrient);
+    window.removeEventListener('resize', onOrient);
+  };
+}, [layoutClass]); // no messages/isTyping here
 
   // Auto-compact the header when contents overflow (enables .narrow / .tiny)
 useEffect(() => {
