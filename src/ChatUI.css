@@ -37,6 +37,7 @@ html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 
   display: flex;
   flex-direction: column;   /* enables align-self on bubbles */
+  justify-content: flex-end;
   gap: 6px;
 
   overflow-y: auto;
