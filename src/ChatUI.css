@@ -51,6 +51,10 @@ html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 html.ime-open .chat-container {
   bottom: calc(max(var(--ftr-h, 90px), var(--kb-h, 0px)));
 }
+/* Lift the footer (input bar) above the keyboard too */
+html.ime-open .App.stable .footer {
+  bottom: var(--kb-h);
+}
 /* While IME animates, turn off smooth scrolling to prevent “rubber band” */
 html.ime-open .chat-container { scroll-behavior: auto; }
 
@@ -854,6 +858,30 @@ body { background: linear-gradient(180deg, #fce7f3 0%, #ede9fe 100%); }
   display: flex;
   flex-direction: column;
   overflow: visible; /* allow child scroller to work on Android WebView */
+}
+/* === Window/page scroll fallback (old behavior) === */
+html.page-scroll-fallback .App.stable {
+  height: auto;                 /* let page grow again */
+  min-height: 100dvh;
+}
+
+/* Header & footer follow the page; header stays sticky on top */
+html.page-scroll-fallback .App.stable .header {
+  position: sticky;
+  top: 0;
+}
+
+/* Footer sits at the end of the page; sticky bottom is supported on modern Chrome */
+html.page-scroll-fallback .App.stable .footer {
+  position: sticky;
+  bottom: 0;
+}
+
+/* Chat content becomes part of the normal flow */
+html.page-scroll-fallback .chat-container {
+  position: static;
+  min-height: calc(100dvh - var(--hdr-h) - var(--ftr-h));
+  /* still scrollable if it overflows, but page can scroll too */
 }
 
 /* Header fixed on top (Android stable) */
