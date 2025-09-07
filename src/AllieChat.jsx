@@ -1038,30 +1038,32 @@ useEffect(() => {
   useEffect(() => {
   const c = scrollerRef.current;
   if (!c) return;
-  if (document.documentElement.classList.contains('ime-open')) return;
 
-  const shouldOverflow = c.scrollHeight > c.clientHeight + 1;
+  // Skip checks during IME open/close animation
+  if (imeLockRef.current) return;
 
-  if (shouldOverflow) {
-    const before = c.scrollTop;
-    c.scrollTop = before + 1;
-    const canScroll = c.scrollTop !== before;
-    c.scrollTop = before;
+  // Wait one frame + a tiny delay so measurements are stable
+  const raf = requestAnimationFrame(() => {
+    setTimeout(() => {
+      const shouldOverflow = c.scrollHeight > c.clientHeight + 1;
 
-    if (!canScroll) {
-      // Inner scroller ineffective → latch fallback
-      enablePageFallback();
-      requestAnimationFrame(() => {
-        try { window.scrollTo(0, document.body.scrollHeight); } catch {}
-      });
-    } else {
-      // Inner scroller works → only disable if never latched
-      disablePageFallback();
-    }
-  } else {
-    // No overflow → only disable if never latched
-    disablePageFallback();
-  }
+      if (shouldOverflow) {
+        const before = c.scrollTop;
+        c.scrollTop = before + 1;
+        const canScroll = c.scrollTop !== before;
+        c.scrollTop = before;
+
+        if (!canScroll) {
+          enablePageFallback();  // latch-on once if inner scroll is truly dead
+        } else {
+          disablePageFallback(); // inner scroller works → keep normal model
+        }
+      } else {
+        disablePageFallback();
+      }
+    }, 120);
+  });
+  return () => cancelAnimationFrame(raf);
 }, [messages.length, isTyping, layoutClass, showWelcome]);
 
   // Auto-compact the header when contents overflow (enables .narrow / .tiny)
