@@ -47,6 +47,7 @@ html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
   scroll-padding-bottom: calc(var(--ftr-h, 90px) + 12px);
 
   padding: 12px 12px;
+  padding-bottom: calc(12px + var(--ftr-h, 90px));
 }
 /* 1) Prevent bubbles/typing/anchor from shrinking vertically (restores overflow) */
 .chat-container > * {
@@ -65,6 +66,7 @@ html.ime-open .chat-container {
   bottom: calc(max(var(--ftr-h, 90px), var(--kb-h, 0px)));
 /* when keyboard is open, reserve the larger of footer/keyboard */
   scroll-padding-bottom: calc(max(var(--ftr-h, 90px), var(--kb-h, 0px)) + 12px);
+  padding-bottom: calc(12px + max(var(--ftr-h, 90px), var(--kb-h, 0px)));
 }
 
 /* 2) State-specific backgrounds (fixes the flicker) */
