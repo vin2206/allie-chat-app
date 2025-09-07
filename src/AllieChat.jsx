@@ -248,6 +248,11 @@ const [coins, setCoins] = useState(loadCoins());
 // Layout chooser: Android → 'stable' (scrollable, no black band); others → 'fixed'
 const IS_ANDROID = /Android/i.test(navigator.userAgent);
 const [layoutClass] = useState(IS_ANDROID ? 'stable' : 'fixed');
+// TEMP: use page-scroll fallback so the page itself can scroll (old behavior)
+useEffect(() => {
+  enablePageFallback();
+  return () => disablePageFallback();
+}, []);
   // One-time: after first paint, ensure we start at the latest message
 useEffect(() => {
   const id = setTimeout(() => scrollToBottomNow(true), 0);
