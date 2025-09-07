@@ -46,6 +46,16 @@ html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 
   padding: 12px 12px;
 }
+/* 1) Prevent bubbles/typing/anchor from shrinking vertically (restores overflow) */
+.chat-container > * {
+  flex: 0 0 auto;
+}
+
+/* 2) Real, scrollable spacer at the top so short chats sit above the input */
+.chat-container::before {
+  content: "";
+  flex: 1 0 auto;
+}
 
 /* keep last items clear of footer when snapping to bottom */
 .message,
