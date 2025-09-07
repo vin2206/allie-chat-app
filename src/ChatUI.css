@@ -43,10 +43,10 @@ html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
 /* make scrollIntoView stop above the footer */
-  scroll-padding-bottom: calc(var(--ftr-h, 90px) + 12px);
+  scroll-padding-bottom: 16px;
 
   padding: 12px 12px;
-  padding-bottom: calc(12px + var(--ftr-h, 90px));
+  padding-bottom: 12px;
 }
 /* 1) Prevent bubbles/typing/anchor from shrinking vertically (restores overflow) */
 .chat-container > * {
@@ -55,18 +55,21 @@ html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 /* Real spacer element that grows when chat is short */
 .chat-pad { flex: 1 1 0; min-height: 0; }
 
-/* keep last items clear of footer when snapping to bottom */
+/* small cushion so scrollTo/anchors stop above the footer */
 .message,
-.typing-bounce,
-.chat-container > div:last-child { scroll-margin-block-end: 16px; }
-/* make the bottom sentinel an anchor so Chrome keeps it visible when IME opens */
-.chat-container > div:last-child { overflow-anchor: auto; }
+.typing-bounce { scroll-margin-block-end: 16px; }
 
+/* one permanent anchor at the very end */
+.bottom-sentinel {
+  height: 1px;
+  overflow-anchor: auto;
+}
+
+/* Android: when IME opens, clamp the chat area between header and whichever is taller at the bottom */
 html.ime-open .chat-container {
-  /* reserve BOTH keyboard drop AND footer height */
-  bottom: calc(var(--kb-h, 0px) + var(--ftr-h, 90px));
-  scroll-padding-bottom: calc(var(--kb-h, 0px) + var(--ftr-h, 90px) + 12px);
-  padding-bottom: calc(12px + var(--kb-h, 0px) + var(--ftr-h, 90px));
+  bottom: calc(max(var(--ftr-h, 90px), var(--kb-h, 0px)));
+  scroll-padding-bottom: 16px;
+  padding-bottom: 12px;
 }
 
 /* 2) State-specific backgrounds (fixes the flicker) */
