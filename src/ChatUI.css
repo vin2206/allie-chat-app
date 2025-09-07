@@ -62,12 +62,11 @@ html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 /* make the bottom sentinel an anchor so Chrome keeps it visible when IME opens */
 .chat-container > div:last-child { overflow-anchor: auto; }
 
-/* Android: when keyboard opens, lift the bottom edge to stay visible */
 html.ime-open .chat-container {
-  bottom: calc(max(var(--ftr-h, 90px), var(--kb-h, 0px)));
-/* when keyboard is open, reserve the larger of footer/keyboard */
-  scroll-padding-bottom: calc(max(var(--ftr-h, 90px), var(--kb-h, 0px)) + 12px);
-  padding-bottom: calc(12px + max(var(--ftr-h, 90px), var(--kb-h, 0px)));
+  /* reserve BOTH keyboard drop AND footer height */
+  bottom: calc(var(--kb-h, 0px) + var(--ftr-h, 90px));
+  scroll-padding-bottom: calc(var(--kb-h, 0px) + var(--ftr-h, 90px) + 12px);
+  padding-bottom: calc(12px + var(--kb-h, 0px) + var(--ftr-h, 90px));
 }
 
 /* 2) State-specific backgrounds (fixes the flicker) */
