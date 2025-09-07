@@ -38,6 +38,8 @@ html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
   display: flex;
   flex-direction: column;   /* enables align-self on bubbles */
   gap: 6px;
+  justify-content: flex-end;     /* anchor messages to bottom when list is short */
+  scroll-behavior: smooth;       /* smooth bottom snaps */
 
   overflow-y: auto;
   overflow-x: hidden;
@@ -45,16 +47,12 @@ html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 
   padding: 12px 12px;
 }
-
-/* keep last items clear of footer when snapping to bottom */
-.message,
-.typing-bounce,
-.chat-container > div:last-child { scroll-margin-block-end: 16px; }
-
 /* Android: when keyboard opens, lift the bottom edge to stay visible */
 html.ime-open .chat-container {
   bottom: calc(max(var(--ftr-h, 90px), var(--kb-h, 0px)));
 }
+/* While IME animates, turn off smooth scrolling to prevent “rubber band” */
+html.ime-open .chat-container { scroll-behavior: auto; }
 
 /* 2) State-specific backgrounds (fixes the flicker) */
 
