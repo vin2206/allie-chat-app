@@ -1140,16 +1140,18 @@ useEffect(() => {
     if (drop > 80) root.classList.add('ime-open'); else root.classList.remove('ime-open');
     root.style.setProperty('--kb-h', drop ? `${drop}px` : '0px');
 
-    // If keyboard height changed, treat it as a layout change (not a user scroll)
     if (drop !== lastDrop) {
-      readingUpRef.current = false;          // don't lock auto-stick
-      imeLockRef.current = true;             // suppress scroll handler for a moment
-      setTimeout(() => { imeLockRef.current = false; }, 380);
-      if (stickToBottomRef.current) {
-        requestAnimationFrame(() => scrollToBottomNow(true)); // keep last bubble visible
-      }
-      lastDrop = drop;
-    }
+  readingUpRef.current = false;      // do not lock auto-stick
+  imeLockRef.current = true;         // ignore synthetic scrolls briefly
+  setTimeout(() => { imeLockRef.current = false; }, 380);
+
+  // If user is actually typing (input focused), keep view pinned to last bubble
+  if (document.activeElement === inputRef.current) {
+    requestAnimationFrame(() => scrollToBottomNow(true));
+  }
+
+  lastDrop = drop;
+}
   };
 
   const onResize = debounce(setKbVars, 60);
@@ -1429,7 +1431,8 @@ if (!user) {
   onKeyDown={(e) => e.key === 'Enter' && handleSend()}
   onFocus={() => {
   setShowEmoji(false);
-  setTimeout(() => scrollToBottomNow(false), 0); // respect sentinel
+  // when the IME opens, force-stick to last message
+  setTimeout(() => scrollToBottomNow(true), 0);
 }}
 />
 
