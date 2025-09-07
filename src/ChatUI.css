@@ -38,7 +38,6 @@ html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
   display: flex;
   flex-direction: column;   /* enables align-self on bubbles */
   gap: 6px;
-  overflow-anchor: none;
 
   overflow-y: auto;
   overflow-x: hidden;
@@ -60,6 +59,8 @@ html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 .message,
 .typing-bounce,
 .chat-container > div:last-child { scroll-margin-block-end: 16px; }
+/* make the bottom sentinel an anchor so Chrome keeps it visible when IME opens */
+.chat-container > div:last-child { overflow-anchor: auto; }
 
 /* Android: when keyboard opens, lift the bottom edge to stay visible */
 html.ime-open .chat-container {
