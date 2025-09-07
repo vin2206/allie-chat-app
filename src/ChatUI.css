@@ -914,10 +914,6 @@ html.ime-open:not(.page-scroll-fallback) .chat-container {
   .coin-pill       { padding: 5px 10px; font-size: 11px; }
   .role-btn        { padding: 6px 8px;  font-size: 11px; }
 }
-/* Fallback for very old WebViews that lack sticky: layout still stable */
-@supports not (position: sticky) {
-  .App.stable .header, .App.stable .footer { position: static; }
-}
 /* Tiny devices – keep everything on ONE line, just shrink */
 @media (max-width: 360px) {
   /* keep header on one line and shrink */
@@ -1082,8 +1078,12 @@ html, body, #root { background-color: #7a4bd1; }            /* page base */
 .page-scroll-fallback .App.stable .footer,
 .page-scroll-fallback .App.fixed  .footer { background: rgba(50,20,60,0.12); }
 
-/* 4) Nudge GPU to keep these layers in their own surface (reduces flashing) */
-.App.signed-in, .chat-container { transform: translateZ(0); backface-visibility: hidden; }
+/* 4) Nudge GPU only on scroller so fixed header/footer stay truly fixed */
+.chat-container { transform: translateZ(0); backface-visibility: hidden; }
 
 html.ime-open .App.stable .header { background: rgba(255,105,180,0.15); }
 html.ime-open .App.stable .footer { background: rgba(50,20,60,0.12); }
+
+/* Ensure header/footer remain fixed even when page-scroll fallback is on */
+.page-scroll-fallback .header { position: fixed; top: 0; left: 0; right: 0; }
+.page-scroll-fallback .footer { position: fixed; bottom: 0; left: 0; right: 0; }
