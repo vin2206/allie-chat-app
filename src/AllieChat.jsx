@@ -248,16 +248,6 @@ const [coins, setCoins] = useState(loadCoins());
 // Layout chooser: Android → 'stable' (scrollable, no black band); others → 'fixed'
 const IS_ANDROID = /Android/i.test(navigator.userAgent);
 const [layoutClass] = useState(IS_ANDROID ? 'stable' : 'fixed');
-// TEMP: use page-scroll fallback so the page itself can scroll (old behavior)
-useEffect(() => {
-  enablePageFallback();
-  return () => disablePageFallback();
-}, []);
-  // One-time: after first paint, ensure we start at the latest message
-useEffect(() => {
-  const id = setTimeout(() => scrollToBottomNow(true), 0);
-  return () => clearTimeout(id);
-}, []);
 
 // Show instructions every time the chat page opens,
 // but award +100 coins only the first time for this user.
@@ -320,13 +310,11 @@ const enablePageFallback = React.useCallback(() => {
   }
 }, []);
 
-// REPLACE the whole function
 const scrollToBottomNow = (force = false) => {
-  // Only auto-jump when: we are at bottom OR caller forced it
-  if (!force && (!stickToBottomRef.current || readingUpRef.current)) return;
-
+  if (!force && readingUpRef.current) return;
   const anchor = bottomRef.current;
   if (!anchor) return;
+  // Let the browser scroll the *active* container (inner or page)
   anchor.scrollIntoView({ block: 'end', inline: 'nearest', behavior: 'auto' });
 };
   
@@ -391,7 +379,6 @@ useEffect(() => {
 const [showEmoji, setShowEmoji] = useState(false);
 const emojiPanelRef = useRef(null);
 const inputRef = useRef(null);
-const composingRef = useRef(false);
 
 const EMOJIS = [
   "😀","😁","😂","😊","😍","😘","💦","🤔","😏","😎","😈","😭","😡","😴","🤩","😜","🤤",
@@ -445,13 +432,14 @@ function formatTTL(ms){
 
 async function refreshWallet(){
   if (!user) return;
-  const url = `${BACKEND_BASE}/wallet?email=${encodeURIComponent((user.email||'').toLowerCase())}&sub=${encodeURIComponent(user.sub||'')}`;
-  const r = await fetch(url);
-  if (!r.ok) throw new Error(`HTTP ${r.status}`);
+  const r = await fetch(
+  `${BACKEND_BASE}/wallet?email=${encodeURIComponent((user.email||'').toLowerCase())}&sub=${encodeURIComponent(user.sub||'')}`
+);
   const data = await r.json();
   if (data?.ok) {
     setWallet(data.wallet);
-    setCoins(c => Math.max(c, Number(data.wallet.coins || 0)));
+    // Keep local welcome bonus if server wallet is still 0
+  setCoins(c => Math.max(c, Number(data.wallet.coins || 0)));
   }
 }
 
@@ -620,12 +608,6 @@ const mediaRecorderRef = useRef(null);
 const chunksRef = useRef([]);
 const autoStopTimerRef = useRef(null);
 const MAX_RECORD_MS = 5000; // 5 seconds cap
-const onAudioLoaded = (e) => {
- const src = e.currentTarget.currentSrc || e.currentTarget.src;
-  if (src && src.startsWith('blob:')) {
-    try { URL.revokeObjectURL(src); } catch {}
-  }
-};
   const roleColors = {
   wife: '#ff6ec4',
   girlfriend: '#ff9f40',
@@ -1006,7 +988,7 @@ if (shouldResetRef.current) { fetchRetryBody.reset = true; shouldResetRef.curren
 }, [messages.length, isTyping]);
 
   useEffect(() => {
-  if (isTyping && stickToBottomRef.current) {
+  if (isTyping && !readingUpRef.current) {
     requestAnimationFrame(() => scrollToBottomNow(true));
   }
 }, [isTyping]);
@@ -1347,15 +1329,14 @@ if (!user) {
         {msg.audioUrl ? (
           <div className="audio-wrapper">
             <audio
-  className="audio-player"
-  controls
-  preload="none"
-  src={msg.audioUrl}
-  onLoadedData={onAudioLoaded}
-  onError={(e) => console.warn('audio failed:', e.currentTarget.src)}
-/>
+              className="audio-player"
+              controls
+              preload="none"
+              src={msg.audioUrl}
+              onError={(e) => console.warn('audio failed:', e.currentTarget.src)}
+            />
             <div className="audio-fallback">
-              <a href={msg.audioUrl} target="_blank" rel="noopener noreferrer">Open audio</a>
+              <a href={msg.audioUrl} target="_blank" rel="noreferrer">Open audio</a>
             </div>
           </div>
         ) : (
@@ -1444,16 +1425,11 @@ if (!user) {
   placeholder="Type a message..."
   value={inputValue}
   onChange={(e) => setInputValue(e.target.value)}
-  onCompositionStart={() => (composingRef.current = true)}
-  onCompositionEnd={() => (composingRef.current = false)}
-  onKeyDown={(e) => {
-    if (e.key === 'Enter' && !composingRef.current) handleSend();
-  }}
+  onKeyDown={(e) => e.key === 'Enter' && handleSend()}
   onFocus={() => {
-    setShowEmoji(false);
-    setTimeout(() => scrollToBottomNow(false), 0);
-  }}
-  enterKeyHint="send"  /* optional, just improves mobile keyboard */
+  setShowEmoji(false);
+  setTimeout(() => scrollToBottomNow(false), 0); // respect sentinel
+}}
 />
 
           <button
