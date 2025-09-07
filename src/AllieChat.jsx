@@ -348,17 +348,17 @@ useEffect(() => {
     if (targetIsWindow) {
       const root = document.scrollingElement || document.documentElement;
       const dist = root.scrollHeight - window.scrollY - window.innerHeight;
-      const atBottom = dist <= 2;
+      const atBottom = dist <= 12;
       stickToBottomRef.current = atBottom;
-      if (dist > 40) readingUpRef.current = true;
+      if (dist > 120) readingUpRef.current = true;
       if (atBottom) releaseReadDebounced();
     } else {
       const s = scrollerRef.current || document.querySelector('.chat-container');
       if (!s) return;
       const dist = s.scrollHeight - s.scrollTop - s.clientHeight;
-      const atBottom = dist <= 2;
+      const atBottom = dist <= 12;
       stickToBottomRef.current = atBottom;
-      if (dist > 40) readingUpRef.current = true;
+      if (dist > 120) readingUpRef.current = true;
       if (atBottom) releaseReadDebounced();
     }
   };
@@ -1364,7 +1364,7 @@ if (!user) {
       <span></span><span></span><span></span>
     </div>
   )}
-  <div ref={bottomRef}></div>
+  <div ref={bottomRef} className="bottom-sentinel" />
 </div>
 
       {showCoins && (
