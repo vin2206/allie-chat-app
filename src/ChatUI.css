@@ -38,6 +38,7 @@ html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
   display: flex;
   flex-direction: column;   /* enables align-self on bubbles */
   gap: 6px;
+  overflow-anchor: none;   /* prevent jump to top when layout shrinks */
 
   overflow-y: auto;
   overflow-x: hidden;
