@@ -1151,6 +1151,10 @@ useEffect(() => {
       // keep view pinned to last bubble while typing
       if (document.activeElement === inputRef.current) {
         requestAnimationFrame(() => scrollToBottomNow(true));
+        // after IME settles, nudge once more if we should be stuck to bottom
+setTimeout(() => {
+  if (stickToBottomRef.current) scrollToBottomNow(true);
+}, 140);
       }
       lastDrop = drop;
     }
