@@ -123,38 +123,10 @@ body { background: linear-gradient(180deg, #fce7f3 0%, #ede9fe 100%); }
   text-transform: capitalize;
   box-shadow: 0 2px 6px rgba(0,0,0,.18);
 }
-
-/* Chat scroller: flex child between fixed header/footer */
-/* Chat scroller: pinned between header and footer (no fixed height) */
-.chat-container{
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: var(--hdr-h, 80px);                   /* ← no extra 12px seam */
-  bottom: 0;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior-y: contain;
-  /* keep bubbles a touch off the bottom for readability */
-  scroll-padding-bottom: 12px;
-  touch-action: pan-y;
-  /* Reserve the larger of footer height or keyboard height */
-  padding: 0 10px calc(max(var(--ftr-h, 90px), var(--kb-h, 0px)) + env(safe-area-inset-bottom));
-  background: linear-gradient(to bottom, #ff99cc, #cc66cc, #9966cc);
-}
 html.ime-open:not(.page-scroll-fallback) .chat-container {
   /* keep exactly the same spacing rule as default to avoid “purple blink” */
   padding-bottom: calc(max(var(--ftr-h, 90px), var(--kb-h, 0px)) + env(safe-area-inset-bottom)) !important;
 }
-
-.chat-container::before{
-  content:"";
-  flex: 1 0 auto;   /* eats leftover height ABOVE the messages */
-}
-
 /* Message bubble layout */
 .message {
   max-width: 92%;
@@ -863,7 +835,7 @@ html.ime-open:not(.page-scroll-fallback) .chat-container {
 }
 
 /* Header fixed on top */
-.App.stable .header {
+html:not(.page-scroll-fallback) .App.stable .header {
   position: fixed;
   top: 0; left: 0; right: 0;
   z-index: 100;
@@ -873,7 +845,7 @@ html.ime-open:not(.page-scroll-fallback) .chat-container {
 }
 
 /* Footer fixed at bottom */
-.App.stable .footer {
+html:not(.page-scroll-fallback) .App.stable .footer {
   position: fixed;
   bottom: 0; left: 0; right: 0;
   z-index: 100;
@@ -1072,18 +1044,67 @@ html, body, #root { background-color: #7a4bd1; }            /* page base */
 .App.signed-in       { background-color: #7a4bd1; }          /* app layer */
 .chat-container      { background-color: #7a4bd1; }          /* scroll layer */
 
-.page-scroll-fallback .App.stable .header,
-.page-scroll-fallback .App.fixed  .header { background: rgba(255,105,180,0.15); }
-
-.page-scroll-fallback .App.stable .footer,
-.page-scroll-fallback .App.fixed  .footer { background: rgba(50,20,60,0.12); }
-
 /* 4) Nudge GPU only on scroller so fixed header/footer stay truly fixed */
 .chat-container { transform: translateZ(0); backface-visibility: hidden; }
 
-html.ime-open .App.stable .header { background: rgba(255,105,180,0.15); }
-html.ime-open .App.stable .footer { background: rgba(50,20,60,0.12); }
+/* ===== Option A: page-only scroller + sticky bars ===== */
 
-/* Ensure header/footer remain fixed even when page-scroll fallback is on */
-.page-scroll-fallback .header { position: fixed; top: 0; left: 0; right: 0; }
-.page-scroll-fallback .footer { position: fixed; bottom: 0; left: 0; right: 0; }
+/* When page-scroll-fallback is ON, the page is the only scroll container */
+html.page-scroll-fallback,
+body.page-scroll-fallback {
+  height: auto;
+  overflow-y: auto;
+}
+#root.page-scroll-fallback {
+  min-height: 100svh; /* respect dynamic viewport on Android/iOS */
+  display: flex;
+}
+
+/* App column: header (sticky) + chat + footer (sticky) */
+.App {
+  flex: 1 1 auto;
+  min-height: 100svh;       /* fill screen */
+  display: flex;
+  flex-direction: column;
+  background: var(--app-bg, linear-gradient(180deg,#ff9fbd 0%,#8c4ac4 100%));
+}
+
+/* Header looks "fixed" but is in the flow */
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  /* keep it opaque so no see-through during IME */
+  background: rgba(255, 192, 224, 0.98); /* match your theme */
+  backdrop-filter: saturate(1.05) blur(6px);
+}
+
+/* Footer / composer also "fixed" but in flow */
+.footer {
+  position: sticky;
+  bottom: 0;
+  z-index: 40;
+  background: rgba(87, 23, 120, 0.98);   /* solid-ish to avoid transparency flash */
+  /* if you already had gradient here, keep it but ensure final rgba alpha >= .95 */
+}
+
+/* Chat area no longer scrolls itself */
+.chat-container {
+  flex: 1 1 auto;
+  overflow: visible;               /* IMPORTANT: page scrolls, not this */
+  padding: 12px 12px calc(var(--ftr-h, 92px) + 12px);
+  /* Keep some top space so first bubble breathes */
+  scroll-behavior: smooth;         /* optional */
+}
+
+/* Make sure message bubbles never hide under the bars */
+:root {
+  --hdr-h: 72px; /* sane defaults, JS still updates these values */
+  --ftr-h: 92px;
+}
+
+/* Optional: prevent “rubber-band” gaps showing the bg during IME animation */
+.page-scroll-fallback .footer,
+.page-scroll-fallback .header {
+  transform: translateZ(0);   /* force layer */
+}
