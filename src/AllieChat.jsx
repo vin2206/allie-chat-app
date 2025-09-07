@@ -1130,39 +1130,45 @@ useEffect(() => {
   const vv = window.visualViewport;
   if (!vv) return;
 
-  let baseline = vv.height; // largest height (no IME)
   let lastDrop = 0;
 
   const setKbVars = () => {
-    baseline = Math.max(baseline, vv.height);
-    const drop = Math.max(0, Math.round(baseline - vv.height)); // px
+    // Measure keyboard by comparing the layout viewport vs visual viewport
+    const layoutH =
+      Math.max(window.innerHeight || 0, document.documentElement.clientHeight || 0);
+    const drop = Math.max(0, Math.round(layoutH - vv.height)); // px
 
-    if (drop > 80) root.classList.add('ime-open'); else root.classList.remove('ime-open');
+    if (drop > 80) root.classList.add('ime-open');
+    else root.classList.remove('ime-open');
+
     root.style.setProperty('--kb-h', drop ? `${drop}px` : '0px');
 
     if (drop !== lastDrop) {
-  readingUpRef.current = false;      // do not lock auto-stick
-  imeLockRef.current = true;         // ignore synthetic scrolls briefly
-  setTimeout(() => { imeLockRef.current = false; }, 380);
+      readingUpRef.current = false;   // don't lock auto-stick
+      imeLockRef.current = true;      // ignore synthetic scrolls briefly
+      setTimeout(() => { imeLockRef.current = false; }, 380);
 
-  // If user is actually typing (input focused), keep view pinned to last bubble
-  if (document.activeElement === inputRef.current) {
-    requestAnimationFrame(() => scrollToBottomNow(true));
-  }
-
-  lastDrop = drop;
-}
+      // keep view pinned to last bubble while typing
+      if (document.activeElement === inputRef.current) {
+        requestAnimationFrame(() => scrollToBottomNow(true));
+      }
+      lastDrop = drop;
+    }
   };
 
   const onResize = debounce(setKbVars, 60);
   vv.addEventListener('resize', onResize);
-  window.addEventListener('orientationchange', () => { baseline = vv.height; setKbVars(); });
+  // Fires more reliably during IME animation on newer Chromium
+  vv.addEventListener('geometrychange', onResize);
+  window.addEventListener('orientationchange', setKbVars);
 
   // initial pass
   setKbVars();
 
   return () => {
     vv.removeEventListener('resize', onResize);
+    vv.removeEventListener('geometrychange', onResize);
+    window.removeEventListener('orientationchange', setKbVars);
     root.classList.remove('ime-open');
     root.style.removeProperty('--kb-h');
   };
