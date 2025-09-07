@@ -892,6 +892,26 @@ body { background: linear-gradient(180deg, #fce7f3 0%, #ede9fe 100%); }
   background: rgba(50, 20, 60, 0.12);
 }
 
+/* NEW — Android stable: scroller fixed between header and footer */
+.App.stable .chat-container {
+  position: fixed;                 /* was absolute via the generic rule */
+  top: var(--hdr-h, 80px);
+  bottom: var(--ftr-h, 90px);
+  left: 0; right: 0;
+}
+
+/* Keep honoring the taller of footer vs keyboard when IME opens */
+html.ime-open .App.stable .chat-container {
+  bottom: calc(max(var(--ftr-h, 90px), var(--kb-h, 0px)));
+}
+
+/* Tiny cushion so the last item never kisses the bar */
+.App.stable .message,
+.App.stable .typing-bounce,
+.App.stable .bottom-sentinel {
+  scroll-margin-block-end: 12px;
+}
+
 /* Smaller, non-shifting controls on Android pinned layout */
 .App.stable .footer .send-btn,
 .App.stable .footer .mic-btn { width: 52px; height: 52px; transform: none; }
