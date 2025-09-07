@@ -303,11 +303,18 @@ const enablePageFallback = React.useCallback(() => {
     setFallbackOn(true);
   }
 }, []);
-const disablePageFallback = React.useCallback(() => {
+  const disablePageFallback = React.useCallback(() => {
   if (!fallbackLatchedRef.current) {
     setPageScrollFallback(false);
     setFallbackOn(false);
   }
+}, []);
+
+// --- OPTION A: force page-only scroll (always use fallback = page) ---
+useEffect(() => {
+  setPageScrollFallback(true);        // add class on <html>, <body>, #root
+  fallbackLatchedRef.current = true;  // don't allow code to turn it off
+  setFallbackOn(true);
 }, []);
 
 const scrollToBottomNow = (force = false) => {
@@ -1059,38 +1066,6 @@ useEffect(() => {
     window.removeEventListener('pageshow', setVars);
   };
 }, [layoutClass, messages.length, isTyping]);
-
-  useEffect(() => {
-  // Run rarely: on mount + orientation/resize; skip during IME
-  const probe = () => {
-    if (imeLockRef.current) return;
-    const c = scrollerRef.current || document.querySelector('.chat-container');
-    if (!c) return;
-
-    const shouldOverflow = c.scrollHeight > c.clientHeight + 1;
-    if (!shouldOverflow) { disablePageFallback(); return; }
-
-    const before = c.scrollTop;
-    c.scrollTop = before + 1;
-    const canScroll = c.scrollTop !== before;
-    c.scrollTop = before;
-
-    if (!canScroll) enablePageFallback();
-    else disablePageFallback();
-  };
-
-  const raf = requestAnimationFrame(() => setTimeout(probe, 120));
-  const onOrient = () => setTimeout(probe, 150);
-
-  window.addEventListener('orientationchange', onOrient);
-  window.addEventListener('resize', onOrient);
-
-  return () => {
-    cancelAnimationFrame(raf);
-    window.removeEventListener('orientationchange', onOrient);
-    window.removeEventListener('resize', onOrient);
-  };
-}, [layoutClass]); // no messages/isTyping here
 
   // Auto-compact the header when contents overflow (enables .narrow / .tiny)
 useEffect(() => {
