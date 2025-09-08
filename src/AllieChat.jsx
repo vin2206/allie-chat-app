@@ -1370,25 +1370,28 @@ if (!user) {
       <div className="chat-container" ref={scrollerRef}>
        <div className="chat-pad" aria-hidden="true" />
   {displayedMessages.map((msg, index) => (
-    <div key={index} className={`message ${msg.sender === 'user' ? 'user-message' : 'allie-message'}`}>
-      <span className={`bubble-content ${msg.audioUrl ? 'has-audio' : ''}`}>
-        {msg.audioUrl ? (
-          <div className="audio-wrapper">
-            <audio
-              className="audio-player"
-              controls
-              preload="none"
-              src={msg.audioUrl}
-              onError={(e) => console.warn('audio failed:', e.currentTarget.src)}
-            />
-            <div className="audio-fallback">
-              <a href={msg.audioUrl} target="_blank" rel="noreferrer">Open audio</a>
-            </div>
+  <div
+    key={index}
+    className={`message ${msg.sender === 'user' ? 'user-message' : 'allie-message'}`}
+  >
+    <span className={`bubble-content ${msg.audioUrl ? 'has-audio' : ''}`}>
+      {msg.audioUrl ? (
+        <div className="audio-wrapper">
+          <audio
+            className="audio-player"
+            controls
+            preload="none"
+            src={msg.audioUrl}
+            onError={(e) => console.warn('audio failed:', e.currentTarget.src)}
+          />
+          <div className="audio-fallback">
+            <a href={msg.audioUrl} target="_blank" rel="noreferrer">Open audio</a>
           </div>
-        ) : (
-          msg.text
-        )}
-    </div>
+        </div>
+      ) : (
+        msg.text
+      )}
+    </span>
   </div>
 ))}
   {isTyping && (
