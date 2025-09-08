@@ -272,7 +272,7 @@ body { background: linear-gradient(180deg, #fce7f3 0%, #ede9fe 100%); }
   color: #222;
   border: none;
   outline: none;
-  font-size: 18px;
+  font-size: 19px;
   min-height: 44px;              /* NEW: prevents autosize collapse */
   line-height: 1.2;              /* NEW: stable vertical rhythm */
 }
@@ -302,18 +302,18 @@ body { background: linear-gradient(180deg, #fce7f3 0%, #ede9fe 100%); }
   min-width: 0;
   display: flex;
 }
-.footer .input-wrap input { width: 100%; padding-left: 52px; }
+.footer .input-wrap input { width: 100%; padding-left: 54px; }
 
 /* tiny emoji button inside the input */
 .footer .emoji-inside {
   position: absolute;
-  left: 12px;
+  left: 11px;
   top: 50%;
   transform: translateY(-50%);
   background: transparent;
   border: 0;
-  width: 24px;
-  height: 24px;
+  width: 26px;
+  height: 26px;
   font-size: 0;        /* using SVG, no text metrics */
   line-height: 1;
   color: #9aa0a6;      /* neutral icon tint */
@@ -324,8 +324,8 @@ body { background: linear-gradient(180deg, #fce7f3 0%, #ede9fe 100%); }
 
 /* compact on very small screens */
 @media (max-width: 360px) {
-  .footer .emoji-inside { left: 12px; width: 22px; height: 22px; }
-  .footer .input-wrap input { padding-left: 52px; }
+  .footer .emoji-inside { left: 12px; width: 24px; height: 24px; }
+  .footer .input-wrap input { padding-left: 55px; }
 }
 
 /* —— Emoji panel that drops above the input —— */
@@ -931,7 +931,7 @@ html.ime-open .App.stable .chat-container {
 /* Legacy/very small screens */
 @media (max-width: 380px), (max-height: 640px) {
   .App.stable .footer { padding: 8px 10px; gap: 8px; }
-  .App.stable .footer input { min-height: 34px; font-size: 14px; min-width: 0; }
+  .App.stable .footer input { min-height: 34px; font-size: 16px; min-width: 0; }
   .App.stable .footer .send-btn,
   .App.stable .footer .mic-btn { width: 50px; height: 50px; transform: none; }
 }
@@ -955,7 +955,7 @@ html.ime-open .App.stable .chat-container {
   .App.stable .footer { padding: 10px 12px; }
   .App.stable .footer .send-btn,
   .App.stable .footer .mic-btn { width: 46px; height: 46px; }
-  .App.stable .footer input { min-height: 38px; font-size: 15px; }
+  .App.stable .footer input { min-height: 38px; font-size: 16px; }
 }
 
 /* ==== Realme 1 / legacy-Android sizing — header stays on one line ==== */
@@ -974,7 +974,7 @@ html.ime-open .App.stable .chat-container {
 /* ==== Realme 1 / legacy-Android sizing — footer compact & safe ==== */
 @media (max-width: 380px), (max-height: 640px) {
   .App.stable .footer { padding: 8px 10px; gap: 8px; }
-  .App.stable .footer input { min-height: 34px; font-size: 14px; min-width: 0; }
+  .App.stable .footer input { min-height: 34px; font-size: 16px; min-width: 0; }
 
   /* shrink mic/send just for tiny/short screens */
   .App.stable .footer .send-btn,
@@ -1046,7 +1046,3 @@ html.ime-open .App.stable .chat-container {
   box-shadow: 0 10px 22px rgba(0,0,0,.18);
 }
 .welcome-note{ margin-top: 8px; font-size: 12px; opacity: .75; }
-
-/* Keep input/icon size stable while the keyboard is open on Android */
-html.ime-open .footer input { font-size: 18px !important; }
-html.ime-open .footer .emoji-inside { width: 24px !important; height: 24px !important; }
