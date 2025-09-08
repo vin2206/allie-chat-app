@@ -423,14 +423,14 @@ body { background: linear-gradient(180deg, #fce7f3 0%, #ede9fe 100%); }
   display: flex;
   align-items: center;
   margin: 10px 0 10px 10px;
-  height: 28px;
+  min-height: 32px;          /* was: height: 28px; → use min-height so it can grow */
 }
 
 .typing-bounce span {
   display: inline-block;
-  width: 6px;
-  height: 6px;
-  margin-right: 6px;
+  width: 7px;
+  height: 7px;
+  margin-right: 7px;
   background: #cc66cc;
   border-radius: 50%;
   opacity: 0.8;
@@ -448,11 +448,11 @@ body { background: linear-gradient(180deg, #fce7f3 0%, #ede9fe 100%); }
 .allie-message.typing-bounce {
   background: linear-gradient(135deg, #ffe3e3, #c2f0fc);
   padding: 12px 16px;
-  border-radius: 8px 24px 24px 24px;   /* TL TR BR BL  ← small at top-left */
+  border-radius: 24px 24px 24px 4px;   /* TL TR BR BL  ← small at top-left */
   box-shadow: 0 6px 12px rgba(0, 0, 0, 0.17);
   display: flex;
   align-items: center;
-  margin: 10px 0 10px 10px;
+  margin: 10px 40px 10px 1px;
   height: 28px;
   width: auto !important;        /* <-- Force bubble to be only as wide as needed */
   min-width: 0 !important;
