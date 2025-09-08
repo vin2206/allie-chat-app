@@ -1172,14 +1172,14 @@ useEffect(() => {
     }
     const started = Date.now();
     kbChaseTimerRef.current = setInterval(() => {
-      // stop after ~800ms or if the input lost focus
-      if (Date.now() - started > 800 || document.activeElement !== inputRef.current) {
-        clearInterval(kbChaseTimerRef.current);
-        kbChaseTimerRef.current = null;
-        return;
-      }
-      if (stickToBottomRef.current) scrollToBottomNow(true);
-    }, 50);
+  // stop after ~1200ms or if the input lost focus
+  if (Date.now() - started > 1200 || document.activeElement !== inputRef.current) {
+    clearInterval(kbChaseTimerRef.current);
+    kbChaseTimerRef.current = null;
+    return;
+  }
+  if (stickToBottomRef.current) scrollToBottomNow(true);
+}, 50);
   }
   lastDrop = drop;
 }
