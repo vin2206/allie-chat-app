@@ -275,7 +275,7 @@ useEffect(() => {
     case 'wife':       return 'Aaj itni der laga di reply mein jaan? 😉';
     case 'girlfriend': return 'Miss kiya apko babu 😊';
     case 'bhabhi':     return 'tum aa gaye devarji, kha the subha se? 😅';
-    case 'cousin':     return 'Hello, kaise ho bhaiya? 😁';
+    case 'exgf':      return 'Itna time baad yaad aayi meri? 😉';
     default:           return 'Hi… kaise ho aap? 😊';
   }
 }
@@ -612,7 +612,7 @@ const MAX_RECORD_MS = 5000; // 5 seconds cap
   wife: '#ff6ec4',
   girlfriend: '#ff9f40',
   bhabhi: '#7c4dff',
-  cousin: '#00bcd4',
+  exgf: '#00bcd4',
 };
   // Avatar map
 const avatarMap = {
