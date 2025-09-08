@@ -302,18 +302,18 @@ body { background: linear-gradient(180deg, #fce7f3 0%, #ede9fe 100%); }
   min-width: 0;
   display: flex;
 }
-.footer .input-wrap input { width: 100%; padding-left: 54px; }
+.footer .input-wrap input { width: 100%; padding-left: 60px; }
 
 /* tiny emoji button inside the input */
 .footer .emoji-inside {
   position: absolute;
-  left: 11px;
+  left: 12px;
   top: 50%;
   transform: translateY(-50%);
   background: transparent;
   border: 0;
-  width: 26px;
-  height: 26px;
+  width: 30px;
+  height: 30px;
   font-size: 0;        /* using SVG, no text metrics */
   line-height: 1;
   color: #9aa0a6;      /* neutral icon tint */
@@ -324,8 +324,8 @@ body { background: linear-gradient(180deg, #fce7f3 0%, #ede9fe 100%); }
 
 /* compact on very small screens */
 @media (max-width: 360px) {
-  .footer .emoji-inside { left: 12px; width: 24px; height: 24px; }
-  .footer .input-wrap input { padding-left: 55px; }
+  .footer .emoji-inside { left: 12px; width: 28px; height: 28px; }
+  .footer .input-wrap input { padding-left: 58px; }
 }
 
 /* —— Emoji panel that drops above the input —— */
