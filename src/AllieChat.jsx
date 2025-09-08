@@ -1489,9 +1489,9 @@ if (!user) {
   title="Emoji"
   onClick={() => setShowEmoji(v => !v)}
 >
-  <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+  <svg width="100%" height="100%" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
     <circle cx="12" cy="12" r="9.5" fill="none" stroke="currentColor" strokeWidth="1.5"/>
-    <circle cx="9" cy="10" r="1.2"/>
+    <circle cx="9"  cy="10" r="1.2"/>
     <circle cx="15" cy="10" r="1.2"/>
     <path d="M8 14c1 1.3 2.4 2 4 2s3-.7 4-2" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
   </svg>
