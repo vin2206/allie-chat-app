@@ -46,7 +46,7 @@ html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
   scroll-padding-bottom: 16px;
 
   padding: 12px 12px;
-  padding-bottom: 12px;
+  padding-bottom: 8px;
 }
 /* 1) Prevent bubbles/typing/anchor from shrinking vertically (restores overflow) */
 .chat-container > * {
@@ -69,7 +69,7 @@ html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 html.ime-open .chat-container {
   bottom: calc(max(var(--ftr-h, 90px), var(--kb-h, 0px)));
   scroll-padding-bottom: 16px;
-  padding-bottom: 12px;
+  padding-bottom: 8px;
 }
 
 /* While keyboard is up, give extra cushion so the last bubble never hides */
