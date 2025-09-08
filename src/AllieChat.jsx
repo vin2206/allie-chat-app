@@ -1489,7 +1489,7 @@ if (!user) {
   title="Emoji"
   onClick={() => setShowEmoji(v => !v)}
 >
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
     <circle cx="12" cy="12" r="9.5" fill="none" stroke="currentColor" strokeWidth="1.5"/>
     <circle cx="9" cy="10" r="1.2"/>
     <circle cx="15" cy="10" r="1.2"/>
