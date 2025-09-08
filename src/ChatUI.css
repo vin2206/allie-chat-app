@@ -1051,3 +1051,24 @@ html.ime-open .App.stable .chat-container {
   box-shadow: 0 10px 22px rgba(0,0,0,.18);
 }
 .welcome-note{ margin-top: 8px; font-size: 12px; opacity: .75; }
+
+/* === Message bar micro-tweaks === */
+
+/* Slightly larger typing text */
+.footer .input-wrap input {
+  font-size: 18px;         /* was ~16 */
+  padding-left: 50px;      /* was 52, gives a touch more room for text */
+}
+/* Keep placeholder same size as typed text */
+.footer .input-wrap input::placeholder { font-size: 18px; }
+
+/* Emoji a bit bigger and nudged left */
+.footer .emoji-inside { left: 10px; width: 26px; height: 26px; }
+.footer .emoji-inside svg { width: 24px; height: 24px; }
+
+/* Tiny screens: scale down just a hair so nothing feels cramped */
+@media (max-width: 360px) {
+  .App.stable .footer input { font-size: 16.5px; }
+  .footer .emoji-inside { left: 9px; width: 24px; height: 24px; }
+  .footer .emoji-inside svg { width: 22px; height: 22px; }
+}
