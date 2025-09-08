@@ -47,6 +47,14 @@ const VOICE_COST = 18; // keep 18; change to 15 only if you insist
 const DAILY_PACK = { id: 'daily',  label: 'Daily Pack',  price: 49,  coins: 420 };
 const WEEKLY_PACK= { id: 'weekly', label: 'Weekly Pack', price: 199, coins: 2000 };
 const OWNER_EMAIL = 'vinayvedic23@gmail.com';
+// — Display labels for roles (UI only)
+const ROLE_LABELS = {
+  wife: 'Wife',
+  girlfriend: 'Girlfriend',
+  bhabhi: 'Bhabhi',
+  exgf: 'Ex-GF',
+  stranger: 'Stranger'
+};
 
 // localStorage helpers
 const COIN_KEY = 'coins_v1';
@@ -217,7 +225,7 @@ const close = (e) => {
               <li><b>Start with trust.</b> Share a little about yourself first. Once she’s comfortable, the conversation will naturally shape to your vibe.</li>
               <li><b>Choose your bond.</b> She can be your friend, a safe space for confessions, or your emotional partner—whatever you need today.</li>
               <li><b>Talk it out, regain focus.</b> Let her ease your urge to chat with a loving presence so you can return to real life with better concentration.</li>
-              <li><b>Unlock deeper modes.</b> Access Wife, Girlfriend, Bhabhi, or Cousin role-play for more personalized chats—upgrade anytime with a Daily or Weekly plan.</li>
+              <li><b>Unlock deeper modes.</b> Access Wife, Girlfriend, Bhabhi, or Ex-GF role-play for more personalized chats—upgrade anytime with a Daily or Weekly plan.</li>
             </ul>
 
             <div className="instr-quick">Quick tips</div>
@@ -582,9 +590,7 @@ const shouldResetRef = useRef(false);
 
 // Display name for header
 const displayName = 'Shraddha';
-const capRole = roleType
-  ? roleType.charAt(0).toUpperCase() + roleType.slice(1)
-  : '';
+const capRole = roleType ? (ROLE_LABELS[roleType] || roleType) : '';
   // --- HOLD-TO-RECORD state/refs ---
 const [isRecording, setIsRecording] = useState(false);
   // Persistent session id per device/browser (used for voice quota)
@@ -620,7 +626,7 @@ const avatarMap = {
   wife: '/avatars/shraddha_wife.png',
   girlfriend: '/avatars/shraddha_girlfriend.png',
   bhabhi: '/avatars/shraddha_bhabhi.png',
-  cousin: '/avatars/shraddha_cousin.png',
+  exgf: '/avatars/shraddha_exgf.png',
 };
 
 function getAvatarSrc(mode, type) {
@@ -1192,7 +1198,11 @@ if (!user) {
         <div className="profile-pic">
           <img
   src={getAvatarSrc(roleMode, roleType)}
-  alt={`Shraddha – ${roleMode === 'roleplay' && roleType ? roleType : 'stranger'}`}
+  alt={`Shraddha – ${
+  roleMode === 'roleplay' && roleType
+    ? (ROLE_LABELS[roleType] || 'Stranger')
+    : 'Stranger'
+}`}
   style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }}
 />
         </div>
@@ -1316,15 +1326,15 @@ if (!user) {
         >Girlfriend</button>
 
         <button
-          className="role-chip"
-          onClick={() => {
-            openConfirm(
-              'Start as Shraddha (Cousin)?',
-              'A fresh chat will begin and current messages will be cleared.',
-              () => { closeConfirm(); applyRoleChange('roleplay','cousin'); }
-            );
-          }}
-        >Cousin</button>
+  className="role-chip"
+  onClick={() => {
+    openConfirm(
+      'Start as Shraddha (Ex-GF)?',
+      'A fresh chat will begin and current messages will be cleared.',
+      () => { closeConfirm(); applyRoleChange('roleplay','exgf'); }
+    );
+  }}
+>Ex-GF</button>
       </div>
 
       {(roleplayNeedsPremium && !isOwner && !(wallet?.expires_at > Date.now())) ? (
@@ -1372,7 +1382,7 @@ if (!user) {
     <div className="modal-content" onClick={(e) => e.stopPropagation()}>
 
       <h3 className="coins-modal-title">Need more time with Shraddha?</h3>
-      <div className="coins-sub">Unlock roleplay models — Wife · Girlfriend · Bhabhi · Cousin</div>
+      <div className="coins-sub">Unlock roleplay models — Wife · Girlfriend · Bhabhi · Ex-GF</div>
 
       <p style={{marginTop:4}}>Balance: <b>{coins}</b> coins</p>
 
