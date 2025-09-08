@@ -1474,8 +1474,9 @@ if (!user) {
   onKeyDown={(e) => e.key === 'Enter' && handleSend()}
   onFocus={() => {
   setShowEmoji(false);
-  // when the IME opens, force-stick to last message
-  setTimeout(() => scrollToBottomNow(true), 0);
+  // Nudge immediately and keep nudging briefly to cover late viewport events
+  const bumps = [0, 120, 260, 520];
+  bumps.forEach(ms => setTimeout(() => scrollToBottomNow(true), ms));
 }}
 />
 
