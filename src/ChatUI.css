@@ -1052,23 +1052,26 @@ html.ime-open .App.stable .chat-container {
 }
 .welcome-note{ margin-top: 8px; font-size: 12px; opacity: .75; }
 
-/* === Message bar micro-tweaks === */
+/* === Message bar: bump size ONLY while typing === */
+.input-wrap:focus-within input { font-size: 18px; line-height: 1.25; }
+.input-wrap:focus-within input::placeholder { font-size: 18px; }
 
-/* Slightly larger typing text */
-.footer .input-wrap input {
-  font-size: 18px;         /* was ~16 */
-  padding-left: 50px;      /* was 52, gives a touch more room for text */
-}
-/* Keep placeholder same size as typed text */
-.footer .input-wrap input::placeholder { font-size: 18px; }
+/* Emoji slightly bigger & a bit more left while typing */
+.input-wrap:focus-within .emoji-inside { left: 10px; width: 26px; height: 26px; }
+.input-wrap:focus-within .emoji-inside svg { width: 24px; height: 24px; }
 
-/* Emoji a bit bigger and nudged left */
-.footer .emoji-inside { left: 10px; width: 26px; height: 26px; }
-.footer .emoji-inside svg { width: 24px; height: 24px; }
+/* Android fallback when we set html.ime-open */
+html.ime-open .footer .input-wrap input { font-size: 18px; line-height: 1.25; }
+html.ime-open .footer .input-wrap input::placeholder { font-size: 18px; }
+html.ime-open .footer .emoji-inside { left: 10px; width: 26px; height: 26px; }
+html.ime-open .footer .emoji-inside svg { width: 24px; height: 24px; }
 
-/* Tiny screens: scale down just a hair so nothing feels cramped */
+/* Tiny screens: nudge down just a hair */
 @media (max-width: 360px) {
-  .App.stable .footer input { font-size: 16.5px; }
-  .footer .emoji-inside { left: 9px; width: 24px; height: 24px; }
-  .footer .emoji-inside svg { width: 22px; height: 22px; }
+  .input-wrap:focus-within input,
+  html.ime-open .footer .input-wrap input { font-size: 16.5px; }
+  .input-wrap:focus-within .emoji-inside,
+  html.ime-open .footer .emoji-inside { left: 9px; width: 24px; height: 24px; }
+  .input-wrap:focus-within .emoji-inside svg,
+  html.ime-open .footer .emoji-inside svg { width: 22px; height: 22px; }
 }
