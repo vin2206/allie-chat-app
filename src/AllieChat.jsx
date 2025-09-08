@@ -1388,8 +1388,6 @@ if (!user) {
         ) : (
           msg.text
         )}
-        <span className="msg-time">{msg.time}</span>
-      </span>
     </div>
   ))}
   {isTyping && (
