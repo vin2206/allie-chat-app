@@ -420,8 +420,8 @@ body { background: linear-gradient(180deg, #fce7f3 0%, #ede9fe 100%); }
 
 .typing-bounce span {
   display: inline-block;
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
   margin-right: 6px;
   background: #cc66cc;
   border-radius: 50%;
@@ -462,10 +462,11 @@ body { background: linear-gradient(180deg, #fce7f3 0%, #ede9fe 100%); }
   }
 }
 
+/* Neutral default — specific .allie-message/.user-message rules set the tilt */
 .bubble-content {
-  display: inline-block;      /* <- KEY! */
-  padding: 8px 44px 16px 13px;
-  border-radius: 20px 20px 20px 8px;
+  display: inline-block;
+  padding: 8px 14px 12px 13px;
+  border-radius: 18px;
   box-shadow: 0 4px 18px 0 rgba(112, 76, 255, 0.09), 0 1.5px 8px rgba(60, 20, 60, 0.08);
   font-size: 16px;
   background: linear-gradient(135deg, #ffe3e3, #c2f0fc);
@@ -487,20 +488,6 @@ body { background: linear-gradient(180deg, #fce7f3 0%, #ede9fe 100%); }
   color: #fff;
   border-radius: 18px 18px 6px 20px;   /* small at bottom-right */
   padding: 8px 14px 12px 13px;         /* no extra room for time */
-}
-
-.msg-time {
-  position: absolute;
-  right: 12px;
-  bottom: 7px;
-  font-size: 11px;
-  color: #888;
-  opacity: 0.8;
-  white-space: nowrap;
-  letter-spacing: 0.1px;
-  margin: 0;
-  padding: 0;
-  pointer-events: none;
 }
 
 /* Make sure generic .footer button rule doesn't force same look on both. */
@@ -559,11 +546,10 @@ body { background: linear-gradient(180deg, #fce7f3 0%, #ede9fe 100%); }
   box-shadow: 0 2px 8px rgba(0,0,0,.12);
 }
 
-/* When the bubble contains audio, give more room for the time stamp */
 .bubble-content.has-audio {
-  min-width: 240px;           /* ensures full control bar fits */
+  min-width: 240px;
   max-width: 80vw;
-  padding-right: 90px;        /* space for the time at right */
+  padding-right: 14px;   /* normal padding now */
   overflow: visible;
 }
 /* Fallback link only if the <audio> fails to have a src */
@@ -1006,11 +992,8 @@ html.ime-open .App.stable .chat-container {
   }
 }
 
-/* tighter gutter for text-only bubbles; don't affect audio bubbles */
-.user-message .bubble-content:not(.has-audio)  { padding-right: 36px; }
-.allie-message .bubble-content:not(.has-audio) { padding-right: 24px; }
-
-.msg-time { right: 6px; bottom: 8px; }               /* was right:10px */
+.user-message .bubble-content:not(.has-audio),
+.allie-message .bubble-content:not(.has-audio) { padding-right: 14px; }
 
 /* --- Instructions content inside the welcome card --- */
 .instr-title{
