@@ -1389,7 +1389,8 @@ if (!user) {
           msg.text
         )}
     </div>
-  ))}
+  </div>
+))}
   {isTyping && (
     <div className="message allie-message typing-bounce">
       <span></span><span></span><span></span>
