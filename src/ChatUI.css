@@ -72,12 +72,16 @@ html.ime-open .chat-container {
   padding-bottom: 12px;
 }
 
-/* While keyboard is up, stop scrollIntoView a touch earlier so the last bubble
-   never kisses the input bar during the IME animation */
+/* While keyboard is up, give extra cushion so the last bubble never hides */
 html.ime-open .message,
 html.ime-open .typing-bounce,
 html.ime-open .bottom-sentinel {
-  scroll-margin-block-end: 18px;   /* was 12–16; only during IME */
+  scroll-margin-block-end: 32px;
+}
+
+/* Also make the sentinel itself thicker during IME */
+html.ime-open .bottom-sentinel {
+  height: 28px; /* was 1px */
 }
 
 /* 2) State-specific backgrounds (fixes the flicker) */
