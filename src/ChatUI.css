@@ -282,8 +282,8 @@ body { background: linear-gradient(180deg, #fce7f3 0%, #ede9fe 100%); }
   color: white;
   border: none;
   border-radius: 50%;
-  width: 55px;
-  height: 55px;
+  width: 54px;
+  height: 54px;
   font-size: 24px;
   display: flex;
   align-items: center;
@@ -920,7 +920,7 @@ html.ime-open .App.stable .chat-container {
 
 /* Smaller, non-shifting controls on Android pinned layout */
 .App.stable .footer .send-btn,
-.App.stable .footer .mic-btn { width: 52px; height: 52px; transform: none; }
+.App.stable .footer .mic-btn { width: 54px; height: 54px; transform: none; }
 .App.stable .footer input { min-height: 42px; }
 
 /* keep last items comfortably above the footer */
