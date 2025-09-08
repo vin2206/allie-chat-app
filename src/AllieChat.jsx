@@ -1145,7 +1145,9 @@ useEffect(() => {
       Math.max(window.innerHeight || 0, document.documentElement.clientHeight || 0);
     const drop = Math.max(0, Math.round(layoutH - vv.height)); // px
 
-    if (drop > 80) root.classList.add('ime-open');
+   // Lower threshold so we react as soon as the keyboard starts moving
+    const OPEN_THRESHOLD = 24; // px (was 80)
+    if (drop > OPEN_THRESHOLD) root.classList.add('ime-open');
     else root.classList.remove('ime-open');
 
     root.style.setProperty('--kb-h', drop ? `${drop}px` : '0px');
