@@ -465,7 +465,7 @@ body { background: linear-gradient(180deg, #fce7f3 0%, #ede9fe 100%); }
 /* Neutral default — specific .allie-message/.user-message rules set the tilt */
 .bubble-content {
   display: inline-block;
-  padding: 8px 14px 12px 13px;
+  padding: 12px 14px 12px 13px;
   border-radius: 18px;
   box-shadow: 0 4px 18px 0 rgba(112, 76, 255, 0.09), 0 1.5px 8px rgba(60, 20, 60, 0.08);
   font-size: 16px;
@@ -480,13 +480,13 @@ body { background: linear-gradient(180deg, #fce7f3 0%, #ede9fe 100%); }
 .allie-message .bubble-content {
   background: linear-gradient(135deg, #ffe3e3, #c2f0fc);
   color: #222;
-  border-radius: 18px 18px 18px 6px;   /* TL TR BR BL → small at bottom-left */
+  border-radius: 24px 24px 24px 4px;   /* TL TR BR BL → small at bottom-left */
   padding: 8px 14px 12px 13px;         /* no extra room for time */
 }
 .user-message .bubble-content {
   background: linear-gradient(135deg, #ff99cc, #b388eb, #80d0f1);
   color: #fff;
-  border-radius: 18px 18px 6px 20px;   /* small at bottom-right */
+  border-radius: 24px 24px 4px 24px;   /* small at bottom-right */
   padding: 8px 14px 12px 13px;         /* no extra room for time */
 }
 
