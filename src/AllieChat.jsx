@@ -297,6 +297,7 @@ const scrollerRef = useRef(null);
 const stickToBottomRef = useRef(true); // true only when truly at bottom
 const readingUpRef = useRef(false);    // true when user scrolled up (locks auto-scroll)
 const imeLockRef = useRef(false); // ignore scroll logic during IME open/close animation
+const kbChaseTimerRef = useRef(null); // NEW: keep-last-bubble-visible during IME animation
 // --- Scroll model bridge ---
 const [fallbackOn, setFallbackOn] = useState(false);  // tracks which scroller is active
 
@@ -1150,20 +1151,36 @@ useEffect(() => {
     root.style.setProperty('--kb-h', drop ? `${drop}px` : '0px');
 
     if (drop !== lastDrop) {
-      readingUpRef.current = false;   // don't lock auto-stick
-      imeLockRef.current = true;      // ignore synthetic scrolls briefly
-      setTimeout(() => { imeLockRef.current = false; }, 380);
+  readingUpRef.current = false;   // don't lock auto-stick
+  imeLockRef.current = true;      // ignore synthetic scrolls briefly
+  setTimeout(() => { imeLockRef.current = false; }, 380);
 
-      // keep view pinned to last bubble while typing
-      if (document.activeElement === inputRef.current) {
-        requestAnimationFrame(() => scrollToBottomNow(true));
-        // after IME settles, nudge once more if we should be stuck to bottom
-setTimeout(() => {
-  if (stickToBottomRef.current) scrollToBottomNow(true);
-}, 140);
-      }
-      lastDrop = drop;
+  // keep view pinned to last bubble while typing
+  if (document.activeElement === inputRef.current) {
+    // immediate nudge and a short follow-up
+    requestAnimationFrame(() => scrollToBottomNow(true));
+    setTimeout(() => {
+      if (stickToBottomRef.current) scrollToBottomNow(true);
+    }, 140);
+
+    // NEW: chase the IME animation so the last bubble never sinks under the bar
+    if (kbChaseTimerRef.current) {
+      clearInterval(kbChaseTimerRef.current);
+      kbChaseTimerRef.current = null;
     }
+    const started = Date.now();
+    kbChaseTimerRef.current = setInterval(() => {
+      // stop after ~800ms or if the input lost focus
+      if (Date.now() - started > 800 || document.activeElement !== inputRef.current) {
+        clearInterval(kbChaseTimerRef.current);
+        kbChaseTimerRef.current = null;
+        return;
+      }
+      if (stickToBottomRef.current) scrollToBottomNow(true);
+    }, 50);
+  }
+  lastDrop = drop;
+}
   };
 
   const onResize = debounce(setKbVars, 60);
@@ -1176,12 +1193,16 @@ setTimeout(() => {
   setKbVars();
 
   return () => {
-    vv.removeEventListener('resize', onResize);
-    vv.removeEventListener('geometrychange', onResize);
-    window.removeEventListener('orientationchange', setKbVars);
-    root.classList.remove('ime-open');
-    root.style.removeProperty('--kb-h');
-  };
+  vv.removeEventListener('resize', onResize);
+  vv.removeEventListener('geometrychange', onResize);
+  window.removeEventListener('orientationchange', setKbVars);
+  if (kbChaseTimerRef.current) {
+    clearInterval(kbChaseTimerRef.current);
+    kbChaseTimerRef.current = null;
+  }
+  root.classList.remove('ime-open');
+  root.style.removeProperty('--kb-h');
+};
 }, [layoutClass]);
   
   const displayedMessages = messages;
