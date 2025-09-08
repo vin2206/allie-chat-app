@@ -282,8 +282,8 @@ body { background: linear-gradient(180deg, #fce7f3 0%, #ede9fe 100%); }
   color: white;
   border: none;
   border-radius: 50%;
-  width: 54px;
-  height: 54px;
+  width: 55px;
+  height: 55px;
   font-size: 24px;
   display: flex;
   align-items: center;
@@ -505,6 +505,7 @@ body { background: linear-gradient(180deg, #fce7f3 0%, #ede9fe 100%); }
   color: #5b45ff;              /* richer icon color */
   border: 0;
   width: 50px; height: 50px;
+  aspect-ratio: 1 / 1;
   border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
   box-shadow: 0 10px 22px rgba(0,0,0,.25);
@@ -920,7 +921,7 @@ html.ime-open .App.stable .chat-container {
 
 /* Smaller, non-shifting controls on Android pinned layout */
 .App.stable .footer .send-btn,
-.App.stable .footer .mic-btn { width: 54px; height: 54px; transform: none; }
+.App.stable .footer .mic-btn { width: 52px; height: 52px; transform: none; }
 .App.stable .footer input { min-height: 42px; }
 
 /* keep last items comfortably above the footer */
@@ -934,6 +935,12 @@ html.ime-open .App.stable .chat-container {
   .App.stable .footer .send-btn,
   .App.stable .footer .mic-btn { width: 46px; height: 46px; }
   .App.stable .footer input { min-height: 38px; font-size: 15px; }
+}
+/* Closed-keyboard sizing so the circles don't look stretched */
+html:not(.ime-open) .App.stable .footer .send-btn,
+html:not(.ime-open) .App.stable .footer .mic-btn {
+  width: 48px;
+  height: 48px;
 }
 
 /* Legacy/very small screens */
