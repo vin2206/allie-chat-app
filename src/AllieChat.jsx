@@ -276,15 +276,43 @@ useEffect(() => {
   setWelcomeDefaultStep(hasClaimed ? 1 : 0);
   setShowWelcome(true);
 }, [user]);
-  function getOpener(mode, type) {
-  if (mode !== 'roleplay') return 'Hi… kaise ho aap? 😊';
+  function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
 
+function getOpener(mode, type) {
+  if (mode !== 'roleplay') {
+    return pick([
+      "Hi… kaise ho? 🙂",
+      "Hey, kya chal raha hai? 🙂",
+      "Hi, kaise ho aaj?"
+    ]);
+  }
   switch ((type || '').toLowerCase()) {
-    case 'wife':       return 'Aaj itni der laga di reply mein jaan? 😉';
-    case 'girlfriend': return 'Miss kiya apko babu 😊';
-    case 'bhabhi':     return 'tum aa gaye devarji, kha the subha se? 😅';
-    case 'exgf':      return 'Itna time baad yaad aayi meri? 😉';
-    default:           return 'Hi… kaise ho aap? 😊';
+    case 'wife':
+      return pick([
+        "Jaan, aaj itni der laga di reply mein?",
+        "Thak gaye ho? Aaj jaldi aao na.",
+        "Dinner ke liye kya chahiye, jaan?"
+      ]);
+    case 'girlfriend':
+      return pick([
+        "Miss kiya tumhe aaj.",
+        "Aaj late ho gaye… yaad aayi meri? 😉",
+        "Kahan busy the babu?"
+      ]);
+    case 'bhabhi':
+      return pick([
+        "Arre devarji, ab aaye? 😂",
+        "Subah se gayab the, kahaan the?",
+        "Aaj kaise ho, devarji?"
+      ]);
+    case 'exgf':
+      return pick([
+        "Itna time baad yaad aayi meri? 😉",
+        "Abhi bhi meri photo dekhte ho na… sach btao.",
+        "Aaj achanak se ping? Kya hua?"
+      ]);
+    default:
+      return "Hi… kaise ho? 🙂";
   }
 }
   const [messages, setMessages] = useState([
@@ -326,8 +354,6 @@ const scrollToBottomNow = (force = false) => {
   // Let the browser scroll the *active* container (inner or page)
   anchor.scrollIntoView({ block: 'end', inline: 'nearest', behavior: 'auto' });
 };
-  
-  const [isPaused, setIsPaused] = useState(false);
   // Does roleplay require premium? (server-controlled)
 const [roleplayNeedsPremium, setRoleplayNeedsPremium] = useState(true);
 
@@ -647,7 +673,7 @@ const askedForVoice = (text = "") => {
 
   // noun: voice/audio/awaaz/awaz/avaaz/avaj/awaj (loose spelling)
   const noun = /(voice|audio|a+w?a+a?j|a+w?a+a?z|awaaz|awaz|avaaz|avaj|awaj)/i;
-  // verb: send/bhejo/bhejdo/sunao/sunado/bolo (allow “na”, “do”, “please”, “to” etc. anywhere)
+  // verb: send/bhejo/bhejdo/sunao/sunado/(allow “na”, “do”, “please”, “to” etc. anywhere)
   const verb = /(bhej(?:o|do)?|send|suna(?:o|do)?)/i;
 
   // We consider it a real request only if sentence contains BOTH a noun and a verb,
@@ -685,7 +711,7 @@ const applyRoleChange = (mode, type) => {
 };
   // --------- PRESS & HOLD mic handlers ---------
 const startRecording = async () => {
-  if (isTyping || isPaused || cooldown) return;
+  if (isTyping || cooldown) return;
   try {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
 
@@ -823,7 +849,7 @@ const sendVoiceBlob = async (blob) => {
 };
   const handleSend = async () => {
   setShowEmoji(false); // close emoji panel when sending
-  if (inputValue.trim() === '' || isPaused || isTyping || cooldown || isRecording) return;
+  if (inputValue.trim() === '' || isTyping || cooldown || isRecording) return;
 
   // Quick commands
   if (inputValue.trim().toLowerCase() === '#stranger') {
@@ -923,20 +949,6 @@ const sendVoiceBlob = async (blob) => {
           setMessages(prev => [...prev, { text: data.reply, sender: 'allie', time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }]);
           setTimeout(() => openCoins(), 400);
           return;
-        }
-
-        if (data.pause) {
-          setIsPaused(true);
-          setMessages(prev => [...prev, { text: data.reply, sender: 'allie', time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }]);
-          setTimeout(() => {
-            setIsPaused(false);
-            setMessages(prev => [...prev, { text: 'Hi… wapas aa gayi hoon 😳 tum miss kar rahe the na?', sender: 'allie', time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }]);
-          }, 5 * 60 * 1000);
-          return;
-        }
-
-        if (data.reset) {
-          setTimeout(() => { setMessages([{ text: 'Hi… kaise ho aap? ☺️', sender: 'allie' }]); }, 5 * 60 * 1000);
         }
 
         const reply = data.reply || "Hmm… Shraddha didn’t respond.";
