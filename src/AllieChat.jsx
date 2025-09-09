@@ -1524,9 +1524,10 @@ if (!user) {
   onCancel={closeConfirm}
   onConfirm={confirmState.onConfirm || closeConfirm}
 />
- <WelcomeFlow
+ {/* show Character popup after instructions */}
+<WelcomeFlow
   open={showWelcome}
-  onClose={() => { setShowWelcome(false); setShowCharPopup(true); }}  // show Character popup after instructions
+  onClose={() => { setShowWelcome(false); setShowCharPopup(true); }}
   amount={100}
   defaultStep={welcomeDefaultStep}
 />
