@@ -12,15 +12,6 @@ function debounce(fn, wait = 120) {
     t = setTimeout(() => fn(...args), wait);
   };
 }
-// Toggle page-scroll fallback by adding/removing a class on html/body/#root
-function setPageScrollFallback(on) {
-  const nodes = [
-    document.documentElement,
-    document.body,
-    document.getElementById('root')
-  ];
-  nodes.forEach(n => n && n.classList[on ? 'add' : 'remove']('page-scroll-fallback'));
-}
 // --- Google Sign-In (GIS) ---
 const GOOGLE_CLIENT_ID = '962465973550-2lhard334t8kvjpdhh60catlb1k6fpb6.apps.googleusercontent.com';
 const parseJwt = (t) => {
@@ -372,26 +363,8 @@ const stickToBottomRef = useRef(true); // true only when truly at bottom
 const readingUpRef = useRef(false);    // true when user scrolled up (locks auto-scroll)
 const imeLockRef = useRef(false); // ignore scroll logic during IME open/close animation
 const kbChaseTimerRef = useRef(null); // NEW: keep-last-bubble-visible during IME animation
-// --- Scroll model bridge ---
-const [fallbackOn, setFallbackOn] = useState(false);  // tracks which scroller is active
-
 const isFallback = () =>
   document.documentElement.classList.contains('page-scroll-fallback');
-
-const fallbackLatchedRef = useRef(false);
-const enablePageFallback = React.useCallback(() => {
-  if (!fallbackLatchedRef.current) {
-    setPageScrollFallback(true);
-    fallbackLatchedRef.current = true;   // once on, keep it for this visit
-    setFallbackOn(true);
-  }
-}, []);
-  const disablePageFallback = React.useCallback(() => {
-  if (!fallbackLatchedRef.current) {
-    setPageScrollFallback(false);
-    setFallbackOn(false);
-  }
-}, []);
 
 const scrollToBottomNow = (force = false) => {
   if (!force && readingUpRef.current) return;
@@ -454,7 +427,7 @@ useEffect(() => {
     el.addEventListener('scroll', onScroll, { passive: true });
     return () => el.removeEventListener('scroll', onScroll);
   }
-}, [fallbackOn, layoutClass]); // rebind when model changes
+}, [layoutClass]); // rebind when model changes
   
   // ——— Emoji picker state/refs ———
 const [showEmoji, setShowEmoji] = useState(false);
