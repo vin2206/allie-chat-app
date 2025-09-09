@@ -46,7 +46,7 @@ const TEXT_COST = 10;
 const VOICE_COST = 18; // keep 18; change to 15 only if you insist
 const DAILY_PACK = { id: 'daily',  label: 'Daily Pack',  price: 49,  coins: 420 };
 const WEEKLY_PACK= { id: 'weekly', label: 'Weekly Pack', price: 199, coins: 2000 };
-const OWNER_EMAIL = 'vinayvedic23@gmail.com';
+const OWNER_EMAILS = ['vinayvedic23@gmail.com', 'chauhanyogender17@gmail.com'];
 // — Display labels for roles (UI only)
 const ROLE_LABELS = {
   wife: 'Wife',
@@ -530,7 +530,7 @@ useEffect(() => saveAuto(autoRenew), [autoRenew]);
   // Auto-unlock Owner mode if signed-in email matches
 useEffect(() => {
   if (!user) return;
-  setIsOwner((user.email || '').toLowerCase() === OWNER_EMAIL);
+  setIsOwner(OWNER_EMAILS.includes((user.email || '').toLowerCase()));
 }, [user]);
 
 const openCoins = () => setShowCoins(true);
