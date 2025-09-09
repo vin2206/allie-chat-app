@@ -243,6 +243,51 @@ const close = (e) => {
   );
 }
 
+/* ---------- Character Insight (translucent, top, tap-to-dismiss) ---------- */
+function CharacterPopup({ open, roleMode, roleType, onClose }) {
+  if (!open) return null;
+
+  // Reuse your labels
+  const titleRole =
+    roleMode === 'roleplay' && roleType
+      ? (ROLE_LABELS[roleType] || 'Stranger')
+      : 'Stranger';
+
+  // Minimal, neutral insights you requested
+  const INSIGHTS = {
+    stranger:
+      "A 24-yr girl who loves acting but family doesn't support. She helps her father in a small business and is an introvert who opens up online.",
+    wife:
+      "A 28-yr housewife, who loves to fulfill her husband's every wish — a little jealous too.",
+    bhabhi:
+      "A 30-yr woman, unsatisfied in her marriage, witty and affectionate toward her devar; young, fit boys are her weakness.",
+    girlfriend:
+      "A 25-yr possessive girl who loves her boyfriend more than anyone, but her jealousy often causes problems.",
+    exgf:
+      "A 26-yr spicy girl who gets bored quickly. Confused right now — loves her boyfriend but also likes her ex and chats with him when alone."
+  };
+
+  const key = roleMode === 'roleplay' ? (roleType || 'stranger') : 'stranger';
+  const text = INSIGHTS[key];
+
+  React.useEffect(() => {
+    if (!open) return;
+    const t = setTimeout(onClose, 5000);            // auto-dismiss in 5s
+    const onEsc = (e) => { if (e.key === 'Escape') onClose(); };
+    document.addEventListener('keydown', onEsc);
+    return () => { clearTimeout(t); document.removeEventListener('keydown', onEsc); };
+  }, [open, onClose]);
+
+  return (
+    <div className="charpop-overlay" onClick={onClose}>
+      <div className="character-popup" onClick={(e) => e.stopPropagation()}>
+        <div className="charpop-title">Shraddha — {titleRole}</div>
+        <div className="charpop-body">{text}</div>
+      </div>
+    </div>
+  );
+}
+
 function AllieChat() {
   // NEW: auth + welcome
 const [user, setUser] = useState(loadUser());
@@ -251,6 +296,7 @@ const [user, setUser] = useState(loadUser());
   return stop;
 }, []);
 const [showWelcome, setShowWelcome] = useState(false);
+const [showCharPopup, setShowCharPopup] = useState(false);
 const [welcomeDefaultStep, setWelcomeDefaultStep] = useState(0);
 const [coins, setCoins] = useState(loadCoins());
 // Layout chooser: Android → 'stable' (scrollable, no black band); others → 'fixed'
@@ -708,6 +754,7 @@ const applyRoleChange = (mode, type) => {
 
   // clear server context on next request
   shouldResetRef.current = true;
+  setShowCharPopup(true);   // show insight each time the user switches roles
 };
   // --------- PRESS & HOLD mic handlers ---------
 const startRecording = async () => {
@@ -849,6 +896,7 @@ const sendVoiceBlob = async (blob) => {
 };
   const handleSend = async () => {
   setShowEmoji(false); // close emoji panel when sending
+  setShowCharPopup(false);
   if (inputValue.trim() === '' || isTyping || cooldown || isRecording) return;
 
   // Quick commands
@@ -1285,7 +1333,14 @@ if (!user) {
   </button>
 </div>
   </div>
-
+{/* Character Insight popup */}
+<CharacterPopup
+  open={showCharPopup}
+  roleMode={roleMode}
+  roleType={roleType}
+  onClose={() => setShowCharPopup(false)}
+/>
+      
     {showRoleMenu && (
   <div
     className="role-modal"
@@ -1471,7 +1526,7 @@ if (!user) {
 />
  <WelcomeFlow
   open={showWelcome}
-  onClose={() => setShowWelcome(false)}
+  onClose={() => { setShowWelcome(false); setShowCharPopup(true); }}  // show Character popup after instructions
   amount={100}
   defaultStep={welcomeDefaultStep}
 />
@@ -1488,7 +1543,7 @@ if (!user) {
   onKeyDown={(e) => e.key === 'Enter' && handleSend()}
   onFocus={() => {
   setShowEmoji(false);
-  // Nudge immediately and keep nudging briefly to cover late viewport events
+  setShowCharPopup(false);           // hide insight as soon as they try to type
   const bumps = [0, 120, 260, 520];
   bumps.forEach(ms => setTimeout(() => scrollToBottomNow(true), ms));
 }}
