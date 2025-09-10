@@ -1095,3 +1095,25 @@ html:not(.ime-open) .App.stable .footer .mic-btn {
   line-height: 1.25;
   color: #222;
 }
+
+/* === DP full-image lightbox === */
+.dp-lightbox{
+  position: fixed;
+  inset: 0;
+  z-index: 1300;                 /* above header/footer & role modal; below coins modal (9999) */
+  background: rgba(0,0,0,.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  touch-action: none;            /* prevents pinch-zoom inside overlay */
+}
+.dp-lightbox img{
+  max-width: min(92vw, 900px);
+  max-height: 86vh;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  border-radius: 14px;
+  box-shadow: 0 18px 48px rgba(0,0,0,.55);
+}
