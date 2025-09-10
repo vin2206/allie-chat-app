@@ -282,13 +282,6 @@ function CharacterPopup({ open, roleMode, roleType, onClose }) {
 function AllieChat() {
   // NEW: auth + welcome
 const [user, setUser] = useState(loadUser());
-  // Preload avatars once when the chat mounts
-  useEffect(() => {
-    Object.values(avatarMap).forEach(src => {
-      const img = new Image();
-      img.src = src;
-    });
-  }, []);
   useEffect(() => {
   const stop = startVersionWatcher(60000);
   return stop;
@@ -627,6 +620,22 @@ const closeCoins = () => setShowCoins(false);
   // --- Roleplay wiring (Step 1) ---
 const [roleMode, setRoleMode] = useState('stranger');
 const [roleType, setRoleType] = useState(null);
+  // DP lightbox
+const [showAvatarFull, setShowAvatarFull] = useState(false);
+
+// Preload the current role's full image so the popup appears instantly
+useEffect(() => {
+  const img = new Image();
+  img.src = getFullAvatarSrc(roleMode, roleType);
+}, [roleMode, roleType]);
+
+// Close on ESC
+useEffect(() => {
+  if (!showAvatarFull) return;
+  const onKey = (e) => e.key === 'Escape' && setShowAvatarFull(false);
+  document.addEventListener('keydown', onKey);
+  return () => document.removeEventListener('keydown', onKey);
+}, [showAvatarFull]);
 const [showRoleMenu, setShowRoleMenu] = useState(false);
   // custom confirm modal state
 const [confirmState, setConfirmState] = useState({
@@ -680,6 +689,27 @@ const avatarMap = {
   bhabhi: '/avatars/shraddha_bhabhi.png',
   exgf: '/avatars/shraddha_exgf.png',
 };
+  // Preload avatars once when the chat mounts
+  useEffect(() => {
+    Object.values(avatarMap).forEach(src => {
+      const img = new Image();
+      img.src = src;
+    });
+  }, []);
+
+  // Full-size photos for the DP lightbox
+const avatarFullMap = {
+  stranger: '/avatars/shraddha_stranger_full.jpg',
+  wife: '/avatars/shraddha_wife_full.jpg',
+  girlfriend: '/avatars/shraddha_girlfriend_full.jpg',
+  bhabhi: '/avatars/shraddha_bhabhi_full.jpg',
+  exgf: '/avatars/shraddha_exgf_full.jpg',
+};
+
+function getFullAvatarSrc(mode, type) {
+  if (mode === 'roleplay' && type && avatarFullMap[type]) return avatarFullMap[type];
+  return avatarFullMap.stranger;
+}
 
 function getAvatarSrc(mode, type) {
   if (mode === 'roleplay' && type && avatarMap[type]) return avatarMap[type];
@@ -1256,12 +1286,9 @@ if (!user) {
         <div className="profile-pic">
           <img
   src={getAvatarSrc(roleMode, roleType)}
-  alt={`Shraddha – ${
-  roleMode === 'roleplay' && roleType
-    ? (ROLE_LABELS[roleType] || 'Stranger')
-    : 'Stranger'
-}`}
+  alt={`Shraddha – ${roleMode === 'roleplay' && roleType ? (ROLE_LABELS[roleType] || 'Stranger') : 'Stranger'}`}
   style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }}
+  onClick={() => setShowAvatarFull(true)}
 />
         </div>
         <div className="username-container">
@@ -1315,6 +1342,21 @@ if (!user) {
   roleType={roleType}
   onClose={() => setShowCharPopup(false)}
 />
+{/* DP full-image lightbox */}
+{showAvatarFull && (
+  <div
+    className="dp-lightbox"
+    role="dialog"
+    aria-modal="true"
+    onClick={() => setShowAvatarFull(false)}
+  >
+    <img
+      src={getFullAvatarSrc(roleMode, roleType)}
+      alt="Shraddha"
+      onClick={(e) => e.stopPropagation()}
+    />
+  </div>
+)}
       
     {showRoleMenu && (
   <div
