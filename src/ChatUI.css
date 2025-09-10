@@ -498,46 +498,6 @@ body { background: linear-gradient(180deg, #fce7f3 0%, #ede9fe 100%); }
   padding: 8px 14px 12px 13px;         /* no extra room for time */
 }
 
-/* === Bottom-corner tails (integrated, not a sticker) === */
-:root{
-  --tail-w: 14px;         /* width of tail (try 12–16) */
-  --tail-h: 10px;         /* height of tail (try 8–12)  */
-  --tail-underlap: 3px;   /* how much the tail tucks under the bubble */
-  --corner-small: 6px;    /* your small corner on tail side (matches your CSS) */
-}
-
-/* common base: put a tiny rounded wedge BEHIND the bubble */
-.allie-message .bubble-content::before,
-.user-message  .bubble-content::before{
-  content: "";
-  position: absolute;
-  width: var(--tail-w);
-  height: var(--tail-h);
-  background: inherit;                           /* same gradient as the bubble */
-  border-radius: 4px;                             /* soft, bottle-cap edge */
-  filter: drop-shadow(0 2px 4px rgba(0,0,0,.12)); /* match bubble depth */
-  pointer-events: none;
-  z-index: -1;                                    /* ← sits behind bubble */
-}
-
-/* LEFT (her): bottom-left tail */
-.allie-message .bubble-content::before{
-  left: calc(-1 * var(--tail-w) + var(--tail-underlap));
-  bottom: calc(var(--corner-small) - (var(--tail-h) / 2) - var(--tail-underlap));
-  /* rounded triangle pointing left */
-  clip-path: polygon(100% 0, 0 50%, 100% 100%);
-}
-
-/* RIGHT (you): bottom-right tail (mirror) */
-.user-message .bubble-content::before{
-  right: calc(-1 * var(--tail-w) + var(--tail-underlap));
-  bottom: calc(var(--corner-small) - (var(--tail-h) / 2) - var(--tail-underlap));
-  clip-path: polygon(0 0, 100% 50%, 0 100%);
-}
-
-/* no tail for audio bubbles */
-.bubble-content.has-audio::before{ display:none; }
-
 /* Make sure generic .footer button rule doesn't force same look on both. */
 .footer .send-btn,
 .footer .mic-btn {
