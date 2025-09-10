@@ -236,7 +236,14 @@ const close = (e) => {
 
 /* ---------- Character Insight (translucent, top, tap-to-dismiss) ---------- */
 function CharacterPopup({ open, roleMode, roleType, onClose }) {
-  if (!open) return null;
+  // Always call hooks; exit early *inside* the effect if closed
+  React.useEffect(() => {
+    if (!open) return;
+    const t = setTimeout(onClose, 5000); // auto-dismiss in 5s
+    const onEsc = (e) => { if (e.key === 'Escape') onClose(); };
+    document.addEventListener('keydown', onEsc);
+    return () => { clearTimeout(t); document.removeEventListener('keydown', onEsc); };
+  }, [open, onClose]);
 
   // Reuse your labels
   const titleRole =
@@ -244,7 +251,6 @@ function CharacterPopup({ open, roleMode, roleType, onClose }) {
       ? (ROLE_LABELS[roleType] || 'Stranger')
       : 'Stranger';
 
-  // Minimal, neutral insights you requested
   const INSIGHTS = {
     stranger:
       "A 24-yr girl who loves acting but family doesn't support. She helps her father in a small business and is an introvert who opens up online.",
@@ -261,13 +267,7 @@ function CharacterPopup({ open, roleMode, roleType, onClose }) {
   const key = roleMode === 'roleplay' ? (roleType || 'stranger') : 'stranger';
   const text = INSIGHTS[key];
 
-  React.useEffect(() => {
-    if (!open) return;
-    const t = setTimeout(onClose, 5000);            // auto-dismiss in 5s
-    const onEsc = (e) => { if (e.key === 'Escape') onClose(); };
-    document.addEventListener('keydown', onEsc);
-    return () => { clearTimeout(t); document.removeEventListener('keydown', onEsc); };
-  }, [open, onClose]);
+  if (!open) return null;
 
   return (
     <div className="charpop-overlay" onClick={onClose}>
@@ -282,6 +282,13 @@ function CharacterPopup({ open, roleMode, roleType, onClose }) {
 function AllieChat() {
   // NEW: auth + welcome
 const [user, setUser] = useState(loadUser());
+  // Preload avatars once when the chat mounts
+  useEffect(() => {
+    Object.values(avatarMap).forEach(src => {
+      const img = new Image();
+      img.src = src;
+    });
+  }, []);
   useEffect(() => {
   const stop = startVersionWatcher(60000);
   return stop;
@@ -679,10 +686,6 @@ function getAvatarSrc(mode, type) {
   if (mode === 'roleplay' && type && avatarMap[type]) return avatarMap[type];
   return avatarMap.stranger;
 }
-  useEffect(() => {
-  Object.values(avatarMap).forEach(src => { const img = new Image(); img.src = src; });
-}, []);
-
 // optional: simple day string
 const today = () => new Date().toLocaleDateString('en-GB');
   // Did the user ask for a voice reply?
