@@ -1095,43 +1095,76 @@ html:not(.ime-open) .App.stable .footer .mic-btn {
   line-height: 1.25;
   color: #222;
 }
-/* ——— WhatsApp-correct tiny tails (built into bottom corners) ——— */
+/* ——— WhatsApp-true tails: one silhouette, one gradient, one shadow ——— */
+/* Tune only these if you want slightly different size/offset */
 :root{
-  --wa-tail-w: 10px;     /* try 9–12 */
-  --wa-tail-h: 8px;      /* try 7–10 */
-  --wa-underlap: 2px;    /* hides the join — 1–2px */
-  --wa-small-corner: 6px;/* your small corner radius on the tail side */
+  --wa-tail-w: 12px;     /* 10–14 looks good */
+  --wa-tail-h: 10px;     /* 8–12 looks good  */
+  --wa-underlap: 2px;    /* hides the join inside the bubble edge */
+  --wa-r-big: 18px;      /* your large corners */
+  --wa-r-small: 6px;     /* your tail-side small corner */
+  --wa-shadow: 0 6px 18px rgba(112, 76, 255, 0.09), 0 1.5px 8px rgba(60, 20, 60, 0.08);
 }
 
-/* let tails extend outside the bubble */
+/* 1) The bubble itself stops painting background/shadow; content stays the same */
 .allie-message .bubble-content,
-.user-message  .bubble-content { overflow: visible; }
+.user-message  .bubble-content{
+  position: relative;                /* already there, safe to repeat */
+  background: transparent !important;
+  box-shadow: none !important;
+  overflow: visible;                 /* allow tail to protrude */
+}
 
-/* base (no separate shadow → same silhouette as the bubble) */
-.allie-message .bubble-content::after,
-.user-message  .bubble-content::after{
+/* 2) One background shape that includes the tail */
+.allie-message .bubble-content::before,
+.user-message  .bubble-content::before{
   content:"";
   position:absolute;
-  width:var(--wa-tail-w);
-  height:var(--wa-tail-h);
-  background:inherit;               /* same gradient as bubble */
-  pointer-events:none;
-  /* no extra shadow here */
+  top:0; bottom:0;
+  /* we expand on the tail side only (left for her, right for you) */
+  left:0; right:0;
+  z-index: -1;                       /* sit behind the text */
+  background: inherit;               /* your existing gradient */
+  /* one shadow for whole silhouette */
+  filter: drop-shadow( var(--wa-shadow) );
 }
 
-/* her reply: bottom-left tail pointing left */
-.allie-message .bubble-content::after{
-  left: calc(-1*var(--wa-tail-w) + var(--wa-underlap));
-  bottom: calc(var(--wa-small-corner) - (var(--wa-tail-h)/2) - var(--wa-underlap));
-  clip-path: polygon(100% 0, 0 50%, 100% 100%); /* tiny wedge → left */
+/* ---- LEFT bubble (her): tail at bottom-left, built into mask ---- */
+.allie-message .bubble-content::before{
+  /* extend box to make room for the tail */
+  left: calc(-1 * var(--wa-tail-w));
+  /* build silhouette with a CSS mask: rounded-rect (asymmetric) + tiny wedge */
+  -webkit-mask:
+    /* main rounded rectangle with radii: TL 18, TR 18, BR 18, BL 6 */
+    radial-gradient(var(--wa-r-big) at var(--wa-r-big) var(--wa-r-big), #000 98%, transparent) top left,
+    radial-gradient(var(--wa-r-big) at calc(100% - var(--wa-r-big)) var(--wa-r-big), #000 98%, transparent) top right,
+    radial-gradient(var(--wa-r-big) at calc(100% - var(--wa-r-big)) calc(100% - var(--wa-r-big)), #000 98%, transparent) bottom right,
+    radial-gradient(var(--wa-r-small) at var(--wa-r-small) calc(100% - var(--wa-r-small)), #000 98%, transparent) bottom left,
+    linear-gradient(#000 0 0) center/100% 100% no-repeat,
+    /* the tiny wedge (triangle) that “grows” from the bottom-left corner */
+    conic-gradient(from 45deg at calc(var(--wa-tail-w) - var(--wa-underlap))
+                              calc(100% - var(--wa-r-small) - var(--wa-underlap)),
+                   #000 0 90deg, transparent 0)
+      left calc(var(--wa-underlap) * -1) bottom/ var(--wa-tail-w) var(--wa-tail-h) no-repeat;
+  -webkit-mask-repeat: no-repeat,no-repeat,no-repeat,no-repeat,no-repeat,no-repeat;
+  -webkit-mask-size: 51% 51%,51% 51%,51% 51%,51% 51%,100% 100%,var(--wa-tail-w) var(--wa-tail-h);
 }
 
-/* your reply: bottom-right tail pointing right */
-.user-message .bubble-content::after{
-  right: calc(-1*var(--wa-tail-w) + var(--wa-underlap));
-  bottom: calc(var(--wa-small-corner) - (var(--wa-tail-h)/2) - var(--wa-underlap));
-  clip-path: polygon(0 0, 100% 50%, 0 100%);     /* tiny wedge → right */
+/* ---- RIGHT bubble (you): mirror the mask to bottom-right ---- */
+.user-message .bubble-content::before{
+  right: calc(-1 * var(--wa-tail-w));
+  -webkit-mask:
+    radial-gradient(var(--wa-r-big) at var(--wa-r-big) var(--wa-r-big), #000 98%, transparent) top left,
+    radial-gradient(var(--wa-r-big) at calc(100% - var(--wa-r-big)) var(--wa-r-big), #000 98%, transparent) top right,
+    radial-gradient(var(--wa-r-small) at calc(100% - var(--wa-r-small)) calc(100% - var(--wa-r-small)), #000 98%, transparent) bottom right,
+    radial-gradient(var(--wa-r-big) at var(--wa-r-big) calc(100% - var(--wa-r-big)), #000 98%, transparent) bottom left,
+    linear-gradient(#000 0 0) center/100% 100% no-repeat,
+    conic-gradient(from -45deg at calc(100% - (var(--wa-tail-w) - var(--wa-underlap)))
+                               calc(100% - var(--wa-r-small) - var(--wa-underlap)),
+                   #000 0 90deg, transparent 0)
+      right calc(var(--wa-underlap) * -1) bottom/ var(--wa-tail-w) var(--wa-tail-h) no-repeat;
+  -webkit-mask-repeat: no-repeat,no-repeat,no-repeat,no-repeat,no-repeat,no-repeat;
+  -webkit-mask-size: 51% 51%,51% 51%,51% 51%,51% 51%,100% 100%,var(--wa-tail-w) var(--wa-tail-h);
 }
 
-/* keep audio bubbles tail-less */
-.bubble-content.has-audio::after{ display:none; }
+/* 3) Audio bubbles still tail-less */
