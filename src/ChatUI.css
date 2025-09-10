@@ -505,21 +505,26 @@ body { background: linear-gradient(180deg, #fce7f3 0%, #ede9fe 100%); }
   position: absolute;
   width: 10px;
   height: 10px;
-  background: inherit;            /* matches the gradient */
-  bottom: -3px;                   /* sticks just below the bubble */
+  background: inherit;          /* matches the gradient */
   transform: rotate(45deg);
   border-radius: 2px;
   box-shadow: 0 3px 6px rgba(0,0,0,.10);
   pointer-events: none;
 }
 
-/* left bubble gets tail at bottom-left */
-.allie-message .bubble-content::after { left: 14px; }
+/* LEFT bubble → tail on bottom-left (sticks out to the left) */
+.allie-message .bubble-content::after {
+  left: -5px;     /* negative = outside the bubble */
+  bottom: 10px;   /* align with the bottom corner */
+}
 
-/* right bubble gets tail at bottom-right */
-.user-message  .bubble-content::after { right: 14px; }
+/* RIGHT bubble → tail on bottom-right (sticks out to the right) */
+.user-message .bubble-content::after {
+  right: -5px;    /* negative = outside the bubble */
+  bottom: 10px;   /* align with the bottom corner */
+}
 
-/* avoid odd tails on audio messages */
+/* avoid tails on audio messages */
 .bubble-content.has-audio::after { display: none; }
 
 /* Make sure generic .footer button rule doesn't force same look on both. */
