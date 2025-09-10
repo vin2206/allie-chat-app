@@ -498,41 +498,41 @@ body { background: linear-gradient(180deg, #fce7f3 0%, #ede9fe 100%); }
   padding: 8px 14px 12px 13px;         /* no extra room for time */
 }
 
-/* === Bottom-corner tails (flush + rounded, WhatsApp vibe) === */
+/* === Tiny bottom-corner notches (professional, WhatsApp-ish) === */
 :root{
-  --tail-size: 14px;      /* notch size — try 12–16 */
-  --tail-shift: 36%;      /* how far the diamond sits outside the corner */
-  --tail-shadow: 0 2px 6px rgba(0,0,0,.12);
+  --tail: 10px;            /* overall size (try 9–12) */
+  --tail-inset: 2px;       /* tucks under the bubble to avoid a seam */
+  --tail-shadow: 0 1px 3px rgba(0,0,0,.10);
 }
 
-/* make sure tails aren't clipped */
+/* tails must be allowed to extend past the bubble */
 .allie-message .bubble-content,
-.user-message .bubble-content { overflow: visible; }
+.user-message  .bubble-content { overflow: visible; }
 
 .allie-message .bubble-content::after,
-.user-message .bubble-content::after{
-  content:"";
-  position:absolute;
-  width: var(--tail-size);
-  height: var(--tail-size);
-  background: inherit;              /* continues your gradient */
+.user-message  .bubble-content::after{
+  content: "";
+  position: absolute;
+  width: var(--tail);
+  height: var(--tail);
+  background: inherit;                 /* matches the gradient */
+  transform: rotate(45deg);
+  border-radius: 2px;                  /* softens the point */
+  filter: drop-shadow(var(--tail-shadow));
   pointer-events: none;
-  border-radius: 3px;               /* softer, less “triangle” */
-  box-shadow: var(--tail-shadow);
 }
 
-/* LEFT bubble → tail grows from the bottom-left corner */
+/* bottom-LEFT */
 .allie-message .bubble-content::after{
-  left: 0; 
-  bottom: 0;                         /* sits ON the bottom edge */
-  transform: translate(calc(-1*var(--tail-shift)), var(--tail-shift)) rotate(45deg);
+  /* center of the diamond sits exactly on the BL corner */
+  left: calc(-0.5 * var(--tail) + var(--tail-inset));
+  bottom: calc(-0.5 * var(--tail) + var(--tail-inset));
 }
 
-/* RIGHT bubble → tail grows from the bottom-right corner */
+/* bottom-RIGHT (mirror) */
 .user-message .bubble-content::after{
-  right: 0; 
-  bottom: 0;                         /* sits ON the bottom edge */
-  transform: translate(var(--tail-shift), var(--tail-shift)) rotate(45deg);
+  right: calc(-0.5 * var(--tail) + var(--tail-inset));
+  bottom: calc(-0.5 * var(--tail) + var(--tail-inset));
 }
 
 /* no tail on audio bubbles */
