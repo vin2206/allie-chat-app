@@ -495,7 +495,7 @@ body { background: linear-gradient(180deg, #fce7f3 0%, #ede9fe 100%); }
   background: linear-gradient(135deg, #ff99cc, #b388eb, #80d0f1);
   color: #fff;
   border-radius: 18px 18px 6px 18px;   /* small at bottom-right */
-  padding: 1px 14px 10px 13px;         /* no extra room for time */
+  padding: 10px 14px 10px 13px;         /* no extra room for time */
 }
 
 /* Make sure generic .footer button rule doesn't force same look on both. */
