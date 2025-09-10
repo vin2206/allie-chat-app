@@ -326,8 +326,7 @@ function getOpener(mode, type) {
   if (mode !== 'roleplay') {
     return pick([
       "Hi… kaise ho? 🙂",
-      "Hey, kya chal raha hai? 🙂",
-      "Hi, kaise ho aaj?"
+      "Hey, kya chal raha hai? 🙂"
     ]);
   }
   switch ((type || '').toLowerCase()) {
@@ -345,7 +344,7 @@ function getOpener(mode, type) {
       ]);
     case 'bhabhi':
       return pick([
-        "Arre devarji, ab aaye? 😂",
+        "Arre devarji, ab aaye? ☺️",
         "Subah se gayab the, kahaan the?",
         "Aaj kaise ho, devarji?"
       ]);
