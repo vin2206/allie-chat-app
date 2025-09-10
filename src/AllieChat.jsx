@@ -239,7 +239,7 @@ function CharacterPopup({ open, roleMode, roleType, onClose }) {
   // Always call hooks; exit early *inside* the effect if closed
   React.useEffect(() => {
     if (!open) return;
-    const t = setTimeout(onClose, 10000); // auto-dismiss in 5s
+    const t = setTimeout(onClose, 10000); // auto-dismiss in 10s
     const onEsc = (e) => { if (e.key === 'Escape') onClose(); };
     document.addEventListener('keydown', onEsc);
     return () => { clearTimeout(t); document.removeEventListener('keydown', onEsc); };
