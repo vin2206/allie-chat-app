@@ -498,34 +498,40 @@ body { background: linear-gradient(180deg, #fce7f3 0%, #ede9fe 100%); }
   padding: 8px 14px 12px 13px;         /* no extra room for time */
 }
 
-/* tiny WhatsApp-style tails at the BOTTOM corners */
+/* === WhatsApp-like side notches at the BOTTOM corners === */
+:root{
+  /* tweak these 3 numbers if you want */
+  --tail-w: 16px;   /* a bit wider than tall, like WhatsApp */
+  --tail-h: 12px;
+  --tail-offset: 7px; /* how high above the very bottom edge it sits */
+}
+
 .allie-message .bubble-content::after,
-.user-message .bubble-content::after {
-  content: "";
-  position: absolute;
-  width: 10px;
-  height: 10px;
-  background: inherit;          /* matches the gradient */
-  transform: rotate(45deg);
-  border-radius: 2px;
-  box-shadow: 0 3px 6px rgba(0,0,0,.10);
-  pointer-events: none;
+.user-message .bubble-content::after{
+  content:"";
+  position:absolute;
+  width:var(--tail-w);
+  height:var(--tail-h);
+  bottom:var(--tail-offset);
+  background:inherit;                    /* continues the gradient */
+  pointer-events:none;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,.12));
 }
 
-/* LEFT bubble → tail on bottom-left (sticks out to the left) */
-.allie-message .bubble-content::after {
-  left: -5px;     /* negative = outside the bubble */
-  bottom: 10px;   /* align with the bottom corner */
+/* LEFT bubble → tail sits at bottom-left and points left */
+.allie-message .bubble-content::after{
+  left:-8px;                              /* push slightly outside */
+  clip-path: polygon(100% 0, 0 50%, 100% 100%); /* triangle pointing left */
 }
 
-/* RIGHT bubble → tail on bottom-right (sticks out to the right) */
-.user-message .bubble-content::after {
-  right: -5px;    /* negative = outside the bubble */
-  bottom: 10px;   /* align with the bottom corner */
+/* RIGHT bubble → tail sits at bottom-right and points right */
+.user-message .bubble-content::after{
+  right:-8px;                             /* push slightly outside */
+  clip-path: polygon(0 0, 100% 50%, 0 100%);    /* triangle pointing right */
 }
 
-/* avoid tails on audio messages */
-.bubble-content.has-audio::after { display: none; }
+/* no tail on audio bubbles */
+.bubble-content.has-audio::after{ display:none; }
 
 /* Make sure generic .footer button rule doesn't force same look on both. */
 .footer .send-btn,
