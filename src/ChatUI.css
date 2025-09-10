@@ -498,36 +498,41 @@ body { background: linear-gradient(180deg, #fce7f3 0%, #ede9fe 100%); }
   padding: 8px 14px 12px 13px;         /* no extra room for time */
 }
 
-/* === WhatsApp-like side notches at the BOTTOM corners === */
+/* === Bottom-corner tails (flush + rounded, WhatsApp vibe) === */
 :root{
-  /* tweak these 3 numbers if you want */
-  --tail-w: 16px;   /* a bit wider than tall, like WhatsApp */
-  --tail-h: 12px;
-  --tail-offset: 7px; /* how high above the very bottom edge it sits */
+  --tail-size: 14px;      /* notch size — try 12–16 */
+  --tail-shift: 36%;      /* how far the diamond sits outside the corner */
+  --tail-shadow: 0 2px 6px rgba(0,0,0,.12);
 }
+
+/* make sure tails aren't clipped */
+.allie-message .bubble-content,
+.user-message .bubble-content { overflow: visible; }
 
 .allie-message .bubble-content::after,
 .user-message .bubble-content::after{
   content:"";
   position:absolute;
-  width:var(--tail-w);
-  height:var(--tail-h);
-  bottom:var(--tail-offset);
-  background:inherit;                    /* continues the gradient */
-  pointer-events:none;
-  filter: drop-shadow(0 2px 4px rgba(0,0,0,.12));
+  width: var(--tail-size);
+  height: var(--tail-size);
+  background: inherit;              /* continues your gradient */
+  pointer-events: none;
+  border-radius: 3px;               /* softer, less “triangle” */
+  box-shadow: var(--tail-shadow);
 }
 
-/* LEFT bubble → tail sits at bottom-left and points left */
+/* LEFT bubble → tail grows from the bottom-left corner */
 .allie-message .bubble-content::after{
-  left:-8px;                              /* push slightly outside */
-  clip-path: polygon(100% 0, 0 50%, 100% 100%); /* triangle pointing left */
+  left: 0; 
+  bottom: 0;                         /* sits ON the bottom edge */
+  transform: translate(calc(-1*var(--tail-shift)), var(--tail-shift)) rotate(45deg);
 }
 
-/* RIGHT bubble → tail sits at bottom-right and points right */
+/* RIGHT bubble → tail grows from the bottom-right corner */
 .user-message .bubble-content::after{
-  right:-8px;                             /* push slightly outside */
-  clip-path: polygon(0 0, 100% 50%, 0 100%);    /* triangle pointing right */
+  right: 0; 
+  bottom: 0;                         /* sits ON the bottom edge */
+  transform: translate(var(--tail-shift), var(--tail-shift)) rotate(45deg);
 }
 
 /* no tail on audio bubbles */
