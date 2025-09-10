@@ -498,41 +498,42 @@ body { background: linear-gradient(180deg, #fce7f3 0%, #ede9fe 100%); }
   padding: 8px 14px 12px 13px;         /* no extra room for time */
 }
 
-/* === Tiny bottom-corner notches (professional, WhatsApp-ish) === */
+/* === WhatsApp-style tiny tails at the real bottom corners === */
 :root{
-  --tail: 10px;            /* overall size (try 9–12) */
-  --tail-inset: 2px;       /* tucks under the bubble to avoid a seam */
-  --tail-shadow: 0 1px 3px rgba(0,0,0,.10);
+  --bubble-r: 18px;      /* your bubble corner radius (you use 18px) */
+  --tail-w:   12px;      /* tail width  (try 10–14) */
+  --tail-h:   10px;      /* tail height (try 8–12) */
+  --tail-shadow: 0 2px 4px rgba(0,0,0,.12);
 }
 
-/* tails must be allowed to extend past the bubble */
+/* let the tail stick out */
 .allie-message .bubble-content,
 .user-message  .bubble-content { overflow: visible; }
 
+/* base for both tails */
 .allie-message .bubble-content::after,
 .user-message  .bubble-content::after{
-  content: "";
-  position: absolute;
-  width: var(--tail);
-  height: var(--tail);
-  background: inherit;                 /* matches the gradient */
-  transform: rotate(45deg);
-  border-radius: 2px;                  /* softens the point */
+  content:"";
+  position:absolute;
+  width:var(--tail-w);
+  height:var(--tail-h);
+  background:inherit;                 /* continues your gradient */
   filter: drop-shadow(var(--tail-shadow));
-  pointer-events: none;
+  pointer-events:none;
 }
 
-/* bottom-LEFT */
+/* LEFT bubble → small triangle pointing left, centered on bottom-left corner */
 .allie-message .bubble-content::after{
-  /* center of the diamond sits exactly on the BL corner */
-  left: calc(-0.5 * var(--tail) + var(--tail-inset));
-  bottom: calc(-0.5 * var(--tail) + var(--tail-inset));
+  left: calc(-1 * var(--tail-w) + 2px); /* push slightly outside; tweak 1–3px */
+  bottom: calc(var(--bubble-r) - var(--tail-h)/2);
+  clip-path: polygon(100% 0, 0 50%, 100% 100%); /* triangle pointing left */
 }
 
-/* bottom-RIGHT (mirror) */
+/* RIGHT bubble → mirror, pointing right */
 .user-message .bubble-content::after{
-  right: calc(-0.5 * var(--tail) + var(--tail-inset));
-  bottom: calc(-0.5 * var(--tail) + var(--tail-inset));
+  right: calc(-1 * var(--tail-w) + 2px);
+  bottom: calc(var(--bubble-r) - var(--tail-h)/2);
+  clip-path: polygon(0 0, 100% 50%, 0 100%);     /* triangle pointing right */
 }
 
 /* no tail on audio bubbles */
