@@ -488,15 +488,39 @@ body { background: linear-gradient(180deg, #fce7f3 0%, #ede9fe 100%); }
 .allie-message .bubble-content {
   background: linear-gradient(135deg, #ffe3e3, #c2f0fc);
   color: #222;
-  border-radius: 24px 24px 24px 4px;   /* TL TR BR BL → small at bottom-left */
+  border-radius: 18px 18px 18px 6px;   /* TL TR BR BL → small at bottom-left */
   padding: 8px 14px 12px 13px;         /* no extra room for time */
 }
 .user-message .bubble-content {
   background: linear-gradient(135deg, #ff99cc, #b388eb, #80d0f1);
   color: #fff;
-  border-radius: 24px 24px 4px 24px;   /* small at bottom-right */
+  border-radius: 18px 18px 6px 18px;   /* small at bottom-right */
   padding: 8px 14px 12px 13px;         /* no extra room for time */
 }
+
+/* tiny WhatsApp-style tails at the BOTTOM corners */
+.allie-message .bubble-content::after,
+.user-message .bubble-content::after {
+  content: "";
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background: inherit;            /* matches the gradient */
+  bottom: -3px;                   /* sticks just below the bubble */
+  transform: rotate(45deg);
+  border-radius: 2px;
+  box-shadow: 0 3px 6px rgba(0,0,0,.10);
+  pointer-events: none;
+}
+
+/* left bubble gets tail at bottom-left */
+.allie-message .bubble-content::after { left: 14px; }
+
+/* right bubble gets tail at bottom-right */
+.user-message  .bubble-content::after { right: 14px; }
+
+/* avoid odd tails on audio messages */
+.bubble-content.has-audio::after { display: none; }
 
 /* Make sure generic .footer button rule doesn't force same look on both. */
 .footer .send-btn,
