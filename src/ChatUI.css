@@ -498,47 +498,6 @@ body { background: linear-gradient(180deg, #fce7f3 0%, #ede9fe 100%); }
   padding: 8px 14px 12px 13px;         /* no extra room for time */
 }
 
-/* === WhatsApp-style tiny tails at the real bottom corners === */
-:root{
-  --bubble-r: 18px;      /* your bubble corner radius (you use 18px) */
-  --tail-w:   12px;      /* tail width  (try 10–14) */
-  --tail-h:   10px;      /* tail height (try 8–12) */
-  --tail-shadow: 0 2px 4px rgba(0,0,0,.12);
-}
-
-/* let the tail stick out */
-.allie-message .bubble-content,
-.user-message  .bubble-content { overflow: visible; }
-
-/* base for both tails */
-.allie-message .bubble-content::after,
-.user-message  .bubble-content::after{
-  content:"";
-  position:absolute;
-  width:var(--tail-w);
-  height:var(--tail-h);
-  background:inherit;                 /* continues your gradient */
-  filter: drop-shadow(var(--tail-shadow));
-  pointer-events:none;
-}
-
-/* LEFT bubble → small triangle pointing left, centered on bottom-left corner */
-.allie-message .bubble-content::after{
-  left: calc(-1 * var(--tail-w) + 2px); /* push slightly outside; tweak 1–3px */
-  bottom: calc(var(--bubble-r) - var(--tail-h)/2);
-  clip-path: polygon(100% 0, 0 50%, 100% 100%); /* triangle pointing left */
-}
-
-/* RIGHT bubble → mirror, pointing right */
-.user-message .bubble-content::after{
-  right: calc(-1 * var(--tail-w) + 2px);
-  bottom: calc(var(--bubble-r) - var(--tail-h)/2);
-  clip-path: polygon(0 0, 100% 50%, 0 100%);     /* triangle pointing right */
-}
-
-/* no tail on audio bubbles */
-.bubble-content.has-audio::after{ display:none; }
-
 /* Make sure generic .footer button rule doesn't force same look on both. */
 .footer .send-btn,
 .footer .mic-btn {
@@ -1136,3 +1095,43 @@ html:not(.ime-open) .App.stable .footer .mic-btn {
   line-height: 1.25;
   color: #222;
 }
+/* ——— WhatsApp-correct tiny tails (built into bottom corners) ——— */
+:root{
+  --wa-tail-w: 10px;     /* try 9–12 */
+  --wa-tail-h: 8px;      /* try 7–10 */
+  --wa-underlap: 2px;    /* hides the join — 1–2px */
+  --wa-small-corner: 6px;/* your small corner radius on the tail side */
+}
+
+/* let tails extend outside the bubble */
+.allie-message .bubble-content,
+.user-message  .bubble-content { overflow: visible; }
+
+/* base (no separate shadow → same silhouette as the bubble) */
+.allie-message .bubble-content::after,
+.user-message  .bubble-content::after{
+  content:"";
+  position:absolute;
+  width:var(--wa-tail-w);
+  height:var(--wa-tail-h);
+  background:inherit;               /* same gradient as bubble */
+  pointer-events:none;
+  /* no extra shadow here */
+}
+
+/* her reply: bottom-left tail pointing left */
+.allie-message .bubble-content::after{
+  left: calc(-1*var(--wa-tail-w) + var(--wa-underlap));
+  bottom: calc(var(--wa-small-corner) - (var(--wa-tail-h)/2) - var(--wa-underlap));
+  clip-path: polygon(100% 0, 0 50%, 100% 100%); /* tiny wedge → left */
+}
+
+/* your reply: bottom-right tail pointing right */
+.user-message .bubble-content::after{
+  right: calc(-1*var(--wa-tail-w) + var(--wa-underlap));
+  bottom: calc(var(--wa-small-corner) - (var(--wa-tail-h)/2) - var(--wa-underlap));
+  clip-path: polygon(0 0, 100% 50%, 0 100%);     /* tiny wedge → right */
+}
+
+/* keep audio bubbles tail-less */
+.bubble-content.has-audio::after{ display:none; }
