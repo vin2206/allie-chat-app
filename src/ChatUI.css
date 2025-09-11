@@ -1101,19 +1101,21 @@ html:not(.ime-open) .App.stable .footer .mic-btn {
   position: fixed;
   inset: 0;
   z-index: 1300;                 /* above header/footer & role modal; below coins modal (9999) */
-  background: rgba(0,0,0,.85);
+  background: rgba(0,0,0,..75);
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 16px;
   touch-action: none;            /* prevents pinch-zoom inside overlay */
+  cursor: zoom-out;
 }
 .dp-lightbox img{
-  max-width: min(92vw, 900px);
-  max-height: 86vh;
+  max-width: min(70vw, 720px);
+  max-height: 70vh;
   width: auto;
   height: auto;
   object-fit: contain;
   border-radius: 14px;
   box-shadow: 0 18px 48px rgba(0,0,0,.55);
+  cursor: default;
 }
