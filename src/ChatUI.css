@@ -1101,7 +1101,7 @@ html:not(.ime-open) .App.stable .footer .mic-btn {
   position: fixed;
   inset: 0;
   z-index: 1300;                 /* above header/footer & role modal; below coins modal (9999) */
-  background: rgba(0,0,0,..85);
+  background: rgba(0,0,0,.80);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1110,8 +1110,8 @@ html:not(.ime-open) .App.stable .footer .mic-btn {
   cursor: zoom-out;
 }
 .dp-lightbox img{
-  max-width: min(75vw, 720px);
-  max-height: 75vh;
+  max-width: min(78vw, 720px);
+  max-height: 78vh;
   width: auto;
   height: auto;
   object-fit: contain;
