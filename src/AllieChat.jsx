@@ -47,6 +47,27 @@ const ROLE_LABELS = {
   stranger: 'Stranger'
 };
 
+// === Voice quota per day ===
+const FREE_DAILY_VOICE_LIMIT = 2;     // Free users
+const PAID_DAILY_VOICE_LIMIT = 8;    // Paid users (tweak anytime)
+
+// Use local day so quota resets at the user's midnight
+const isoDay = () => {
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`; // YYYY-MM-DD (local)
+};
+const userIdFor = (u) => (u?.sub || u?.email || 'anon').toLowerCase();
+const voiceKey = (paid, u) => `voice_used_${paid ? 'paid' : 'free'}_${userIdFor(u)}_${isoDay()}`;
+
+const getVoiceUsed = (paid, u) => Number(localStorage.getItem(voiceKey(paid, u)) || 0);
+const bumpVoiceUsed = (paid, u) => {
+  const k = voiceKey(paid, u);
+  localStorage.setItem(k, String(getVoiceUsed(paid, u) + 1));
+};
+
 // localStorage helpers
 const COIN_KEY = 'coins_v1';
 const AUTORENEW_KEY = 'autorenew_v1'; // {daily:bool, weekly:bool}
@@ -66,8 +87,7 @@ const loadAuto = () => {
   catch { return { daily:false, weekly:false }; }
 };
 const saveAuto = (obj) => localStorage.setItem(AUTORENEW_KEY, JSON.stringify(obj));
-// -------- Minimal custom confirm dialog (no browser URL) ----------
-function ConfirmDialog({ open, title, message, onCancel, onConfirm }) {
+function ConfirmDialog({ open, title, message, onCancel, onConfirm, okOnly=false, okText='OK', cancelText='Cancel' }) {
   if (!open) return null;
   return (
     <div className="confirm-backdrop" role="dialog" aria-modal="true">
@@ -75,8 +95,8 @@ function ConfirmDialog({ open, title, message, onCancel, onConfirm }) {
         <h3>{title}</h3>
         <p>{message}</p>
         <div className="confirm-buttons">
-          <button className="btn-secondary" onClick={onCancel}>Cancel</button>
-          <button className="btn-primary" onClick={onConfirm}>OK</button>
+          {!okOnly && <button className="btn-secondary" onClick={onCancel}>{cancelText}</button>}
+          <button className="btn-primary" onClick={onConfirm}>{okText}</button>
         </div>
       </div>
     </div>
@@ -639,12 +659,19 @@ useEffect(() => {
 const [showRoleMenu, setShowRoleMenu] = useState(false);
   // custom confirm modal state
 const [confirmState, setConfirmState] = useState({
-  open: false, title: '', message: '', onConfirm: null
+  open: false, title: '', message: '', onConfirm: null, okOnly: false
 });
 const openConfirm = (title, message, onConfirm) =>
-  setConfirmState({ open: true, title, message, onConfirm });
+  setConfirmState({ open: true, title, message, onConfirm, okOnly: false });
+
+const openNotice = (title, message, after) =>
+  setConfirmState({
+    open: true, title, message, okOnly: true,
+    onConfirm: () => { closeConfirm(); if (typeof after === 'function') after(); }
+  });
+
 const closeConfirm = () =>
-  setConfirmState(s => ({ ...s, open: false, onConfirm: null }));
+  setConfirmState(s => ({ ...s, open: false, onConfirm: null, okOnly: false }));
   // Next request should clear server context after a role switch
 const shouldResetRef = useRef(false);
   const roleMenuRef = useRef(null);
@@ -764,6 +791,25 @@ const applyRoleChange = (mode, type) => {
   // --------- PRESS & HOLD mic handlers ---------
 const startRecording = async () => {
   if (isTyping || cooldown) return;
+  // Daily voice quota check
+  if (!isOwner) {
+    const paid = (wallet?.expires_at || 0) > Date.now();
+    const limit = paid ? PAID_DAILY_VOICE_LIMIT : FREE_DAILY_VOICE_LIMIT;
+    const used  = getVoiceUsed(paid, user);
+    if (used >= limit) {
+      openNotice(
+        paid ? 'Daily voice limit reached' : 'Free voice limit over',
+        paid
+          ? 'You’ve used all your voice replies for today. It resets at midnight.'
+          : 'Aapne 2 free voice replies use kar liye. Daily ya Weekly plan recharge karke aur voice/text replies unlock karein.',
+        paid ? null : openCoins
+      );
+      return;
+    }
+  }
+  // Coins gate early so we don't record and then block
+if (!isOwner && coins < VOICE_COST) { openCoins(); return; }
+  
   try {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
 
@@ -881,6 +927,10 @@ const sendVoiceBlob = async (blob) => {
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       }]);
       if (!isOwner) setCoins(c => Math.max(0, c - VOICE_COST));
+      if (!isOwner) {
+    const paid = (wallet?.expires_at || 0) > Date.now();
+    bumpVoiceUsed(paid, user);
+  }
     } else {
       setMessages(prev => [...prev, {
         text: data.reply || "Hmm… Shraddha didn’t respond.",
@@ -922,6 +972,21 @@ const sendVoiceBlob = async (blob) => {
 
   // Decide cost before sending
   const wantVoiceNow = askedForVoice(inputValue);
+    if (wantVoiceNow && !isOwner) {
+  const paid = (wallet?.expires_at || 0) > Date.now();
+  const limit = paid ? PAID_DAILY_VOICE_LIMIT : FREE_DAILY_VOICE_LIMIT;
+  const used  = getVoiceUsed(paid, user);
+  if (used >= limit) {
+    openNotice(
+      paid ? 'Daily voice limit reached' : 'Free voice limit over',
+      paid
+        ? 'You’ve used all your voice replies for today. It resets at midnight.'
+        : 'Aapne 2 free voice replies use kar liye. Daily ya Weekly plan recharge karke aur voice/text replies unlock karein.',
+      paid ? null : openCoins
+    );
+    return;
+  }
+}
   if (!isOwner) {
     if (wantVoiceNow) {
       if (coins < VOICE_COST) {
@@ -992,11 +1057,15 @@ const sendVoiceBlob = async (blob) => {
         setIsTyping(false);
 
         if (data.audioUrl) {
-          const fullUrl = data.audioUrl.startsWith('http') ? data.audioUrl : `${BACKEND_BASE}${data.audioUrl}`;
-          setMessages(prev => [...prev, { audioUrl: fullUrl, sender: 'allie', time: currentTime }]);
-          if (!isOwner) setCoins(c => Math.max(0, c - VOICE_COST));
-          return;
-        }
+  const fullUrl = data.audioUrl.startsWith('http') ? data.audioUrl : `${BACKEND_BASE}${data.audioUrl}`;
+  setMessages(prev => [...prev, { audioUrl: fullUrl, sender: 'allie', time: currentTime }]);
+  if (!isOwner) {
+    setCoins(c => Math.max(0, c - VOICE_COST));
+    const paid = (wallet?.expires_at || 0) > Date.now();
+    bumpVoiceUsed(paid, user);
+  }
+  return;
+}
 
         if (data.locked) {
           setMessages(prev => [...prev, { text: data.reply, sender: 'allie', time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }]);
@@ -1540,6 +1609,7 @@ if (!user) {
   message={confirmState.message}
   onCancel={closeConfirm}
   onConfirm={confirmState.onConfirm || closeConfirm}
+  okOnly={confirmState.okOnly}
 />
  {/* show Character popup after instructions */}
 <WelcomeFlow
