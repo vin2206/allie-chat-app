@@ -1101,7 +1101,7 @@ html:not(.ime-open) .App.stable .footer .mic-btn {
   position: fixed;
   inset: 0;
   z-index: 1300;                 /* above header/footer & role modal; below coins modal (9999) */
-  background: rgba(0,0,0,..80);
+  background: rgba(0,0,0,..85);
   display: flex;
   align-items: center;
   justify-content: center;
