@@ -1187,7 +1187,7 @@ html:not(.ime-open) .App.stable .footer .mic-btn {
   background:#f1f1f4 !important; color:#333 !important;  /* neutral Close */
   border-radius:12px; font-weight:700;
   box-shadow:0 8px 20px rgba(0,0,0,.12);
-  margin-top: 26px;                                      /* reserve space */
+  margin-top: 35px;                                      /* reserve space */
   position: relative; padding-top: 0;
 }
 .premium-modal .modal-content button.close-modal::before{
