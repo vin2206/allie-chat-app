@@ -1121,67 +1121,45 @@ html:not(.ime-open) .App.stable .footer .mic-btn {
   transform: translateY(-4vh);
 }
 
-/* === Coins modal – polished layout (scoped) === */
-.premium-modal .modal-content {
-  width: min(92vw, 420px);
-  padding: 18px 16px;
-  border-radius: 16px;
-  text-align: center;
+/* === Coins modal – final theming overrides (paste at very bottom) === */
+
+/* 1) Make Close neutral (beats the old generic selector) */
+.premium-modal .modal-content button.close-modal {
+  background: #f1f1f4 !important;
+  color: #333 !important;
+  box-shadow: 0 6px 16px rgba(0,0,0,.12);
+  width: 100%;
+  padding: 12px 14px;
+  border: 0;
+  border-radius: 12px;
+  font-weight: 700;
 }
 
-.premium-modal .packs { 
-  display: flex; 
-  flex-direction: column; 
-  gap: 10px; 
-  margin-top: 8px; 
+/* 2) Daily + Weekly gradients (clean, professional) */
+.premium-modal .pack-btn { /* Daily */
+  background: linear-gradient(135deg, #ff3a7f, #ff0a85); /* bright pink → brand pink */
+  color: #fff;
+}
+.premium-modal .pack-btn.secondary { /* Weekly */
+  background: linear-gradient(135deg, #6a5cff, #9c8bff); /* indigo → violet */
 }
 
-.premium-modal .pack-btn {
-  display: flex; 
-  align-items: center; 
-  justify-content: space-between;
-  width: 100%; 
-  padding: 14px; 
-  border: 0; 
-  border-radius: 14px;
-  background: linear-gradient(135deg, #ff2a95, #ff3fb0);
-  color: #fff; 
-  cursor: pointer; 
-  box-shadow: 0 10px 24px rgba(0,0,0,.18);
-}
-.premium-modal .pack-btn.secondary {
-  background: linear-gradient(135deg, #7b61ff, #9b7dff);
-}
-
-.premium-modal .pack-left { text-align: left; }
-.premium-modal .pack-title { font-size: 16px; font-weight: 900; letter-spacing: .2px; }
-.premium-modal .pack-sub { font-size: 12px; opacity: .95; margin-top: 2px; }
-
-.premium-modal .pack-right { display: flex; align-items: center; gap: 10px; }
-.premium-modal .pack-price { font-size: 18px; font-weight: 900; }
-.premium-modal .pack-cta { font-size: 13px; font-weight: 800; opacity: .95; }
-
+/* 3) “Best value” badge in brand dark pink */
 .premium-modal .best-badge {
-  margin-left: 8px;
-  font-size: 11px; 
-  font-weight: 800; 
-  background: #fff; 
-  color: #7b61ff;
-  padding: 2px 8px; 
-  border-radius: 999px; 
+  background: #ff0a85;
+  color: #fff;
+  font-weight: 800;
+  padding: 2px 10px;
+  border-radius: 999px;
   box-shadow: 0 2px 8px rgba(0,0,0,.12);
 }
 
-/* Neutral Close button (not pink) */
-.premium-modal .close-modal {
-  margin-top: 10px;
-  width: 100%;
-  padding: 12px 14px;
-  border: 0; 
-  border-radius: 12px;
-  background: #f1f1f4; 
-  color: #333; 
-  font-weight: 700;
-  box-shadow: 0 6px 16px rgba(0,0,0,.12);
+/* (Optional) tighten right-side layout so price + Buy feel aligned */
+.premium-modal .pack-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 900;
 }
-.premium-modal .close-modal:active { transform: translateY(1px); }
+.premium-modal .pack-price { font-size: 18px; }
+.premium-modal .pack-cta  { font-size: 13px; font-weight: 800; opacity: .95; }
