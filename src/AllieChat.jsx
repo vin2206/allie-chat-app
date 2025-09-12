@@ -32,6 +32,7 @@ async function ensureRazorpay() {
 }
 // --- backend base ---
 const BACKEND_BASE = 'https://allie-chat-proxy-production.up.railway.app';
+const authHeaders = (u) => (u?.idToken ? { Authorization: `Bearer ${u.idToken}` } : {});
 // === Coins config (Option A agreed) ===
 const TEXT_COST = 10;
 const VOICE_COST = 18; // keep 18; change to 15 only if you insist
@@ -140,11 +141,12 @@ if (!document.querySelector('script[src*="gsi/client"]')) {
             try {
               const p = parseJwt(res.credential);
               onSignedIn({
-                name: p.name || '',
-                email: (p.email || '').toLowerCase(),
-                sub: p.sub,
-                picture: p.picture || ''
-              });
+      name: p.name || '',
+      email: (p.email || '').toLowerCase(),
+      sub: p.sub,
+      picture: p.picture || '',
+      idToken: res.credential     // <<— add this
+    });
             } catch (e) {
               console.error('GIS parse failed', e);
             }
@@ -505,9 +507,7 @@ function formatTTL(ms){
 
 async function refreshWallet(){
   if (!user) return;
-  const r = await fetch(
-  `${BACKEND_BASE}/wallet?email=${encodeURIComponent((user.email||'').toLowerCase())}&sub=${encodeURIComponent(user.sub||'')}`
-);
+  const r = await fetch(`${BACKEND_BASE}/wallet`, { headers: authHeaders(user) });
   const data = await r.json();
   if (data?.ok) {
     setWallet(data.wallet);
@@ -531,7 +531,7 @@ useEffect(() => { refreshWallet(); }, [user]);
   try {
     const r = await fetch(`${BACKEND_BASE}/verify-payment-link`, {
       method: 'POST',
-      headers: { 'Content-Type':'application/json' },
+      headers: { 'Content-Type': 'application/json', ...authHeaders(user) },
       body: JSON.stringify({
         link_id, payment_id, reference_id, status, signature,
         userEmail: (user?.email || '').toLowerCase()
@@ -579,7 +579,7 @@ const closeCoins = () => setShowCoins(false);
     await ensureRazorpay();
     const resp = await fetch(`${BACKEND_BASE}/order/${pack.id}`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...authHeaders(user) },
       body: JSON.stringify({ userEmail: (user.email||'').toLowerCase(), userSub: user.sub })
     });
     const data = await resp.json();
@@ -598,7 +598,7 @@ const closeCoins = () => setShowCoins(false);
         try {
           const v = await fetch(`${BACKEND_BASE}/verify-order`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json', ...authHeaders(user) },
             body: JSON.stringify(resp) // { order_id, payment_id, signature }
           });
           const out = await v.json();
@@ -904,7 +904,7 @@ const sendVoiceBlob = async (blob) => {
     fd.append('roleType', roleType || 'stranger');
     if (shouldResetRef.current) { fd.append('reset', 'true'); shouldResetRef.current = false; }
 
-    const resp = await fetch(`${BACKEND_BASE}/chat`, { method: 'POST', body: fd });
+    const resp = await fetch(`${BACKEND_BASE}/chat`, { method: 'POST', headers: authHeaders(user), body: fd });
     const data = await resp.json();
     setIsTyping(false);
 
@@ -926,7 +926,7 @@ const sendVoiceBlob = async (blob) => {
         audioUrl: fullUrl, sender: 'allie',
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       }]);
-      if (!isOwner) setCoins(c => Math.max(0, c - VOICE_COST));
+      if (data.wallet) setCoins(data.wallet.coins);
       if (!isOwner) {
     const paid = (wallet?.expires_at || 0) > Date.now();
     bumpVoiceUsed(paid, user);
@@ -1045,10 +1045,16 @@ const sendVoiceBlob = async (blob) => {
       setTimeout(() => setCooldown(false), 3000);
 
       const response = await fetch(`${BACKEND_BASE}/chat`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(fetchBody)
-      });
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json', ...authHeaders(user) },
+  body: JSON.stringify(fetchBody)
+});
+if (response.status === 401) {
+  alert('Session expired. Please sign in again.');
+  localStorage.removeItem('user_v1');
+  window.location.reload();
+  return;
+}
       const data = await response.json();
 
       const elapsed = Date.now() - startedAt;
@@ -1059,11 +1065,9 @@ const sendVoiceBlob = async (blob) => {
         if (data.audioUrl) {
   const fullUrl = data.audioUrl.startsWith('http') ? data.audioUrl : `${BACKEND_BASE}${data.audioUrl}`;
   setMessages(prev => [...prev, { audioUrl: fullUrl, sender: 'allie', time: currentTime }]);
-  if (!isOwner) {
-    setCoins(c => Math.max(0, c - VOICE_COST));
-    const paid = (wallet?.expires_at || 0) > Date.now();
-    bumpVoiceUsed(paid, user);
-  }
+  if (data.wallet) setCoins(data.wallet.coins);
+const paid = (wallet?.expires_at || 0) > Date.now();
+bumpVoiceUsed(paid, user); // (optional UI counter)
   return;
 }
 
@@ -1075,7 +1079,7 @@ const sendVoiceBlob = async (blob) => {
 
         const reply = data.reply || "Hmm… Shraddha didn’t respond.";
         setMessages(prev => [...prev, { text: reply, sender: 'allie', time: currentTime }]);
-        if (!isOwner) setCoins(c => Math.max(0, c - TEXT_COST));
+        if (data.wallet) setCoins(data.wallet.coins);
       }, waitMore);
 
     } catch (error) {
@@ -1109,14 +1113,20 @@ if (shouldResetRef.current) { fetchRetryBody.reset = true; shouldResetRef.curren
 
         await new Promise(r => setTimeout(r, 1200));
         const retryResp = await fetch(`${BACKEND_BASE}/chat`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(fetchRetryBody)
-        });
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json', ...authHeaders(user) },
+  body: JSON.stringify(fetchRetryBody)
+});
+if (retryResp.status === 401) {
+  alert('Session expired. Please sign in again.');
+  localStorage.removeItem('user_v1');
+  window.location.reload();
+  return;
+}
         const data = await retryResp.json();
         const reply = data.reply || "Hmm… thoda slow tha. Ab batao?";
         setMessages(prev => [...prev, { text: reply, sender: 'allie', time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }]);
-        if (!isOwner) setCoins(c => Math.max(0, c - TEXT_COST));
+        if (data.wallet) setCoins(data.wallet.coins);
       } catch {
         setMessages(prev => [...prev, { text: 'Oops! Shraddha is quiet right now.', sender: 'allie' }]);
       }
