@@ -1121,82 +1121,99 @@ html:not(.ime-open) .App.stable .footer .mic-btn {
   transform: translateY(-4vh);
 }
 
-/* === Coins Modal — professional override (paste at very bottom) === */
-.premium-modal { background: rgba(20,16,28,.60); }
+/* ===== Coins Popup — final look (brand gradient) ===== */
+:root{
+  --bb-grad: linear-gradient(135deg,#ff6ec4,#7873f5);
+  --bb-pink: #ff0a85;
+}
 
+.premium-modal{ background: rgba(20,16,28,.60); }
+
+/* #6: a touch bigger + deeper shadow */
 .premium-modal .modal-content{
-  width: min(92vw, 420px);
-  padding: 18px 16px 14px;
-  border-radius: 16px;
-  box-shadow: 0 18px 60px rgba(0,0,0,.32);
+  width: min(94vw, 460px);
+  padding: 22px 18px 16px;
+  border-radius: 18px;
+  box-shadow: 0 24px 72px rgba(0,0,0,.38);
 }
 
-/* Headline + chips: neutral, not hot pink */
-.premium-modal .modal-content .coins-modal-title{
-  color:#121212; letter-spacing:.2px;
-}
-.premium-modal .modal-content .coins-sub{ color:#555; }
-.premium-modal .modal-content .rate-chips{ gap:8px; }
-.premium-modal .modal-content .rate-chip{
-  background:#f7f8fa; border:1px solid #eceff3; color:#444;
+/* #2: hot pink headline */
+.premium-modal .coins-modal-title{
+  color: var(--bb-pink);
+  font-weight: 900;
+  letter-spacing: .2px;
 }
 
-/* Card accents (blue for Daily, green for Weekly) */
-.premium-modal .modal-content .pack-btn{
-  --accent: #2563eb;           /* Daily default: blue */
-  --accent-soft: rgba(37,99,235,.14);
-  position:relative; display:flex; justify-content:space-between; align-items:center;
-  width:100%; padding:14px 14px;
-  background:#fff !important; color:#111 !important;
-  border:1px solid #eef0f4; border-radius:14px;
-  box-shadow:0 12px 28px rgba(0,0,0,.12);
-  transition: box-shadow .18s ease, transform .06s ease;
-}
-.premium-modal .modal-content .pack-btn.secondary{
-  --accent: #16a34a;           /* Weekly: green */
-  --accent-soft: rgba(22,163,74,.14);
+/* keep neutral chips */
+.premium-modal .rate-chip{
+  background:#f5f6fa; border:1px solid #eceff3; color:#444;
 }
 
-/* thin accent bar on the left */
-.premium-modal .modal-content .pack-btn::before{
-  content:""; position:absolute; left:0; top:0; bottom:0; width:6px;
-  border-radius:14px 0 0 14px; background: var(--accent);
+/* #1 & #5: unified gradient cards + stronger shadow */
+.premium-modal .pack-btn{
+  position: relative;
+  display:flex; align-items:center; justify-content:space-between;
+  width:100%;
+  padding: 16px 16px 14px;
+  color:#fff !important;
+  background: var(--bb-grad) !important;   /* same for both */
+  border:0;
+  border-radius:16px;
+  box-shadow: 0 18px 40px rgba(0,0,0,.26);
+}
+.premium-modal .pack-btn.secondary{ background: var(--bb-grad) !important; }
+/* kill the old left stripe if present */
+.premium-modal .pack-btn::before{ display:none !important; }
+
+.premium-modal .pack-title{ color:#fff; }
+.premium-modal .pack-sub{ color:#fff; opacity:.9; }
+.premium-modal .pack-price{ color:#fff; font-size:20px; font-weight:900; }
+
+.premium-modal .pack-right{
+  display:flex; align-items:center; gap:10px; position: relative;
 }
 
-/* hover/press feel */
-@media (hover:hover){
-  .premium-modal .modal-content .pack-btn:hover{
-    box-shadow:0 16px 34px rgba(0,0,0,.16);
-  }
-}
-.premium-modal .modal-content .pack-btn:active{ transform: translateY(1px); }
-
-/* left content */
-.premium-modal .modal-content .pack-left{ text-align:left; }
-.premium-modal .modal-content .pack-title{ font-size:16px; font-weight:900; color:#0f172a; }
-.premium-modal .modal-content .pack-sub{ font-size:12px; color:#666; margin-top:2px; }
-
-/* right content: price + buy pill */
-.premium-modal .modal-content .pack-right{ display:flex; align-items:center; gap:10px; }
-.premium-modal .modal-content .pack-price{ font-size:18px; font-weight:900; color:#0f172a; }
-
-.premium-modal .modal-content .pack-cta{
-  padding:6px 12px; border-radius:999px;
-  background: var(--accent);
-  color:#fff; font-size:13px; font-weight:800;
-  box-shadow: 0 6px 14px var(--accent-soft);
+/* #4: black Buy pill */
+.premium-modal .pack-cta{
+  min-width: 68px;
+  text-align: center;
+  padding: 7px 14px;
+  border-radius: 999px;
+  background: #111;
+  color: #fff;
+  font-weight: 800;
+  box-shadow: 0 6px 14px rgba(0,0,0,.35);
 }
 
-/* “Best value” badge — small, amber, top-right */
-.premium-modal .modal-content .best-badge{
-  position:absolute; top:10px; right:12px;
-  padding:3px 10px; border-radius:999px;
-  font-size:11px; font-weight:800; letter-spacing:.1px;
-  background:#f59e0b; color:#fff; box-shadow:0 2px 8px rgba(0,0,0,.12);
+/* #3: smaller badge sitting above Buy (now inside .pack-right) */
+.premium-modal .best-badge{
+  position: absolute;
+  right: 0;
+  top: -8px;               /* above the Buy pill */
+  transform: translateY(-100%);
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-size: 10.5px;
+  font-weight: 800;
+  background: #f9b233;     /* amber */
+  color: #1a1a1a;
+  box-shadow: 0 4px 10px rgba(0,0,0,.20);
 }
 
-/* Close button stays neutral */
+/* #7: thin secure line above the Close button */
+.premium-modal .secure-line{
+  margin: 6px 0 10px;
+  padding-top: 10px;
+  border-top: 1px solid #ececec;
+  font-size: 12px;
+  color: #6b7280;
+  text-align: center;
+}
+
 .premium-modal .modal-content button.close-modal{
-  background:#f1f1f4 !important; color:#333 !important;
-  box-shadow:0 6px 16px rgba(0,0,0,.10);
+  background:#f1f1f4 !important;
+  color:#333 !important;
+  border-radius:12px;
+  font-weight:700;
+  box-shadow:0 8px 20px rgba(0,0,0,.12);
 }
