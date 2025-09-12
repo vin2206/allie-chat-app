@@ -1121,68 +1121,82 @@ html:not(.ime-open) .App.stable .footer .mic-btn {
   transform: translateY(-4vh);
 }
 
-/* === Coins modal – pro card look (overrides) === */
+/* === Coins Modal — professional override (paste at very bottom) === */
+.premium-modal { background: rgba(20,16,28,.60); }
 
-/* Close stays neutral */
-.premium-modal .modal-content button.close-modal{
-  background:#f1f1f4 !important;
-  color:#333 !important;
-  box-shadow:0 6px 16px rgba(0,0,0,.12);
-  width:100%; padding:12px 14px; border:0; border-radius:12px; font-weight:700;
+.premium-modal .modal-content{
+  width: min(92vw, 420px);
+  padding: 18px 16px 14px;
+  border-radius: 16px;
+  box-shadow: 0 18px 60px rgba(0,0,0,.32);
 }
 
-/* Pack cards: white, premium, with a thin gradient accent bar on the left.
-   Default (daily) uses brand-pink; .secondary (weekly) gets an indigo/violet accent. */
+/* Headline + chips: neutral, not hot pink */
+.premium-modal .modal-content .coins-modal-title{
+  color:#121212; letter-spacing:.2px;
+}
+.premium-modal .modal-content .coins-sub{ color:#555; }
+.premium-modal .modal-content .rate-chips{ gap:8px; }
+.premium-modal .modal-content .rate-chip{
+  background:#f7f8fa; border:1px solid #eceff3; color:#444;
+}
+
+/* Card accents (blue for Daily, green for Weekly) */
 .premium-modal .modal-content .pack-btn{
-  --accent: linear-gradient(135deg,#ff6fa5,#ff0a85);  /* daily */
-  position: relative;
-  display:flex; align-items:center; justify-content:space-between;
-  width:100%;
-  padding:14px 14px;
-  background:#fff !important;             /* override old gradients */
-  color:#1a1a1a !important;
-  border:1px solid #eee;
-  border-radius:14px;
-  box-shadow:0 10px 22px rgba(0,0,0,.12);
+  --accent: #2563eb;           /* Daily default: blue */
+  --accent-soft: rgba(37,99,235,.14);
+  position:relative; display:flex; justify-content:space-between; align-items:center;
+  width:100%; padding:14px 14px;
+  background:#fff !important; color:#111 !important;
+  border:1px solid #eef0f4; border-radius:14px;
+  box-shadow:0 12px 28px rgba(0,0,0,.12);
+  transition: box-shadow .18s ease, transform .06s ease;
 }
 .premium-modal .modal-content .pack-btn.secondary{
-  --accent: linear-gradient(135deg,#6a7bff,#9c8bff);  /* weekly */
+  --accent: #16a34a;           /* Weekly: green */
+  --accent-soft: rgba(22,163,74,.14);
 }
 
-/* thin accent bar */
+/* thin accent bar on the left */
 .premium-modal .modal-content .pack-btn::before{
-  content:"";
-  position:absolute; left:0; top:0; bottom:0; width:6px;
-  border-radius:14px 0 0 14px;
-  background: var(--accent);
+  content:""; position:absolute; left:0; top:0; bottom:0; width:6px;
+  border-radius:14px 0 0 14px; background: var(--accent);
 }
+
+/* hover/press feel */
+@media (hover:hover){
+  .premium-modal .modal-content .pack-btn:hover{
+    box-shadow:0 16px 34px rgba(0,0,0,.16);
+  }
+}
+.premium-modal .modal-content .pack-btn:active{ transform: translateY(1px); }
 
 /* left content */
 .premium-modal .modal-content .pack-left{ text-align:left; }
-.premium-modal .modal-content .pack-title{ font-size:16px; font-weight:900; letter-spacing:.2px; color:#111; }
+.premium-modal .modal-content .pack-title{ font-size:16px; font-weight:900; color:#0f172a; }
 .premium-modal .modal-content .pack-sub{ font-size:12px; color:#666; margin-top:2px; }
 
-/* right content: price + Buy pill */
-.premium-modal .modal-content .pack-right{
-  display:flex; align-items:center; gap:10px;
-}
-.premium-modal .modal-content .pack-price{ font-size:18px; font-weight:900; color:#111; }
+/* right content: price + buy pill */
+.premium-modal .modal-content .pack-right{ display:flex; align-items:center; gap:10px; }
+.premium-modal .modal-content .pack-price{ font-size:18px; font-weight:900; color:#0f172a; }
 
-/* Buy pill uses the same accent gradient as the card’s stripe */
 .premium-modal .modal-content .pack-cta{
-  padding:6px 12px;
+  padding:6px 12px; border-radius:999px;
   background: var(--accent);
   color:#fff; font-size:13px; font-weight:800;
-  border-radius:999px;
-  box-shadow:0 3px 8px rgba(0,0,0,.14);
+  box-shadow: 0 6px 14px var(--accent-soft);
 }
 
-/* Best value: small badge, top-right */
+/* “Best value” badge — small, amber, top-right */
 .premium-modal .modal-content .best-badge{
   position:absolute; top:10px; right:12px;
-  padding:3px 10px;
-  border-radius:999px;
-  font-size:11px; font-weight:800;
-  background:#ff0a85; color:#fff;
-  box-shadow:0 2px 8px rgba(0,0,0,.12);
+  padding:3px 10px; border-radius:999px;
+  font-size:11px; font-weight:800; letter-spacing:.1px;
+  background:#f59e0b; color:#fff; box-shadow:0 2px 8px rgba(0,0,0,.12);
+}
+
+/* Close button stays neutral */
+.premium-modal .modal-content button.close-modal{
+  background:#f1f1f4 !important; color:#333 !important;
+  box-shadow:0 6px 16px rgba(0,0,0,.10);
 }
