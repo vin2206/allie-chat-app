@@ -11,10 +11,10 @@ const PACKS = [
 export default function CoinsModal({
   open,
   onClose,
-  onSuccess,            // optional (used only if we open Razorpay from here)
+  onSuccess,            // optional (used only if we open Razorpay here)
   onChoose,             // parent-driven flow (calls your buyPack)
   prefill = {},
-  createOrderForPack,   // optional server-order path if you want to open from here
+  createOrderForPack,   // optional server-order path if you want to open here
 }) {
   const [connecting, setConnecting] = useState(false);
   const timerRef = useRef(null);
@@ -33,13 +33,13 @@ export default function CoinsModal({
   if (!open) return null;
 
   async function handleBuy(pack) {
-    // Preferred: let parent handle purchase (your buyPack with server order)
+    // Preferred: let parent handle (your buyPack with server order)
     if (typeof onChoose === "function") {
       onChoose(pack.id);
       return;
     }
 
-    // Fallback: open Razorpay from here (env key or server order required)
+    // Fallback: open Razorpay from here
     clearTimeout(timerRef.current);
     setConnecting(false);
     timerRef.current = setTimeout(() => setConnecting(true), 1000);
@@ -110,4 +110,31 @@ export default function CoinsModal({
             <button
               key={p.id}
               className={`pack-btn ${p.secondary ? "secondary" : ""}`}
-              onCli
+              onClick={() => handleBuy(p)}
+            >
+              <div className="pack-left">
+                <div className="pack-title">{p.title}</div>
+                <div className="pack-sub">+{p.coins} coins</div>
+              </div>
+              <div className="pack-right">
+                <div className="pack-price">₹{p.priceInr}</div>
+                <div className="pack-cta">Buy</div>
+              </div>
+              {p.best ? <div className="best-badge">{p.best}</div> : null}
+            </button>
+          ))}
+        </div>
+
+        {/* “Connecting…” helper (only shows if this component opens Razorpay) */}
+        {connecting && (
+          <div className="rzp-status">
+            <div className="rzp-spinner" />
+            <span>Connecting to Razorpay…</span>
+          </div>
+        )}
+
+        <button className="close-modal" onClick={onClose} aria-label="Close">Close</button>
+      </div>
+    </div>
+  );
+}
