@@ -4,6 +4,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './ChatUI.css';
 import { startVersionWatcher } from './versionWatcher';
+// Razorpay warm-up + standalone coins modal
+import CoinsModal from './components/CoinsModal';
+import { prewarmRazorpay } from './lib/razorpay';
 // --- small utility ---
 function debounce(fn, wait = 120) {
   let t;
@@ -315,6 +318,8 @@ const [coins, setCoins] = useState(loadCoins());
 // Layout chooser: Android → 'stable' (scrollable, no black band); others → 'fixed'
 const IS_ANDROID = /Android/i.test(navigator.userAgent);
 const [layoutClass] = useState(IS_ANDROID ? 'stable' : 'fixed');
+  // Warm Razorpay early so checkout feels instant
+useEffect(() => { prewarmRazorpay().catch(() => {}); }, []);
 
 // Show instructions every time the chat page opens,
 // but award +100 coins only the first time for this user.
@@ -1392,7 +1397,7 @@ if (!user) {
           
   <button
   className="coin-pill"
-  onClick={isOwner ? () => {} : openCoins}
+  onClick={isOwner ? () => {} : () => { openCoins(); prewarmRazorpay(); }}
   title={isOwner ? "Owner: unlimited" : "Your balance (tap to buy coins)"}
   aria-label="Coins"
 >
@@ -1565,53 +1570,15 @@ if (!user) {
   <div ref={bottomRef} className="bottom-sentinel" />
 </div>
 
-      {showCoins && (
-  <div className="premium-modal" onClick={closeCoins}>
-    <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-
-      <h3 className="coins-modal-title">Need more time with Shraddha?</h3>
-      <div className="coins-sub">Unlock roleplay models — Wife · Girlfriend · Bhabhi · Ex-GF</div>
-
-      <p style={{marginTop:4}}>Balance: <b>{coins}</b> coins</p>
-
-      <div className="rate-chips">
-        <div className="rate-chip">Text = {TEXT_COST} coins</div>
-        <div className="rate-chip">Voice = {VOICE_COST} coins</div>
-      </div>
-
-      <div className="packs">
-        <button className="pack-btn" onClick={() => buyPack(DAILY_PACK)}>
-          <div className="pack-left">
-            <div className="pack-title">Daily Recharge</div>
-            <div className="pack-sub">+{DAILY_PACK.coins} coins</div>
-          </div>
-          <div className="pack-right">
-            <div className="price">₹{DAILY_PACK.price}</div>
-          </div>
-        </button>
-
-        <button className="pack-btn secondary" onClick={() => buyPack(WEEKLY_PACK)}>
-          <div className="pack-left">
-            <div className="pack-title">Weekly Recharge</div>
-            <div className="pack-sub">+{WEEKLY_PACK.coins} coins</div>
-          </div>
-          <div className="pack-right">
-            <span className="best-tag">Best value</span>
-            <div className="price">₹{WEEKLY_PACK.price}</div>
-          </div>
-        </button>
-      </div>
-
-      <div className="renew-note">
-        Recharge anytime with secure Razorpay Checkout.
-      </div>
-
-      <button onClick={closeCoins} className="cancel-btn" style={{marginTop:12}}>
-        Maybe Later
-      </button>
-    </div>
-  </div>
-)}
+      <CoinsModal
+  open={showCoins}
+  onClose={closeCoins}
+  prefill={{ name: user?.name, email: user?.email, contact: user?.phone }}
+  onChoose={(packId) => {
+    if (packId === 'daily')  return buyPack(DAILY_PACK);
+    if (packId === 'weekly') return buyPack(WEEKLY_PACK);
+  }}
+/>
 
       <ConfirmDialog
   open={confirmState.open}
