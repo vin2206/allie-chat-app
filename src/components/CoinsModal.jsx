@@ -11,35 +11,35 @@ const PACKS = [
 export default function CoinsModal({
   open,
   onClose,
-  onSuccess,
-  onChoose,             // <-- parent-driven flow (uses your buyPack)
+  onSuccess,            // optional (used only if we open Razorpay from here)
+  onChoose,             // parent-driven flow (calls your buyPack)
   prefill = {},
-  createOrderForPack,   // optional server-order path
+  createOrderForPack,   // optional server-order path if you want to open from here
 }) {
   const [connecting, setConnecting] = useState(false);
   const timerRef = useRef(null);
 
-  // Only used if we open Razorpay directly from the client
+  // Only needed if we open Razorpay directly from the client
   const keyId = useMemo(
     () => (process.env.REACT_APP_RAZORPAY_KEY_ID || window.__RZP_KEY__ || "").trim(),
     []
   );
 
   useEffect(() => {
-    if (open) prewarmRazorpay();
+    if (open) prewarmRazorpay(); // warm SDK when modal opens
     return () => clearTimeout(timerRef.current);
   }, [open]);
 
   if (!open) return null;
 
   async function handleBuy(pack) {
-    // If parent supplied onChoose, let parent handle (your buyPack)
+    // Preferred: let parent handle purchase (your buyPack with server order)
     if (typeof onChoose === "function") {
       onChoose(pack.id);
       return;
     }
 
-    // Otherwise open Razorpay right here (env key required)
+    // Fallback: open Razorpay from here (env key or server order required)
     clearTimeout(timerRef.current);
     setConnecting(false);
     timerRef.current = setTimeout(() => setConnecting(true), 1000);
@@ -50,7 +50,7 @@ export default function CoinsModal({
         name: "BuddyBy",
         description: pack.title,
         currency: "INR",
-        amount: pack.priceInr * 100,        // paise
+        amount: pack.priceInr * 100, // paise
         notes: { pack: pack.id, coins: pack.coins },
         prefill,
         theme: { color: "#ff0a85" },
@@ -88,6 +88,7 @@ export default function CoinsModal({
   return (
     <div className="premium-modal" onClick={onClose}>
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+        {/* Tiny scoped CSS for spinner */}
         <style>{`
           .rzp-status { display:flex; align-items:center; justify-content:center; gap:8px; margin-top:10px; color:#666; font-size:13px; }
           .rzp-spinner { width:14px; height:14px; border-radius:50%; border:2px solid rgba(0,0,0,.18); border-top-color: rgba(0,0,0,.6); animation: rzpSpin 1s linear infinite; }
@@ -97,19 +98,16 @@ export default function CoinsModal({
         <h3 className="coins-modal-title">Need more time with Shraddha?</h3>
         <div className="coins-sub">Unlock roleplay models — Wife · Girlfriend · Bhabhi · Ex-GF</div>
 
+        {/* Rates */}
         <div className="rate-chips" style={{ marginTop: 8 }}>
           <div className="rate-chip">Text = 10 coins</div>
           <div className="rate-chip">Voice = 18 coins</div>
         </div>
 
+        {/* Packs */}
         <div className="packs">
           {PACKS.map((p) => (
             <button
               key={p.id}
               className={`pack-btn ${p.secondary ? "secondary" : ""}`}
-              onClick={() => handleBuy(p)}
-            >
-              <div className="pack-left">
-                <div className="pack-title">{p.title}</div>
-                <div className="pack-sub">+{p.coins} coins</div>
-              </div>
+              onCli
