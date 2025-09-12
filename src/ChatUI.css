@@ -1121,70 +1121,79 @@ html:not(.ime-open) .App.stable .footer .mic-btn {
   transform: translateY(-4vh);
 }
 
-/* === Coins popup polish — pass 2 (your exact asks) === */
-:root{ --bb-grad: linear-gradient(135deg,#ff6ec4,#7873f5); --bb-pink:#ff0a85; }
-
-/* 5) Modal a touch wider/taller + deeper shadow */
-.premium-modal .modal-content{
-  width: min(95vw, 500px);
-  padding: 24px 20px 18px;
-  border-radius: 20px;
-  box-shadow: 0 28px 80px rgba(0,0,0,.42);
+/* ==== Coins popup — apply EXACT spec ==== */
+:root{
+  --bb-grad: linear-gradient(135deg,#ff6ec4,#7873f5);
+  --bb-pink: #ff0a85;
 }
 
-/* 1) Same gradient on both cards + 5) stronger floating shadow */
+/* Bigger popup (wider + taller) with deeper shadow */
+.premium-modal .modal-content{
+  width: min(96vw, 520px);
+  padding: 24px 22px 24px;          /* extra bottom space for Razorpay line */
+  border-radius: 20px;
+  box-shadow: 0 28px 82px rgba(0,0,0,.42);
+}
+
+/* Hot-pink headline stays */
+.premium-modal .coins-modal-title{ color: var(--bb-pink); }
+
+/* Shared gradient on BOTH cards + strong floating shadows */
 .premium-modal .pack-btn,
 .premium-modal .pack-btn.secondary{
-  background: var(--bb-grad) !important;  /* shared gradient */
+  display:flex; align-items:center; justify-content:space-between;
+  width:100%;
+  padding: 18px 16px 16px;
+  background: var(--bb-grad) !important;
   color:#fff !important;
   border:0; border-radius:18px;
-  padding: 18px 16px 16px;
-  box-shadow: 0 24px 56px rgba(0,0,0,.30);
+  box-shadow: 0 22px 54px rgba(0,0,0,.30);
 }
 
-/* 2) Keep titles on one line (no wrap) */
-.premium-modal .pack-left{ flex:1 1 auto; min-width:0; }
+/* Left text block exactly as before (title + coin line + price) */
+.premium-modal .pack-left{ text-align:left; flex: 1 1 auto; min-width:0; }
 .premium-modal .pack-title{
-  color:#fff;
-  font-size: 15.5px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  color:#fff; font-weight:900; font-size:16px;
+  white-space: nowrap; overflow:hidden; text-overflow:ellipsis; /* keep on one line */
 }
-.premium-modal .pack-price{
-  color:#fff; font-size:19px; font-weight:900;  /* 1–2px smaller */
-}
-.premium-modal .pack-right{ position: relative; flex-shrink: 0; gap: 8px; }
+.premium-modal .pack-sub{ color:#fff; opacity:.92; }
 
-/* 3) Lighter Buy pill (not black) */
+/* Price + Buy anchored on the RIGHT, horizontally aligned */
+.premium-modal .pack-right{
+  margin-left:auto; display:flex; align-items:center; gap:10px;
+  min-width: fit-content; position: relative;        /* for Best value badge */
+}
+.premium-modal .pack-price{ color:#fff; font-weight:900; font-size:19px; }
+
+/* Light Buy pill (not dark) */
 .premium-modal .pack-cta{
-  background:#fff;
-  color:#111;
-  font-weight:800;
-  font-size:12.5px;                  /* slightly smaller */
-  padding:7px 12px; min-width:62px;  /* slightly narrower */
-  border-radius:999px;
-  box-shadow:0 8px 18px rgba(0,0,0,.20);
+  order: 2;
+  padding:7px 14px; min-width:68px; text-align:center;
+  border-radius:999px; background:#fff; color:#111; font-weight:800;
+  box-shadow: 0 8px 18px rgba(0,0,0,.20);
 }
 
-/* 3b) “Best value” small & above Buy, inside Weekly card */
-.premium-modal .best-badge{ display:none !important; } /* hide old badge if present */
+/* Smaller “Best value” badge — ONLY on Weekly, directly above Buy */
 .premium-modal .pack-btn.secondary .pack-right::before{
   content:"Best value";
-  position:absolute; right:0; top:-6px; transform:translateY(-100%);
+  position:absolute; right:0; bottom: calc(100% + 6px);
   padding:3px 8px; border-radius:999px;
-  font-size:10px; font-weight:800;
-  background:#ffd166; color:#2b2b2b;
-  box-shadow:0 3px 10px rgba(0,0,0,.18);
+  font-size:10.5px; font-weight:800; letter-spacing:.1px;
+  background:#ffd166; color:#2b2b2b; box-shadow:0 3px 10px rgba(0,0,0,.18);
 }
 
-/* 4) Razorpay line above Close (no extra markup required) */
+/* Thin Razorpay line ABOVE Close, never overlapping */
 .premium-modal .modal-content button.close-modal{
-  position: relative; margin-top: 6px;
+  background:#f1f1f4 !important; color:#333 !important;  /* neutral Close */
+  border-radius:12px; font-weight:700;
+  box-shadow:0 8px 20px rgba(0,0,0,.12);
+  margin-top: 26px;                                      /* reserve space */
+  position: relative; padding-top: 0;
 }
 .premium-modal .modal-content button.close-modal::before{
-  content: "Secure payment by Razorpay";
-  position: absolute; left:0; right:0; top:-14px;
+  content:"Secure payment by Razorpay";
+  display:block;
+  position:absolute; left:0; right:0; top:-18px;
   text-align:center; font-size:12px; color:#6b7280;
   padding-top:10px; border-top:1px solid #e9e9ee;
 }
