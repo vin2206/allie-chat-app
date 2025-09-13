@@ -5,7 +5,7 @@ import { prewarmRazorpay, openRazorpay } from "../lib/razorpay";
 // Packs (match your UI/prices)
 const PACKS = [
   { id: "daily",  title: "Daily Recharge",  coins: 420,  priceInr: 49,  secondary: false },
-  { id: "weekly", title: "Weekly Recharge", coins: 2000, priceInr: 199, secondary: true, best: "Best value" },
+  { id: "weekly", title: "Weekly Recharge", coins: 2000, priceInr: 199, secondary: true },
 ];
 
 export default function CoinsModal({
@@ -120,7 +120,6 @@ export default function CoinsModal({
                 <div className="pack-price">₹{p.priceInr}</div>
                 <div className="pack-cta">Buy</div>
               </div>
-              {p.best ? <div className="best-badge">{p.best}</div> : null}
             </button>
           ))}
         </div>
@@ -134,6 +133,7 @@ export default function CoinsModal({
         )}
 
         <button className="close-modal" onClick={onClose} aria-label="Close">Close</button>
+        <div className="rzp-foot">Secure payment by Razorpay</div>
       </div>
     </div>
   );
