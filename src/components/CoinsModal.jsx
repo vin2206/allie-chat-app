@@ -15,6 +15,7 @@ export default function CoinsModal({
   onChoose,             // parent-driven flow (calls your buyPack)
   prefill = {},
   createOrderForPack,   // optional server-order path if you want to open here
+  busy = false,
 }) {
   const [connecting, setConnecting] = useState(false);
   const timerRef = useRef(null);
@@ -90,10 +91,11 @@ export default function CoinsModal({
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
         {/* Tiny scoped CSS for spinner */}
         <style>{`
-          .rzp-status { display:flex; align-items:center; justify-content:center; gap:8px; margin-top:10px; color:#666; font-size:13px; }
-          .rzp-spinner { width:14px; height:14px; border-radius:50%; border:2px solid rgba(0,0,0,.18); border-top-color: rgba(0,0,0,.6); animation: rzpSpin 1s linear infinite; }
-          @keyframes rzpSpin { to { transform: rotate(360deg); } }
-        `}</style>
+  .rzp-status { display:flex; align-items:center; justify-content:center; gap:8px; margin-top:10px; color:#666; font-size:13px; }
+  .rzp-spinner { width:14px; height:14px; border-radius:50%; border:2px solid rgba(0,0,0,.18); border-top-color: rgba(0,0,0,.6); animation: rzpSpin 1s linear infinite; }
+  @keyframes rzpSpin { to { transform: rotate(360deg); } }
+  .pack-btn:disabled { opacity: .6; pointer-events: none; }
+`}</style>
 
         <h3 className="coins-modal-title">Need more time with Shraddha?</h3>
         <div className="coins-sub">Unlock roleplay models — Wife · Girlfriend · Bhabhi · Ex-GF</div>
@@ -111,6 +113,7 @@ export default function CoinsModal({
               key={p.id}
               className={`pack-btn ${p.secondary ? "secondary" : ""}`}
               onClick={() => handleBuy(p)}
+              disabled={busy}
             >
               <div className="pack-left">
                 <div className="pack-title">{p.title}</div>
@@ -125,12 +128,12 @@ export default function CoinsModal({
         </div>
 
         {/* “Connecting…” helper (only shows if this component opens Razorpay) */}
-        {connecting && (
-          <div className="rzp-status">
-            <div className="rzp-spinner" />
-            <span>Connecting to Razorpay…</span>
-          </div>
-        )}
+        {(busy || connecting) && (
+  <div className="rzp-status">
+    <div className="rzp-spinner" />
+    <span>Connecting to Razorpay…</span>
+  </div>
+)}
 
         <button className="close-modal" onClick={onClose} aria-label="Close">Close</button>
         <div className="rzp-foot">Secure payment by Razorpay</div>
