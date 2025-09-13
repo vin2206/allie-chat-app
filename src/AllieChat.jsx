@@ -314,6 +314,13 @@ const [welcomeDefaultStep, setWelcomeDefaultStep] = useState(0);
 const [coins, setCoins] = useState(0);
   // server-driven wallet
 const [wallet, setWallet] = useState({ coins: 0, expires_at: 0, welcome_claimed: false });
+  // --- NEW: wallet load gate + welcome "seen once" helpers ---
+const [walletReady, setWalletReady] = useState(false);
+
+// Use your existing helper to build a stable key per user
+const welcomeSeenKey = user ? welcomeKeyFor(user.sub || user.email || 'anon') : null;
+const hasSeenWelcome = () => !!(welcomeSeenKey && localStorage.getItem(welcomeSeenKey));
+const markWelcomeSeen = () => { if (welcomeSeenKey) localStorage.setItem(welcomeSeenKey, '1'); };
 const [ttl, setTtl] = useState(''); // formatted countdown
 // Layout chooser: Android → 'stable' (scrollable, no black band); others → 'fixed'
 const IS_ANDROID = /Android/i.test(navigator.userAgent);
@@ -321,15 +328,15 @@ const [layoutClass] = useState(IS_ANDROID ? 'stable' : 'fixed');
   // Warm Razorpay early so checkout feels instant
 useEffect(() => { prewarmRazorpay().catch(() => {}); }, []);
 
-// Show the welcome modal on every open.
-// Step 0 (Bonus) only if the server hasn't marked it claimed yet.
+// --- NEW: Show Welcome only once per user, and only after wallet is loaded ---
 useEffect(() => {
-  if (!user) return;
-  // refreshWallet() already runs on [user]; when it resolves, wallet updates
+  if (!user || !walletReady) return;
+  if (hasSeenWelcome()) return; // already seen → never show again
+
   const claimed = !!wallet?.welcome_claimed;
   setWelcomeDefaultStep(claimed ? 1 : 0);
   setShowWelcome(true);
-}, [user, wallet?.welcome_claimed]);
+}, [user, walletReady, wallet?.welcome_claimed]);
   function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
 
 function getOpener(mode, type) {
@@ -499,12 +506,32 @@ function formatTTL(ms){
 
 async function refreshWallet(){
   if (!user) return;
-  const r = await fetch(`${BACKEND_BASE}/wallet`, { headers: authHeaders(user) });
-  const data = await r.json();
-  if (data?.ok) {
-  setWallet(data.wallet);
-  setCoins(Number(data.wallet.coins || 0));  // source of truth = server
-}
+  try {
+    const r = await fetch(`${BACKEND_BASE}/wallet`, { headers: authHeaders(user) });
+
+    if (r.status === 401 || r.status === 403) {
+      // Session expired → force sign-in again (matches your chat 401 handler)
+      alert('Session expired. Please sign in again.');
+      localStorage.removeItem('user_v1');
+      setWalletReady(false);
+      window.location.reload();
+      return;
+    }
+
+    const data = await r.json();
+    if (data?.ok) {
+      setWallet(data.wallet);
+      setCoins(Number(data.wallet.coins || 0));  // source of truth = server
+      setWalletReady(true);
+    } else {
+      // Don’t block the UI forever; just proceed without opening Welcome
+      setWalletReady(true);
+    }
+  } catch (e) {
+    console.error('refreshWallet failed:', e);
+    // Network/CORS hiccup → proceed without Welcome to avoid fake “+100”
+    setWalletReady(true);
+  }
 }
 
 useEffect(() => { refreshWallet(); }, [user]);
@@ -1575,7 +1602,11 @@ if (!user) {
  {/* show Character popup after instructions */}
 <WelcomeFlow
   open={showWelcome}
-  onClose={() => { setShowWelcome(false); setShowCharPopup(true); }}
+  onClose={() => {
+    setShowWelcome(false);
+    markWelcomeSeen();          // <-- NEW: remember we showed it once
+    setShowCharPopup(true);
+  }}
   amount={100}
   defaultStep={welcomeDefaultStep}
 />
