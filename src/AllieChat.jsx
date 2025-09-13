@@ -664,6 +664,9 @@ useEffect(() => {
   return () => clearInterval(t);
 }, [wallet.expires_at]);
 const [showCoins, setShowCoins] = useState(false);
+  // Razorpay UI/flow helpers
+const [isPaying, setIsPaying] = useState(false);  // drives "Connecting…" and disables buttons
+const [orderCache, setOrderCache] = useState({}); // { daily: {...}, weekly: {...} }
 const [autoRenew] = useState(loadAuto()); // setter not needed
 useEffect(() => saveAuto(autoRenew), [autoRenew]);
   // Auto-unlock Owner mode if signed-in email matches
@@ -676,31 +679,53 @@ const openCoins = () => setShowCoins(true);
 const closeCoins = () => setShowCoins(false);
   async function buyPack(pack){
   if (!user) return;
+
+  // show "Connecting…" immediately
+  setIsPaying(true);
+
   try {
     await ensureRazorpay();
-    const resp = await fetch(`${BACKEND_BASE}/order/${pack.id}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', ...authHeaders(user) },
-      body: JSON.stringify({ userEmail: (user.email||'').toLowerCase(), userSub: user.sub })
-    });
-    const data = await resp.json();
-    if (!data.ok) throw new Error(data?.error || 'order_failed');
 
+    // Use pre-created order if available; otherwise create now
+    let ord = orderCache[pack.id];
+    if (!ord) {
+      const resp = await fetch(`${BACKEND_BASE}/order/${pack.id}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...authHeaders(user) },
+        body: JSON.stringify({ userEmail: (user.email||'').toLowerCase(), userSub: user.sub })
+      });
+      const data = await resp.json();
+      if (!data?.ok) throw new Error(data?.error || 'order_failed');
+      ord = data;
+      setOrderCache(prev => ({ ...prev, [pack.id]: { ...data, at: Date.now() } }));
+    }
+
+    // Build Razorpay options (prefill everything to skip extra steps)
     const rzp = new window.Razorpay({
-      key: data.key_id,
-      amount: data.amount,
-      currency: data.currency,
+      key: ord.key_id,
+      amount: ord.amount,
+      currency: ord.currency,
       name: 'BuddyBy',
       description: `Shraddha ${pack.label}`,
-      order_id: data.order_id,
-      prefill: { email: (user.email||'') },
+      order_id: ord.order_id,
+      prefill: {
+        name: user?.name || '',
+        email: (user?.email || '').toLowerCase(),
+        contact: user?.phone || ''   // if you don’t have it, empty is fine
+      },
       theme: { color: '#ff3fb0' },
+      modal: {
+        ondismiss: () => {
+          // user closed the Razorpay window → clear "Connecting…"
+          setIsPaying(false);
+        }
+      },
       handler: async (resp) => {
         try {
           const v = await fetch(`${BACKEND_BASE}/verify-order`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', ...authHeaders(user) },
-            body: JSON.stringify(resp) // { order_id, payment_id, signature }
+            body: JSON.stringify(resp) // { razorpay_order_id, razorpay_payment_id, razorpay_signature }
           });
           const out = await v.json();
           if (out?.ok) {
@@ -712,13 +737,19 @@ const closeCoins = () => setShowCoins(false);
           }
         } catch {
           alert('Could not verify yet; webhook will credit shortly.');
+        } finally {
+          // success path → clear "Connecting…"
+          setIsPaying(false);
         }
       }
     });
-    rzp.open();
+
+    rzp.open(); // opens immediately thanks to prewarmed SDK + pre-created order
   } catch (e) {
     console.error('Checkout failed, falling back to Payment Link:', e.message);
-    // Fallback to old Payment Link flow (already works)
+    setIsPaying(false);  // clear state before fallback
+
+    // Fallback to old Payment Link flow (unchanged)
     try {
       const resp = await fetch(`${BACKEND_BASE}/buy/${pack.id}`, {
         method: 'POST',
@@ -738,6 +769,32 @@ const closeCoins = () => setShowCoins(false);
   }
 }
   const [cooldown, setCooldown] = useState(false);
+
+  // Pre-create Razorpay orders as soon as the Coins modal opens (so click opens instantly)
+useEffect(() => {
+  if (!showCoins || !user) return;
+  prewarmRazorpay().catch(() => {});
+  const packs = ['daily', 'weekly'];
+
+  packs.forEach(async (id) => {
+    if (orderCache[id]) return; // already cached
+
+    try {
+      const resp = await fetch(`${BACKEND_BASE}/order/${id}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...authHeaders(user) },
+        body: JSON.stringify({ userEmail: (user.email||'').toLowerCase(), userSub: user.sub })
+      });
+      const data = await resp.json();
+      if (data?.ok) {
+        setOrderCache(prev => ({ ...prev, [id]: { ...data, at: Date.now() } }));
+      }
+    } catch (e) {
+      // ignore; we'll fall back to creating on click
+      console.warn('precreate order failed:', id, e?.message);
+    }
+  });
+}, [showCoins, user]);
   // --- Roleplay wiring (Step 1) ---
 const [roleMode, setRoleMode] = useState('stranger');
 const [roleType, setRoleType] = useState(null);
@@ -1673,6 +1730,7 @@ if (!user) {
     if (packId === 'daily')  return buyPack(DAILY_PACK);
     if (packId === 'weekly') return buyPack(WEEKLY_PACK);
   }}
+  busy={isPaying}
 />
 
       <ConfirmDialog
