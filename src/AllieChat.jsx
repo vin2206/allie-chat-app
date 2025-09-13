@@ -22,6 +22,62 @@ const parseJwt = (t) => {
   const b64 = base.replace(/-/g, '+').replace(/_/g, '/').padEnd(Math.ceil(base.length / 4) * 4, '=');
   return JSON.parse(atob(b64));
 };
+// --- Silent re-auth helpers ---
+let __idRefreshTimer = null;
+
+// Wait until GIS is available (shared)
+const ensureGisLoaded = () =>
+  new Promise((resolve, reject) => {
+    if (window.google?.accounts?.id) return resolve();
+    const start = Date.now();
+    const t = setInterval(() => {
+      if (window.google?.accounts?.id) {
+        clearInterval(t); resolve();
+      } else if (Date.now() - start > 8000) {
+        clearInterval(t); reject(new Error('GIS load timeout'));
+      }
+    }, 50);
+  });
+
+// Schedule a refresh ~5 min before token expiry
+function scheduleIdRefresh(u) {
+  try {
+    if (!u?.idToken) return;
+    if (__idRefreshTimer) clearTimeout(__idRefreshTimer);
+    const { exp } = parseJwt(u.idToken);               // seconds
+    const msLeft   = exp * 1000 - Date.now();
+    const fireIn   = Math.max(60_000, msLeft - 5 * 60_000); // min 1 min
+    __idRefreshTimer = setTimeout(() => {
+      // Triggers our GIS callback without interrupting UI (auto_select)
+      window.google?.accounts?.id?.prompt();
+    }, fireIn);
+  } catch {}
+}
+
+// Initialize GIS for background credential refresh (no UI)
+function enableSilentReauth(clientId, setUser) {
+  window.google.accounts.id.initialize({
+    client_id: clientId,
+    auto_select: true,                // allows quiet refresh if user already chose an account
+    callback: (res) => {
+      try {
+        const p = parseJwt(res.credential);
+        const next = {
+          name: p.name || '',
+          email: (p.email || '').toLowerCase(),
+          sub: p.sub,
+          picture: p.picture || '',
+          idToken: res.credential
+        };
+        saveUser(next);
+        setUser(next);               // updates headers everywhere
+        scheduleIdRefresh(next);     // re-arm the next refresh
+      } catch (e) {
+        console.error('silent re-auth parse failed', e);
+      }
+    }
+  });
+}
 async function ensureRazorpay() {
   if (window.Razorpay) return true;
   await new Promise((resolve, reject) => {
@@ -137,6 +193,7 @@ if (!document.querySelector('script[src*="gsi/client"]')) {
         if (cancelled) return;
         window.google.accounts.id.initialize({
           client_id: GOOGLE_CLIENT_ID,
+           auto_select: true, 
           callback: (res) => {
             try {
               const p = parseJwt(res.credential);
@@ -304,6 +361,33 @@ function CharacterPopup({ open, roleMode, roleType, onClose }) {
 function AllieChat() {
   // NEW: auth + welcome
 const [user, setUser] = useState(loadUser());
+  // --- Silent re-auth: keep ID token fresh without UI ---
+useEffect(() => {
+  if (!user) return;
+
+  // Ensure the GIS script exists (in case AuthGate is unmounted now)
+  if (!document.querySelector('script[src*="gsi/client"]')) {
+    const s = document.createElement('script');
+    s.src = 'https://accounts.google.com/gsi/client';
+    s.async = true; s.defer = true;
+    document.head.appendChild(s);
+  }
+
+  let cancelled = false;
+  ensureGisLoaded()
+    .then(() => {
+      if (cancelled) return;
+      enableSilentReauth(GOOGLE_CLIENT_ID, setUser);  // set up background refresh
+      scheduleIdRefresh(user);                        // arm the first timer
+    })
+    .catch(() => { /* ignore; fallback is existing 401 handler */ });
+
+  return () => {
+    cancelled = true;
+    if (__idRefreshTimer) { clearTimeout(__idRefreshTimer); __idRefreshTimer = null; }
+  };
+  // Re-arm whenever we get a new token
+}, [user?.idToken]);
   useEffect(() => {
   const stop = startVersionWatcher(60000);
   return stop;
