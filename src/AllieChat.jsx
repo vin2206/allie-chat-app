@@ -73,7 +73,6 @@ const bumpVoiceUsed = (paid, u) => {
 };
 
 // localStorage helpers
-const COIN_KEY = 'coins_v1';
 const AUTORENEW_KEY = 'autorenew_v1'; // {daily:bool, weekly:bool}
 // --- NEW: lightweight auth (local only) ---
 const USER_KEY = 'user_v1';
@@ -84,8 +83,6 @@ const loadUser = () => {
   catch { return null; }
 };
 const saveUser = (u) => localStorage.setItem(USER_KEY, JSON.stringify(u));
-const loadCoins = () => Number(localStorage.getItem(COIN_KEY) || 0);
-const saveCoins = (n) => localStorage.setItem(COIN_KEY, String(Math.max(0, n|0)));
 const loadAuto = () => {
   try { return JSON.parse(localStorage.getItem(AUTORENEW_KEY)) || { daily:false, weekly:false }; }
   catch { return { daily:false, weekly:false }; }
@@ -314,32 +311,25 @@ const [user, setUser] = useState(loadUser());
 const [showWelcome, setShowWelcome] = useState(false);
 const [showCharPopup, setShowCharPopup] = useState(false);
 const [welcomeDefaultStep, setWelcomeDefaultStep] = useState(0);
-const [coins, setCoins] = useState(loadCoins());
+const [coins, setCoins] = useState(0);
+  // server-driven wallet
+const [wallet, setWallet] = useState({ coins: 0, expires_at: 0, welcome_claimed: false });
+const [ttl, setTtl] = useState(''); // formatted countdown
 // Layout chooser: Android → 'stable' (scrollable, no black band); others → 'fixed'
 const IS_ANDROID = /Android/i.test(navigator.userAgent);
 const [layoutClass] = useState(IS_ANDROID ? 'stable' : 'fixed');
   // Warm Razorpay early so checkout feels instant
 useEffect(() => { prewarmRazorpay().catch(() => {}); }, []);
 
-// Show instructions every time the chat page opens,
-// but award +100 coins only the first time for this user.
+// Show the welcome modal on every open.
+// Step 0 (Bonus) only if the server hasn't marked it claimed yet.
 useEffect(() => {
   if (!user) return;
-  const id = user.sub || user.email; // prefer sub, else email
-  const wk = welcomeKeyFor(id);
-  const hasClaimed = !!localStorage.getItem(wk);
-
-  if (!hasClaimed) {
-    setCoins(c => c + 100);
-    localStorage.setItem(wk, '1');
-  }
-
-  // Open the modal on every open of the chat page:
-  // - If bonus was just claimed → show Bonus first (step 0)
-  // - If already claimed → jump straight to Instructions (step 1)
-  setWelcomeDefaultStep(hasClaimed ? 1 : 0);
+  // refreshWallet() already runs on [user]; when it resolves, wallet updates
+  const claimed = !!wallet?.welcome_claimed;
+  setWelcomeDefaultStep(claimed ? 1 : 0);
   setShowWelcome(true);
-}, [user]);
+}, [user, wallet?.welcome_claimed]);
   function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
 
 function getOpener(mode, type) {
@@ -497,9 +487,6 @@ useEffect(() => {
     document.removeEventListener('keydown', onEsc);
   };
 }, [showEmoji]);
-  // server-driven wallet
-const [wallet, setWallet] = useState({ coins: loadCoins(), expires_at: 0 });
-const [ttl, setTtl] = useState(''); // formatted countdown
 
 function formatTTL(ms){
   if (!ms || ms <= 0) return 'Expired';
@@ -515,10 +502,9 @@ async function refreshWallet(){
   const r = await fetch(`${BACKEND_BASE}/wallet`, { headers: authHeaders(user) });
   const data = await r.json();
   if (data?.ok) {
-    setWallet(data.wallet);
-    // Keep local welcome bonus if server wallet is still 0
-  setCoins(c => Math.max(c, Number(data.wallet.coins || 0)));
-  }
+  setWallet(data.wallet);
+  setCoins(Number(data.wallet.coins || 0));  // source of truth = server
+}
 }
 
 useEffect(() => { refreshWallet(); }, [user]);
@@ -568,7 +554,6 @@ useEffect(() => {
 }, [wallet.expires_at]);
 const [showCoins, setShowCoins] = useState(false);
 const [autoRenew] = useState(loadAuto()); // setter not needed
-useEffect(() => saveCoins(coins), [coins]);
 useEffect(() => saveAuto(autoRenew), [autoRenew]);
   // Auto-unlock Owner mode if signed-in email matches
 useEffect(() => {
@@ -942,7 +927,6 @@ const sendVoiceBlob = async (blob) => {
         sender: 'allie',
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       }]);
-      if (!isOwner) setCoins(c => Math.max(0, c - TEXT_COST));
     }
   } catch (e) {
     console.error('Voice upload failed:', e);
