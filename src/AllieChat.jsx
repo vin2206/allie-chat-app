@@ -484,7 +484,7 @@ const scrollToBottomNow = (force = false) => {
 const [roleplayNeedsPremium, setRoleplayNeedsPremium] = useState(true);
 
 useEffect(() => {
-  fetch(`${BACKEND_BASE}/config`)
+  fetch(`${BACKEND_BASE}/config`, { credentials: 'include' })
     .then(r => r.json())
     .then(d => setRoleplayNeedsPremium(!!d.roleplayNeedsPremium))
     .catch(() => {}); // keep safe default = true
@@ -591,16 +591,22 @@ function formatTTL(ms){
 async function refreshWallet(){
   if (!user) return;
   try {
-    const r = await fetch(`${BACKEND_BASE}/wallet`, { headers: authHeaders(user) });
+    const r = await fetch(`${BACKEND_BASE}/wallet`, { headers: authHeaders(user), credentials: 'include' });
 
     if (r.status === 401 || r.status === 403) {
-      // Session expired → force sign-in again (matches your chat 401 handler)
-      alert('Session expired. Please sign in again.');
-      localStorage.removeItem('user_v1');
-      setWalletReady(false);
-      window.location.reload();
-      return;
-    }
+  try {
+    await ensureGisLoaded();
+    window.google?.accounts?.id?.prompt(); // silent if the user already consented
+    await new Promise(res => setTimeout(res, 800));
+    const rr = await fetch(`${BACKEND_BASE}/wallet`, { headers: authHeaders(user), credentials: 'include' });
+    if (rr.ok) { const data2 = await rr.json(); setWallet(data2.wallet); setCoins(Number(data2.wallet.coins||0)); setWalletReady(true); return; }
+  } catch {}
+  alert('Session expired. Please sign in again.');
+  localStorage.removeItem('user_v1');
+  setWalletReady(false);
+  window.location.reload();
+  return;
+}
 
     const data = await r.json();
     if (data?.ok) {
@@ -635,10 +641,11 @@ useEffect(() => { refreshWallet(); }, [user]);
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...authHeaders(user) },
       body: JSON.stringify({
-        link_id, payment_id, reference_id, status, signature,
-        userEmail: (user?.email || '').toLowerCase()
-      })
-    });
+  link_id, payment_id, reference_id, status, signature,
+  userEmail: (user?.email || '').toLowerCase()
+}),
+credentials: 'include'
+});
     const data = await r.json();
     if (data?.ok) {
       setWallet(data.wallet);
@@ -692,7 +699,8 @@ const closeCoins = () => setShowCoins(false);
       const resp = await fetch(`${BACKEND_BASE}/order/${pack.id}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...authHeaders(user) },
-        body: JSON.stringify({ userEmail: (user.email||'').toLowerCase(), userSub: user.sub })
+        body: JSON.stringify({ userEmail: (user.email||'').toLowerCase(), userSub: user.sub }),
+        credentials: 'include'
       });
       const data = await resp.json();
       if (!data?.ok) throw new Error(data?.error || 'order_failed');
@@ -725,7 +733,8 @@ const closeCoins = () => setShowCoins(false);
           const v = await fetch(`${BACKEND_BASE}/verify-order`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', ...authHeaders(user) },
-            body: JSON.stringify(resp) // { razorpay_order_id, razorpay_payment_id, razorpay_signature }
+            body: JSON.stringify(resp), // { razorpay_order_id, razorpay_payment_id, razorpay_signature }
+            credentials: 'include'
           });
           const out = await v.json();
           if (out?.ok) {
@@ -752,14 +761,16 @@ const closeCoins = () => setShowCoins(false);
     // Fallback to old Payment Link flow (unchanged)
     try {
       const resp = await fetch(`${BACKEND_BASE}/buy/${pack.id}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userEmail: (user.email||'').toLowerCase(),
-          userSub: user.sub,
-          returnUrl: `${window.location.origin}/payment/thanks`
-        })
-      });
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    userEmail: (user.email||'').toLowerCase(),
+    userSub: user.sub,
+    returnUrl: `${window.location.origin}/payment/thanks`
+  }),
+  credentials: 'include'
+});
+
       const data = await resp.json();
       if (data?.ok) window.location.href = data.short_url;
       else alert('Could not start payment: ' + (data?.error || e.message));
@@ -781,10 +792,12 @@ useEffect(() => {
 
     try {
       const resp = await fetch(`${BACKEND_BASE}/order/${id}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...authHeaders(user) },
-        body: JSON.stringify({ userEmail: (user.email||'').toLowerCase(), userSub: user.sub })
-      });
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json', ...authHeaders(user) },
+  body: JSON.stringify({ userEmail: (user.email||'').toLowerCase(), userSub: user.sub }),
+  credentials: 'include'
+});
+
       const data = await resp.json();
       if (data?.ok) {
         setOrderCache(prev => ({ ...prev, [id]: { ...data, at: Date.now() } }));
@@ -1062,7 +1075,36 @@ const sendVoiceBlob = async (blob) => {
     fd.append('roleType', roleType || 'stranger');
     if (shouldResetRef.current) { fd.append('reset', 'true'); shouldResetRef.current = false; }
 
-    const resp = await fetch(`${BACKEND_BASE}/chat`, { method: 'POST', headers: authHeaders(user), body: fd });
+    const resp = await fetch(`${BACKEND_BASE}/chat`, { method: 'POST', headers: authHeaders(user), body: fd, credentials: 'include' });
+    if (resp.status === 401) {
+  try {
+    await ensureGisLoaded();
+    window.google?.accounts?.id?.prompt();
+    await new Promise(res => setTimeout(res, 800));
+    const retry = await fetch(`${BACKEND_BASE}/chat`, {
+      method: 'POST',
+      headers: authHeaders(user),
+      body: fd,
+      credentials: 'include'
+    });
+    if (!retry.ok) throw new Error('retry failed');
+    const data = await retry.json();
+    setIsTyping(false);
+    if (data.audioUrl) {
+      const fullUrl = data.audioUrl.startsWith('http') ? data.audioUrl : `${BACKEND_BASE}${data.audioUrl}`;
+      setMessages(prev => [...prev, { audioUrl: fullUrl, sender: 'allie', time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }]);
+      if (data.wallet) setCoins(data.wallet.coins);
+      if (!isOwner) { const paid = (wallet?.expires_at || 0) > Date.now(); bumpVoiceUsed(paid, user); }
+    } else {
+      setMessages(prev => [...prev, { text: data.reply || "Hmm… Shraddha didn’t respond.", sender: 'allie', time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }]);
+    }
+    return;
+  } catch {}
+  setIsTyping(false);
+  setMessages(prev => [...prev, { text: 'Session expired. Please sign in again.', sender: 'allie' }]);
+  return;
+}
+
     const data = await resp.json();
     setIsTyping(false);
 
@@ -1072,6 +1114,7 @@ const sendVoiceBlob = async (blob) => {
         sender: 'allie',
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       }]);
+      setIsTyping(false);
       openCoins();
       return;
     }
@@ -1204,14 +1247,49 @@ const sendVoiceBlob = async (blob) => {
       const response = await fetch(`${BACKEND_BASE}/chat`, {
   method: 'POST',
   headers: { 'Content-Type': 'application/json', ...authHeaders(user) },
-  body: JSON.stringify(fetchBody)
+  body: JSON.stringify(fetchBody),
+  credentials: 'include'
 });
 if (response.status === 401) {
+  try {
+    await ensureGisLoaded();
+    window.google?.accounts?.id?.prompt();
+    await new Promise(res => setTimeout(res, 800));
+    const response2 = await fetch(`${BACKEND_BASE}/chat`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...authHeaders(user) },
+      body: JSON.stringify(fetchBody),
+      credentials: 'include'
+    });
+    if (!response2.ok) throw new Error('retry failed');
+    const data = await response2.json();
+    const currentTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    setIsTyping(false);
+if (data.audioUrl) {
+  const fullUrl = data.audioUrl.startsWith('http') ? data.audioUrl : `${BACKEND_BASE}${data.audioUrl}`;
+  setMessages(prev => [...prev, { audioUrl: fullUrl, sender: 'allie', time: currentTime }]);
+  if (data.wallet) setCoins(data.wallet.coins);
+  const paid = (wallet?.expires_at || 0) > Date.now();
+  bumpVoiceUsed(paid, user);
+} else if (data.locked) {
+  setMessages(prev => [...prev, { text: data.reply, sender: 'allie', time: currentTime }]);
+  setTimeout(() => openCoins(), 400);
+} else {
+  const reply = data.reply || "Hmm… Shraddha didn’t respond.";
+  setMessages(prev => [...prev, { text: reply, sender: 'allie', time: currentTime }]);
+  if (data.wallet) setCoins(data.wallet.coins);
+}
+
+    // continue with your existing success handling that you use for `response`
+    // e.g., setMessages(...), setIsTyping(false), etc.
+    return;
+  } catch {}
+  setIsTyping(false);
   alert('Session expired. Please sign in again.');
   localStorage.removeItem('user_v1');
   window.location.reload();
   return;
-}
+}  
       const data = await response.json();
 
       const elapsed = Date.now() - startedAt;
@@ -1240,54 +1318,96 @@ bumpVoiceUsed(paid, user); // (optional UI counter)
       }, waitMore);
 
     } catch (error) {
-      setIsTyping(false);
-      console.error('Error calling Shraddha proxy:', error);
+  setIsTyping(false);
+  console.error('Error calling Shraddha proxy:', error);
 
-      // one-shot retry (kept same)
+  // one-shot retry (cleaned)
+  try {
+    const formattedHistory = updatedMessages.map((msg) => ({
+      role: msg.sender === 'user' ? 'user' : 'assistant',
+      content: msg.text ?? (msg.audioUrl ? '🔊 (voice reply sent)' : '')
+    }));
+
+    const MAX_MSG = roleMode === 'roleplay' ? 18 : 24;
+    const trimmed = formattedHistory.slice(-MAX_MSG);
+
+    const now = new Date();
+    const fetchRetryBody = {
+      messages: trimmed,
+      clientTime: now.toLocaleTimeString('en-US', { hour12: false }),
+      clientDate: now.toLocaleDateString('en-GB'),
+      userEmail: (user?.email || '').toLowerCase(),
+      userSub: user?.sub,
+      wantVoice: !!wantVoice,
+      session_id: sessionIdWithRole,
+      roleMode,
+      roleType: roleType || 'stranger',
+    };
+    if (shouldResetRef.current) { fetchRetryBody.reset = true; shouldResetRef.current = false; }
+
+    await new Promise(r => setTimeout(r, 1200));
+    const retryResp = await fetch(`${BACKEND_BASE}/chat`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...authHeaders(user) },
+      body: JSON.stringify(fetchRetryBody),
+      credentials: 'include'
+    });
+
+    if (retryResp.status === 401) {
       try {
-        const formattedHistory = updatedMessages.map((msg) => ({
-          role: msg.sender === 'user' ? 'user' : 'assistant',
-          content: msg.text ?? (msg.audioUrl ? '🔊 (voice reply sent)' : '')
-        }));
+        await ensureGisLoaded();
+        window.google?.accounts?.id?.prompt();
+        await new Promise(res => setTimeout(res, 800));
+        const retry2 = await fetch(`${BACKEND_BASE}/chat`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', ...authHeaders(user) },
+          body: JSON.stringify(fetchRetryBody),
+          credentials: 'include'
+        });
+        if (!retry2.ok) throw new Error('retry failed');
 
-        const MAX_MSG = roleMode === 'roleplay' ? 18 : 24;
-        const trimmed = formattedHistory.slice(-MAX_MSG);
-
-        const now = new Date();
-        const fetchRetryBody = {
-  messages: trimmed,
-  clientTime: now.toLocaleTimeString('en-US', { hour12: false }),
-  clientDate: now.toLocaleDateString('en-GB'),
-  userEmail: (user?.email || '').toLowerCase(),  // ← add this
-  userSub: user?.sub,
-  wantVoice: !!wantVoice,
-  session_id: sessionIdWithRole,
-  roleMode,
-  roleType: roleType || 'stranger',
-};
-if (shouldResetRef.current) { fetchRetryBody.reset = true; shouldResetRef.current = false; }
-// (removed legacy ownerKey line)
-
-        await new Promise(r => setTimeout(r, 1200));
-        const retryResp = await fetch(`${BACKEND_BASE}/chat`, {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json', ...authHeaders(user) },
-  body: JSON.stringify(fetchRetryBody)
-});
-if (retryResp.status === 401) {
-  alert('Session expired. Please sign in again.');
-  localStorage.removeItem('user_v1');
-  window.location.reload();
-  return;
-}
-        const data = await retryResp.json();
-        const reply = data.reply || "Hmm… thoda slow tha. Ab batao?";
-        setMessages(prev => [...prev, { text: reply, sender: 'allie', time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }]);
-        if (data.wallet) setCoins(data.wallet.coins);
-      } catch {
-        setMessages(prev => [...prev, { text: 'Oops! Shraddha is quiet right now.', sender: 'allie' }]);
-      }
+        const data = await retry2.json();
+        const t = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        if (data.locked) {
+          setMessages(prev => [...prev, { text: data.reply, sender: 'allie', time: t }]);
+          setTimeout(() => openCoins(), 400);
+        } else if (data.audioUrl) {
+          const fullUrl = data.audioUrl.startsWith('http') ? data.audioUrl : `${BACKEND_BASE}${data.audioUrl}`;
+          setMessages(prev => [...prev, { audioUrl: fullUrl, sender: 'allie', time: t }]);
+          if (data.wallet) setCoins(data.wallet.coins);
+          const paid = (wallet?.expires_at || 0) > Date.now();
+          bumpVoiceUsed(paid, user);
+        } else {
+          const reply = data.reply || "Hmm… thoda slow tha. Ab batao?";
+          setMessages(prev => [...prev, { text: reply, sender: 'allie', time: t }]);
+          if (data.wallet) setCoins(data.wallet.coins);
+        }
+        return;
+      } catch {}
+      setMessages(prev => [...prev, { text: 'Session expired. Please sign in again.', sender: 'allie' }]);
+      return;
     }
+
+    const data = await retryResp.json();
+    const t = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    if (data.locked) {
+      setMessages(prev => [...prev, { text: data.reply, sender: 'allie', time: t }]);
+      setTimeout(() => openCoins(), 400);
+    } else if (data.audioUrl) {
+      const fullUrl = data.audioUrl.startsWith('http') ? data.audioUrl : `${BACKEND_BASE}${data.audioUrl}`;
+      setMessages(prev => [...prev, { audioUrl: fullUrl, sender: 'allie', time: t }]);
+      if (data.wallet) setCoins(data.wallet.coins);
+      const paid = (wallet?.expires_at || 0) > Date.now();
+      bumpVoiceUsed(paid, user);
+    } else {
+      const reply = data.reply || "Hmm… thoda slow tha. Ab batao?";
+      setMessages(prev => [...prev, { text: reply, sender: 'allie', time: t }]);
+      if (data.wallet) setCoins(data.wallet.coins);
+    }
+  } catch {
+    setMessages(prev => [...prev, { text: 'Oops! Shraddha is quiet right now.', sender: 'allie' }]);
+  }
+}
   }
 };
   
