@@ -361,33 +361,12 @@ function CharacterPopup({ open, roleMode, roleType, onClose }) {
 function AllieChat() {
   // NEW: auth + welcome
 const [user, setUser] = useState(loadUser());
-  // --- Silent re-auth: keep ID token fresh without UI ---
+const [showSigninBanner, setShowSigninBanner] = useState(false);
+ // --- Stop background Google prompts; rely on our 14-day server cookie ---
 useEffect(() => {
-  if (!user) return;
-
-  // Ensure the GIS script exists (in case AuthGate is unmounted now)
-  if (!document.querySelector('script[src*="gsi/client"]')) {
-    const s = document.createElement('script');
-    s.src = 'https://accounts.google.com/gsi/client';
-    s.async = true; s.defer = true;
-    document.head.appendChild(s);
-  }
-
-  let cancelled = false;
-  ensureGisLoaded()
-    .then(() => {
-      if (cancelled) return;
-      enableSilentReauth(GOOGLE_CLIENT_ID, setUser);  // set up background refresh
-      scheduleIdRefresh(user);                        // arm the first timer
-    })
-    .catch(() => { /* ignore; fallback is existing 401 handler */ });
-
-  return () => {
-    cancelled = true;
-    if (__idRefreshTimer) { clearTimeout(__idRefreshTimer); __idRefreshTimer = null; }
-  };
-  // Re-arm whenever we get a new token
+  if (__idRefreshTimer) { clearTimeout(__idRefreshTimer); __idRefreshTimer = null; }
 }, [user?.idToken]);
+
   useEffect(() => {
   const stop = startVersionWatcher(60000);
   return stop;
@@ -401,26 +380,21 @@ const [wallet, setWallet] = useState({ coins: 0, expires_at: 0, welcome_claimed:
   // --- NEW: wallet load gate + welcome "seen once" helpers ---
 const [walletReady, setWalletReady] = useState(false);
 
-// Use your existing helper to build a stable key per user
-const welcomeSeenKey = user ? welcomeKeyFor(user.sub || user.email || 'anon') : null;
-const hasSeenWelcome = () => !!(welcomeSeenKey && localStorage.getItem(welcomeSeenKey));
-const markWelcomeSeen = () => { if (welcomeSeenKey) localStorage.setItem(welcomeSeenKey, '1'); };
 const [ttl, setTtl] = useState(''); // formatted countdown
 // Layout chooser: Android → 'stable' (scrollable, no black band); others → 'fixed'
 const IS_ANDROID = /Android/i.test(navigator.userAgent);
 const [layoutClass] = useState(IS_ANDROID ? 'stable' : 'fixed');
   // Warm Razorpay early so checkout feels instant
 useEffect(() => { prewarmRazorpay().catch(() => {}); }, []);
+useEffect(() => { if (user) setShowSigninBanner(false); }, [user]);
 
-// --- NEW: Show Welcome only once per user, and only after wallet is loaded ---
+// --- Always show the instructions on each open/refresh (not gated on wallet) ---
 useEffect(() => {
-  if (!user || !walletReady) return;
-  if (hasSeenWelcome()) return; // already seen → never show again
-
-  const claimed = !!wallet?.welcome_claimed;
-  setWelcomeDefaultStep(claimed ? 1 : 0);
+  if (!user) return;
+  setWelcomeDefaultStep(1);   // step 1 = “How to talk to her”
   setShowWelcome(true);
-}, [user, walletReady, wallet?.welcome_claimed]);
+}, [user]);
+
   function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
 
 function getOpener(mode, type) {
@@ -593,69 +567,26 @@ async function refreshWallet(){
   try {
     const r = await fetch(`${BACKEND_BASE}/wallet`, { headers: authHeaders(user), credentials: 'include' });
 
+    // If our 14-day cookie is missing/invalid, show the quiet banner and stop here.
     if (r.status === 401 || r.status === 403) {
-  try {
-    await ensureGisLoaded();
-
-    // Do a blocking silent refresh; no UI unless the user never chose an account
-    await new Promise((resolve) => {
-      window.google.accounts.id.initialize({
-        client_id: GOOGLE_CLIENT_ID,
-        auto_select: true,
-        callback: (res) => {
-          try {
-            const p = parseJwt(res.credential);
-            const next = {
-              name: p.name || '',
-              email: (p.email || '').toLowerCase(),
-              sub: p.sub,
-              picture: p.picture || '',
-              idToken: res.credential
-            };
-            saveUser(next);
-            setUser(next);
-            scheduleIdRefresh(next);
-          } catch {}
-          resolve();
-        }
-      });
-      window.google.accounts.id.prompt(); // silent if already chosen before
-    });
-
-    // retry with fresh token (and this will also mint the 14-day cookie)
-    const rr = await fetch(`${BACKEND_BASE}/wallet`, {
-      headers: authHeaders(loadUser()),
-      credentials: 'include'
-    });
-    if (rr.ok) {
-      const data2 = await rr.json();
-      setWallet(data2.wallet);
-      setCoins(Number(data2.wallet.coins || 0));
-      setWalletReady(true);
+      setShowSigninBanner(true);
+      setWalletReady(false);
       return;
     }
-  } catch (e) {
-    // fall through
-  }
 
-  // final fallback: show AuthGate again (no reload)
-  localStorage.removeItem('user_v1');
-  setUser(null);
-  setWalletReady(false);
-  return;
-}
+    // Normal success path (HTTP 200)
     const data = await r.json();
     if (data?.ok) {
       setWallet(data.wallet);
       setCoins(Number(data.wallet.coins || 0));  // source of truth = server
       setWalletReady(true);
     } else {
-      // Don’t block the UI forever; just proceed without opening Welcome
+      // Don’t block the UI forever; still let the app proceed
       setWalletReady(true);
     }
   } catch (e) {
     console.error('refreshWallet failed:', e);
-    // Network/CORS hiccup → proceed without Welcome to avoid fake “+100”
+    // Network/CORS hiccup → proceed without blocking the app
     setWalletReady(true);
   }
 }
@@ -1113,31 +1044,13 @@ const sendVoiceBlob = async (blob) => {
 
     const resp = await fetch(`${BACKEND_BASE}/chat`, { method: 'POST', headers: authHeaders(user), body: fd, credentials: 'include' });
     if (resp.status === 401) {
-  try {
-    await ensureGisLoaded();
-    window.google?.accounts?.id?.prompt();
-    await new Promise(res => setTimeout(res, 800));
-    const retry = await fetch(`${BACKEND_BASE}/chat`, {
-      method: 'POST',
-      headers: authHeaders(user),
-      body: fd,
-      credentials: 'include'
-    });
-    if (!retry.ok) throw new Error('retry failed');
-    const data = await retry.json();
-    setIsTyping(false);
-    if (data.audioUrl) {
-      const fullUrl = data.audioUrl.startsWith('http') ? data.audioUrl : `${BACKEND_BASE}${data.audioUrl}`;
-      setMessages(prev => [...prev, { audioUrl: fullUrl, sender: 'allie', time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }]);
-      if (data.wallet) setCoins(data.wallet.coins);
-      if (!isOwner) { const paid = (wallet?.expires_at || 0) > Date.now(); bumpVoiceUsed(paid, user); }
-    } else {
-      setMessages(prev => [...prev, { text: data.reply || "Hmm… Shraddha didn’t respond.", sender: 'allie', time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }]);
-    }
-    return;
-  } catch {}
   setIsTyping(false);
-  setMessages(prev => [...prev, { text: 'Session expired. Please sign in again.', sender: 'allie' }]);
+  setShowSigninBanner(true);
+  setMessages(prev => [...prev, {
+    text: 'Please sign in again to continue.',
+    sender: 'allie',
+    time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+  }]);
   return;
 }
 
@@ -1287,43 +1200,13 @@ const sendVoiceBlob = async (blob) => {
   credentials: 'include'
 });
 if (response.status === 401) {
-  try {
-    await ensureGisLoaded();
-    window.google?.accounts?.id?.prompt();
-    await new Promise(res => setTimeout(res, 800));
-    const response2 = await fetch(`${BACKEND_BASE}/chat`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', ...authHeaders(user) },
-      body: JSON.stringify(fetchBody),
-      credentials: 'include'
-    });
-    if (!response2.ok) throw new Error('retry failed');
-    const data = await response2.json();
-    const currentTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    setIsTyping(false);
-if (data.audioUrl) {
-  const fullUrl = data.audioUrl.startsWith('http') ? data.audioUrl : `${BACKEND_BASE}${data.audioUrl}`;
-  setMessages(prev => [...prev, { audioUrl: fullUrl, sender: 'allie', time: currentTime }]);
-  if (data.wallet) setCoins(data.wallet.coins);
-  const paid = (wallet?.expires_at || 0) > Date.now();
-  bumpVoiceUsed(paid, user);
-} else if (data.locked) {
-  setMessages(prev => [...prev, { text: data.reply, sender: 'allie', time: currentTime }]);
-  setTimeout(() => openCoins(), 400);
-} else {
-  const reply = data.reply || "Hmm… Shraddha didn’t respond.";
-  setMessages(prev => [...prev, { text: reply, sender: 'allie', time: currentTime }]);
-  if (data.wallet) setCoins(data.wallet.coins);
-}
-
-    // continue with your existing success handling that you use for `response`
-    // e.g., setMessages(...), setIsTyping(false), etc.
-    return;
-  } catch {}
   setIsTyping(false);
-  alert('Session expired. Please sign in again.');
-  localStorage.removeItem('user_v1');
-  window.location.reload();
+  setShowSigninBanner(true);
+  setMessages(prev => [...prev, {
+    text: 'Please sign in again to continue.',
+    sender: 'allie',
+    time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+  }]);
   return;
 }  
       const data = await response.json();
@@ -1390,39 +1273,15 @@ bumpVoiceUsed(paid, user); // (optional UI counter)
     });
 
     if (retryResp.status === 401) {
-      try {
-        await ensureGisLoaded();
-        window.google?.accounts?.id?.prompt();
-        await new Promise(res => setTimeout(res, 800));
-        const retry2 = await fetch(`${BACKEND_BASE}/chat`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', ...authHeaders(user) },
-          body: JSON.stringify(fetchRetryBody),
-          credentials: 'include'
-        });
-        if (!retry2.ok) throw new Error('retry failed');
-
-        const data = await retry2.json();
-        const t = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        if (data.locked) {
-          setMessages(prev => [...prev, { text: data.reply, sender: 'allie', time: t }]);
-          setTimeout(() => openCoins(), 400);
-        } else if (data.audioUrl) {
-          const fullUrl = data.audioUrl.startsWith('http') ? data.audioUrl : `${BACKEND_BASE}${data.audioUrl}`;
-          setMessages(prev => [...prev, { audioUrl: fullUrl, sender: 'allie', time: t }]);
-          if (data.wallet) setCoins(data.wallet.coins);
-          const paid = (wallet?.expires_at || 0) > Date.now();
-          bumpVoiceUsed(paid, user);
-        } else {
-          const reply = data.reply || "Hmm… thoda slow tha. Ab batao?";
-          setMessages(prev => [...prev, { text: reply, sender: 'allie', time: t }]);
-          if (data.wallet) setCoins(data.wallet.coins);
-        }
-        return;
-      } catch {}
-      setMessages(prev => [...prev, { text: 'Session expired. Please sign in again.', sender: 'allie' }]);
-      return;
-    }
+  setIsTyping(false);
+  setShowSigninBanner(true);
+  setMessages(prev => [...prev, {
+    text: 'Please sign in again to continue.',
+    sender: 'allie',
+    time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+  }]);
+  return;
+}
 
     const data = await retryResp.json();
     const t = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -1727,6 +1586,43 @@ if (!user) {
   </button>
 </div>
   </div>
+      {showSigninBanner && (
+  <div
+    className="signin-banner"
+    role="alert"
+    style={{
+      background:'#fff7e6',
+      border:'1px solid #ffd59e',
+      padding:'10px 12px',
+      margin:'8px',
+      borderRadius:8,
+      display:'flex',
+      gap:12,
+      alignItems:'center'
+    }}
+  >
+    <span style={{flex:1}}>
+      You’re signed out. Please sign in again to continue.
+    </span>
+    <button
+      className="btn-primary"
+      onClick={() => {
+        localStorage.removeItem('user_v1');
+        setUser(null);
+      }}
+      style={{padding:'6px 10px',borderRadius:6}}
+    >
+      Sign in
+    </button>
+    <button
+      aria-label="Dismiss"
+      onClick={() => setShowSigninBanner(false)}
+      style={{background:'transparent',border:'none',fontSize:18,lineHeight:1}}
+    >
+      ✕
+    </button>
+  </div>
+)}
 {/* Character Insight popup */}
 <CharacterPopup
   open={showCharPopup}
@@ -1902,7 +1798,6 @@ if (!user) {
   open={showWelcome}
   onClose={() => {
     setShowWelcome(false);
-    markWelcomeSeen();          // <-- NEW: remember we showed it once
     setShowCharPopup(true);
   }}
   amount={100}
