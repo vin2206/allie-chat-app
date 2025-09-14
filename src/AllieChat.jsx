@@ -596,18 +596,54 @@ async function refreshWallet(){
     if (r.status === 401 || r.status === 403) {
   try {
     await ensureGisLoaded();
-    window.google?.accounts?.id?.prompt(); // silent if the user already consented
-    await new Promise(res => setTimeout(res, 800));
-    const rr = await fetch(`${BACKEND_BASE}/wallet`, { headers: authHeaders(user), credentials: 'include' });
-    if (rr.ok) { const data2 = await rr.json(); setWallet(data2.wallet); setCoins(Number(data2.wallet.coins||0)); setWalletReady(true); return; }
-  } catch {}
-  alert('Session expired. Please sign in again.');
+
+    // Do a blocking silent refresh; no UI unless the user never chose an account
+    await new Promise((resolve) => {
+      window.google.accounts.id.initialize({
+        client_id: GOOGLE_CLIENT_ID,
+        auto_select: true,
+        callback: (res) => {
+          try {
+            const p = parseJwt(res.credential);
+            const next = {
+              name: p.name || '',
+              email: (p.email || '').toLowerCase(),
+              sub: p.sub,
+              picture: p.picture || '',
+              idToken: res.credential
+            };
+            saveUser(next);
+            setUser(next);
+            scheduleIdRefresh(next);
+          } catch {}
+          resolve();
+        }
+      });
+      window.google.accounts.id.prompt(); // silent if already chosen before
+    });
+
+    // retry with fresh token (and this will also mint the 14-day cookie)
+    const rr = await fetch(`${BACKEND_BASE}/wallet`, {
+      headers: authHeaders(loadUser()),
+      credentials: 'include'
+    });
+    if (rr.ok) {
+      const data2 = await rr.json();
+      setWallet(data2.wallet);
+      setCoins(Number(data2.wallet.coins || 0));
+      setWalletReady(true);
+      return;
+    }
+  } catch (e) {
+    // fall through
+  }
+
+  // final fallback: show AuthGate again (no reload)
   localStorage.removeItem('user_v1');
+  setUser(null);
   setWalletReady(false);
-  window.location.reload();
   return;
 }
-
     const data = await r.json();
     if (data?.ok) {
       setWallet(data.wallet);
