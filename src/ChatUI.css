@@ -152,8 +152,8 @@ body { background: linear-gradient(180deg, #fce7f3 0%, #ede9fe 100%); }
   display: flex;
   align-items: center;
   gap: 6px;              /* keeps badge next to name */
-  flex: 1 1 auto;        /* <<< gives this group the flexible space */
   min-width: 0;          /* allow ellipsis */
+  flex: 0 1 auto;        /* don't grow on modern phones */
 }
 
 .username {
@@ -968,9 +968,8 @@ html:not(.ime-open) .App.stable .footer .mic-btn {
   .App.stable .footer .send-btn,
   .App.stable .footer .mic-btn { width: 50px; height: 50px; transform: none; }
 }
-/* Old handsets only (narrow + touch-only) — don't touch modern phones */
-@media (max-width: 360px) and (hover: none) and (pointer: coarse),
-       (max-height: 640px) and (hover: none) and (pointer: coarse) {
+/* Compact header when space is tight to prevent wrap/overlap */
+@media (max-width: 420px) {
   .username        { font-size: clamp(18px, 5vw, 20px); max-width: 40vw; }
   .username-container { gap: 4px; }
   .coin-pill       { padding: 5px 10px; font-size: 11px; }
