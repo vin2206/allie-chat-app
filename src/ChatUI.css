@@ -681,8 +681,7 @@ body { background: linear-gradient(180deg, #fce7f3 0%, #ede9fe 100%); }
 .coin-pill:active{ transform: translateY(1px); }
 /* NEW — prevent header badges from shrinking on tiny/older WebViews */
 .username-container > .coin-pill,
-.username-container > .role-btn,
-.username-container > .validity-ttl {
+.username-container > .role-btn {
   flex-shrink: 0;
 }
 @media (hover:hover){ .coin-pill:hover{ background: rgba(255,255,255,.32); } }
