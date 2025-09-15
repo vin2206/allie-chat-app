@@ -1,6 +1,6 @@
 /* eslint-env browser */
 /* global atob, FormData, Image, URLSearchParams */
-/* eslint-disable no-console, no-alert, react-hooks/exhaustive-deps */
+/* eslint-disable no-console, no-alert, react-hooks/exhaustive-deps, no-unused-vars */
 import React, { useState, useEffect, useRef } from 'react';
 import './ChatUI.css';
 import { startVersionWatcher } from './versionWatcher';
@@ -1365,37 +1365,42 @@ useEffect(() => {
   };
 }, [layoutClass, messages.length, isTyping]);
 
-  // Auto-compact the header when contents overflow (enables .narrow / .tiny)
+ // Auto-compact the header when contents overflow (enables .narrow / .tiny)
 useEffect(() => {
   const header = document.querySelector('.header');
   const container = header?.querySelector('.username-container');
-  if (!header || !container) return;
+  const nameWrap  = header?.querySelector('.name-wrap');
+  if (!header || !container || !nameWrap) return;
 
   const clamp = () => {
     header.classList.remove('narrow', 'tiny');
-    // If row is overflowing, step down sizes; if still overflowing, step down again
-    if (container.scrollWidth > container.clientWidth + 2) {
+    // Decide compaction based on the *name block*, not the whole row
+    const over1 = nameWrap.scrollWidth > nameWrap.clientWidth + 1;
+    if (over1) {
       header.classList.add('narrow');
-      if (container.scrollWidth > container.clientWidth + 24) {
-        header.classList.add('tiny');
-      }
+      const over2 = nameWrap.scrollWidth > nameWrap.clientWidth + 18;
+      if (over2) header.classList.add('tiny');
     }
   };
 
   clamp();
+
   const ro = typeof window.ResizeObserver !== 'undefined'
-  ? new window.ResizeObserver(clamp)
-  : null;
-if (ro) {
-  ro.observe(container);
-  Array.from(container.children).forEach(el => ro.observe(el));
-}
+    ? new window.ResizeObserver(clamp)
+    : null;
+
+  if (ro) {
+    ro.observe(container);
+    ro.observe(nameWrap);
+    Array.from(container.children).forEach(el => ro.observe(el));
+  }
+
   window.addEventListener('resize', clamp);
 
   return () => {
-  if (ro) ro.disconnect();             // <-- null-guard fixes CI crash
-  window.removeEventListener('resize', clamp);
-};
+    ro?.disconnect();
+    window.removeEventListener('resize', clamp);
+  };
 }, [user, coins, roleMode, roleType]);
   
   // Lock the app to the *exact* visible viewport height (older Android safe)
