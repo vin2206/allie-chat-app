@@ -379,8 +379,6 @@ const [coins, setCoins] = useState(0);
 const [wallet, setWallet] = useState({ coins: 0, expires_at: 0, welcome_claimed: false });
   // --- NEW: wallet load gate + welcome "seen once" helpers ---
 const [walletReady, setWalletReady] = useState(false);
-
-const [ttl, setTtl] = useState(''); // formatted countdown
 // Layout chooser: Android → 'stable' (scrollable, no black band); others → 'fixed'
 const IS_ANDROID = /Android/i.test(navigator.userAgent);
 const [layoutClass] = useState(IS_ANDROID ? 'stable' : 'fixed');
@@ -553,15 +551,6 @@ useEffect(() => {
   };
 }, [showEmoji]);
 
-function formatTTL(ms){
-  if (!ms || ms <= 0) return 'Expired';
-  const s = Math.floor(ms/1000);
-  const d = Math.floor(s/86400);
-  const h = Math.floor((s%86400)/3600);
-  const m = Math.floor((s%3600)/60);
-  return d ? `${d}d ${h}h` : `${h}h ${m}m`;
-}
-
 async function refreshWallet(){
   if (!user) return;
   try {
@@ -630,13 +619,6 @@ credentials: 'include'
 
 useEffect(() => { maybeFinalizePayment(); }, [user]);
 
-useEffect(() => {
-  const t = setInterval(() => {
-    const ms = (wallet.expires_at || 0) - Date.now();
-    setTtl(formatTTL(ms));
-  }, 30000);
-  return () => clearInterval(t);
-}, [wallet.expires_at]);
 const [showCoins, setShowCoins] = useState(false);
   // Razorpay UI/flow helpers
 const [isPaying, setIsPaying] = useState(false);  // drives "Connecting…" and disables buttons
@@ -1414,7 +1396,7 @@ if (ro) {
   if (ro) ro.disconnect();             // <-- null-guard fixes CI crash
   window.removeEventListener('resize', clamp);
 };
-}, [user, coins, roleMode, roleType, ttl]);
+}, [user, coins, roleMode, roleType]);
   
   // Lock the app to the *exact* visible viewport height (older Android safe)
 useEffect(() => {
@@ -1570,11 +1552,6 @@ if (!user) {
 >
   🪙 {isOwner ? '∞' : coins}
 </button>
-  {!isOwner && wallet?.expires_at ? (
-  <span className="validity-ttl" style={{ marginLeft: 8, fontSize: 12, opacity: 0.8 }}>
-    ⏳ {ttl || formatTTL((wallet.expires_at||0) - Date.now())}
-  </span>
-) : null}
 
   <button
     className="role-btn"
