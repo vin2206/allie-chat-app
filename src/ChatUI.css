@@ -968,8 +968,9 @@ html:not(.ime-open) .App.stable .footer .mic-btn {
   .App.stable .footer .send-btn,
   .App.stable .footer .mic-btn { width: 50px; height: 50px; transform: none; }
 }
-/* Compact header when space is tight to prevent wrap/overlap */
-@media (max-width: 420px) {
+/* Old handsets only (narrow + touch-only) — don't touch modern phones */
+@media (max-width: 360px) and (hover: none) and (pointer: coarse),
+       (max-height: 640px) and (hover: none) and (pointer: coarse) {
   .username        { font-size: clamp(18px, 5vw, 20px); max-width: 40vw; }
   .username-container { gap: 4px; }
   .coin-pill       { padding: 5px 10px; font-size: 11px; }
