@@ -1564,42 +1564,34 @@ if (!user) {
 </div>
   </div>
       {showSigninBanner && (
-  <div
-    className="signin-banner"
-    role="alert"
-    style={{
-      background:'#fff7e6',
-      border:'1px solid #ffd59e',
-      padding:'10px 12px',
-      margin:'8px',
-      borderRadius:8,
-      display:'flex',
-      gap:12,
-      alignItems:'center'
-    }}
-  >
-    <span style={{flex:1}}>
-      You’re signed out. Please sign in again to continue.
-    </span>
-    <button
-      className="btn-primary"
-      onClick={() => {
-        localStorage.removeItem('user_v1');
-        setUser(null);
-      }}
-      style={{padding:'6px 10px',borderRadius:6}}
-    >
-      Sign in
-    </button>
-    <button
-      aria-label="Dismiss"
-      onClick={() => setShowSigninBanner(false)}
-      style={{background:'transparent',border:'none',fontSize:18,lineHeight:1}}
-    >
-      ✕
-    </button>
+  <div className="signin-overlay" role="dialog" aria-modal="true">
+    <div className="signin-card">
+      <span className="signin-text">
+        You’re signed out. Please sign in again to continue.
+      </span>
+      <div className="signin-actions">
+        <button
+          className="btn-primary"
+          onClick={() => {
+            localStorage.removeItem('user_v1');
+            setUser(null);
+          }}
+        >
+          Sign in
+        </button>
+        <button
+          className="signin-close"
+          aria-label="Dismiss"
+          title="Dismiss"
+          onClick={() => setShowSigninBanner(false)}
+        >
+          ✕
+        </button>
+      </div>
+    </div>
   </div>
 )}
+
 {/* Character Insight popup */}
 <CharacterPopup
   open={showCharPopup}
