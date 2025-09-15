@@ -1151,3 +1151,33 @@ html:not(.ime-open) .App.stable .footer .mic-btn {
   color: #6b7280;                  /* calm grey */
   text-align: right;
 }
+
+/* === FINAL tiny-screen overrides (≤360dp) — keep header on one line === */
+@media (max-width: 360px) {
+  /* tighten header padding + avatar */
+  .header { padding: 8px 12px; }
+  .profile-pic { width: 40px; height: 40px; margin-right: 8px; }
+
+  /* keep row single-line and let name take flexible room */
+  .username-container { gap: 4px; flex-wrap: nowrap; min-width: 0; }
+  .name-wrap { flex: 1 1 auto; min-width: 0; margin-right: 6px; }
+
+  /* slightly smaller name but still branded; extra width so it shows fully */
+  .username {
+    font-size: clamp(16px, 4.8vw, 18px);
+    max-width: 42vw; /* give more room to the name */
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+
+  /* slimmer pills so everything fits comfortably */
+  .role-badge { font-size: 10px; padding: 1px 6px; }
+  .coin-pill, .role-btn { padding: 4px 8px; font-size: 10px; }
+  .coin-pill { margin-left: 6px; }
+  .role-btn  { margin-left: 6px; }
+}
+
+/* ultra-narrow rescue (very old 320–340dp phones) */
+@media (max-width: 340px) {
+  .coin-pill, .role-btn { padding: 3px 6px; font-size: 9.5px; }
+  .username { max-width: 48vw; }  /* a touch more room for the name */
+}
