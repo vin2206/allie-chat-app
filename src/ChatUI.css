@@ -151,8 +151,9 @@ body { background: linear-gradient(180deg, #fce7f3 0%, #ede9fe 100%); }
 .name-wrap {
   display: flex;
   align-items: center;
-  gap: 6px;        /* keeps badge next to name */
-  min-width: 0;
+  gap: 6px;              /* keeps badge next to name */
+  flex: 1 1 auto;        /* <<< gives this group the flexible space */
+  min-width: 0;          /* allow ellipsis */
 }
 
 .username {
@@ -682,7 +683,8 @@ body { background: linear-gradient(180deg, #fce7f3 0%, #ede9fe 100%); }
 /* NEW — prevent header badges from shrinking on tiny/older WebViews */
 .username-container > .coin-pill,
 .username-container > .role-btn {
-  flex-shrink: 0;
+  flex: 0 0 auto;        /* <<< stronger than only flex-shrink on old WebViews */
+  white-space: nowrap;   /* keep label in one piece */
 }
 @media (hover:hover){ .coin-pill:hover{ background: rgba(255,255,255,.32); } }
 /* ——— header “Modes” pill ——— */
@@ -977,10 +979,17 @@ html:not(.ime-open) .App.stable .footer .mic-btn {
 @media (max-width: 360px) {
   /* keep header on one line and shrink */
   .App.stable .username-container { flex-wrap: nowrap; }
-  .App.stable .name-wrap { flex: 1 1 100%; max-width: 100%; }
-  .username { max-width: 100%; font-size: clamp(17px, 5.2vw, 19px); }
-  .coin-pill, .role-btn, .validity-ttl { margin-top: 6px; }
-  .coin-pill, .role-btn { padding: 4px 7px; font-size: 10px; }
+
+/* name group is the flexible spacer; don't cap it to 100% */
+.name-wrap { flex: 1 1 auto; min-width: 0; }
+
+.username {
+  font-size: clamp(17px, 5.2vw, 19px);
+  max-width: 34vw;                  /* <<< critical: keeps room for the pills */
+}
+
+.coin-pill, .role-btn, .validity-ttl { margin-top: 6px; }
+.coin-pill, .role-btn { padding: 4px 7px; font-size: 10px; }
 
   /* Footer tightening (this is the bit you asked about) */
   .App.stable .footer { padding: 10px 12px; }
@@ -995,7 +1004,7 @@ html:not(.ime-open) .App.stable .footer .mic-btn {
   .profile-pic { width: 42px; height: 42px; margin-right: 8px; }
 
   /* let name give up space first so Stranger/Coins/Mode never wrap */
-  .name-wrap { flex: 0 1 auto; min-width: 0; }
+  .name-wrap { flex: 1 1 auto; min-width: 0; margin-right: 6px; } /* <<< adds breathing room */
   .username   { font-size: 18px; max-width: 32vw; }
 
   .coin-pill, .role-btn { padding: 3px 7px; font-size: 10px; }
