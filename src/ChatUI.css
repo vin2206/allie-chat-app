@@ -151,9 +151,8 @@ body { background: linear-gradient(180deg, #fce7f3 0%, #ede9fe 100%); }
 .name-wrap {
   display: flex;
   align-items: center;
-  gap: 6px;              /* keeps badge next to name */
-  min-width: 0;          /* allow ellipsis */
-  flex: 0 1 auto;        /* don't grow on modern phones */
+  gap: 6px;        /* keeps badge next to name */
+  min-width: 0;
 }
 
 .username {
@@ -683,8 +682,7 @@ body { background: linear-gradient(180deg, #fce7f3 0%, #ede9fe 100%); }
 /* NEW — prevent header badges from shrinking on tiny/older WebViews */
 .username-container > .coin-pill,
 .username-container > .role-btn {
-  flex: 0 0 auto;        /* <<< stronger than only flex-shrink on old WebViews */
-  white-space: nowrap;   /* keep label in one piece */
+  flex-shrink: 0;
 }
 @media (hover:hover){ .coin-pill:hover{ background: rgba(255,255,255,.32); } }
 /* ——— header “Modes” pill ——— */
@@ -970,17 +968,9 @@ html:not(.ime-open) .App.stable .footer .mic-btn {
 }
 /* Tiny devices – keep everything on ONE line, just shrink */
 @media (max-width: 360px) {
-  /* keep header on one line and shrink */
   .App.stable .username-container { flex-wrap: nowrap; }
-
-/* name group is the flexible spacer; don't cap it to 100% */
-.name-wrap { flex: 1 1 auto; min-width: 0; }
-
-.username {
-  font-size: clamp(17px, 5.2vw, 19px);
-  max-width: 34vw;                  /* <<< critical: keeps room for the pills */
-}
-
+.App.stable .name-wrap { flex: 1 1 100%; max-width: 100%; }
+.username { max-width: 100%; font-size: clamp(17px, 5.2vw, 19px); }
 .coin-pill, .role-btn, .validity-ttl { margin-top: 6px; }
 .coin-pill, .role-btn { padding: 4px 7px; font-size: 10px; }
 
@@ -997,7 +987,7 @@ html:not(.ime-open) .App.stable .footer .mic-btn {
   .profile-pic { width: 42px; height: 42px; margin-right: 8px; }
 
   /* let name give up space first so Stranger/Coins/Mode never wrap */
-  .name-wrap { flex: 1 1 auto; min-width: 0; margin-right: 6px; } /* <<< adds breathing room */
+  .name-wrap { flex: 0 1 auto; min-width: 0; }
   .username   { font-size: 18px; max-width: 32vw; }
 
   .coin-pill, .role-btn { padding: 3px 7px; font-size: 10px; }
@@ -1143,34 +1133,4 @@ html:not(.ime-open) .App.stable .footer .mic-btn {
   font-size: 12px;
   color: #6b7280;                  /* calm grey */
   text-align: right;
-}
-
-/* === FINAL tiny-screen overrides (≤360dp) — keep header on one line === */
-@media (max-width: 360px) {
-  /* tighten header padding + avatar */
-  .header { padding: 8px 12px; }
-  .profile-pic { width: 40px; height: 40px; margin-right: 8px; }
-
-  /* keep row single-line and let name take flexible room */
-  .username-container { gap: 4px; flex-wrap: nowrap; min-width: 0; }
-  .name-wrap { flex: 1 1 auto; min-width: 0; margin-right: 6px; }
-
-  /* slightly smaller name but still branded; extra width so it shows fully */
-  .username {
-    font-size: clamp(16px, 4.8vw, 18px);
-    max-width: 42vw; /* give more room to the name */
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  }
-
-  /* slimmer pills so everything fits comfortably */
-  .role-badge { font-size: 10px; padding: 1px 6px; }
-  .coin-pill, .role-btn { padding: 4px 8px; font-size: 10px; }
-  .coin-pill { margin-left: 6px; }
-  .role-btn  { margin-left: 6px; }
-}
-
-/* ultra-narrow rescue (very old 320–340dp phones) */
-@media (max-width: 340px) {
-  .coin-pill, .role-btn { padding: 3px 6px; font-size: 9.5px; }
-  .username { max-width: 48vw; }  /* a touch more room for the name */
 }
