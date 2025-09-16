@@ -15,6 +15,19 @@ function debounce(fn, wait = 120) {
     t = setTimeout(() => fn(...args), wait);
   };
 }
+// --- Legacy Android detector (Realme/MIUI font-boost guard) ---
+function looksLegacyAndroidWebView() {
+  const ua = navigator.userAgent || '';
+  const isAndroid = /Android/i.test(ua);
+  // try to read Chrome/WebView major version
+  const m = ua.match(/Chrome\/(\d+)/i);
+  const chromeMajor = m ? parseInt(m[1], 10) : 0;
+  // loose OEM hints often seen on old Realme/MIUI builds
+  const oemHint = /MIUI|Redmi|Realme|Build\/RMX/i.test(ua);
+  // treat Chrome/WebView < 95 as "legacy" (old font-boost behaviour)
+  const isLegacyVer = chromeMajor > 0 && chromeMajor < 95;
+  return isAndroid && (isLegacyVer || oemHint);
+}
 // --- Google Sign-In (GIS) ---
 const GOOGLE_CLIENT_ID = '962465973550-2lhard334t8kvjpdhh60catlb1k6fpb6.apps.googleusercontent.com';
 const parseJwt = (t) => {
@@ -1364,6 +1377,54 @@ useEffect(() => {
     window.removeEventListener('pageshow', setVars);
   };
 }, [layoutClass, messages.length, isTyping]);
+
+  // Legacy header compact mode: ONLY on old Android WebViews + real overflow
+useEffect(() => {
+  const header = document.querySelector('.header');
+  const container = header?.querySelector('.username-container');
+  if (!header || !container) return;
+
+  const uaIsLegacy = looksLegacyAndroidWebView();
+
+  const apply = () => {
+    // check real overflow (allow a few px of jitter)
+    const overflowPx = container.scrollWidth - container.clientWidth;
+    const overflowing = overflowPx > 8;
+
+    const enable = uaIsLegacy && overflowing;
+    document.documentElement.classList.toggle('legacy-zoom', !!enable);
+
+    if (enable) {
+      // If it's still quite tight, compute a gentle uniform scale for the row
+      const need = container.scrollWidth;
+      const avail = container.clientWidth;
+      const ratio = need > 0 ? (avail / need) : 1;
+      const scale = Math.max(0.88, Math.min(1, ratio)); // never smaller than 0.88
+      header.style.setProperty('--hz-scale', String(scale));
+    } else {
+      header.style.removeProperty('--hz-scale');
+    }
+  };
+
+  // run once and whenever sizes change
+  apply();
+
+  const ro = (typeof ResizeObserver !== 'undefined') ? new ResizeObserver(apply) : null;
+  if (ro) {
+    ro.observe(container);
+    Array.from(container.children).forEach(el => ro.observe(el));
+  }
+  window.addEventListener('resize', apply);
+  window.addEventListener('orientationchange', apply);
+
+  return () => {
+    if (ro) ro.disconnect();
+    window.removeEventListener('resize', apply);
+    window.removeEventListener('orientationchange', apply);
+    document.documentElement.classList.remove('legacy-zoom');
+    header.style.removeProperty('--hz-scale');
+  };
+}, []);
 
  // Auto-compact the header when contents overflow (enables .narrow / .tiny)
 useEffect(() => {
