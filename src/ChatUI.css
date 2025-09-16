@@ -983,23 +983,23 @@ html:not(.ime-open) .App.stable .footer .mic-btn {
 /* ==== ANDROID SMALL SCREENS — FORCE COMPACT HEADER (SAFE) ==== */
 @media (max-width: 380px) {
   /* Header shell a bit tighter */
-  .App.stable .header { padding: 10px 12px; }
+  .App.stable .header { padding: 9px 10px; }
 
-  /* Smaller DP so everything fits */
-  .App.stable .profile-pic { width: 44px; height: 44px; margin-right: 10px; }
+  /* DP smaller */
+  .App.stable .profile-pic { width: 40px; height: 40px; margin-right: 8px; }
 
-  /* Name slightly smaller + shorter max width */
-  .App.stable .username { font-size: 19px; max-width: 40vw; }
+  /* Name smaller + shorter max width */
+  .App.stable .username { font-size: 18px; max-width: 36vw; }
 
-  /* Stranger pill (and other role badges) a touch smaller */
-  .App.stable .role-badge { font-size: 11px; padding: 2px 7px; }
+  /* “Stranger” pill smaller */
+  .App.stable .role-badge { font-size: 10px; line-height: 16px; padding: 1px 6px; }
 
-  /* Coins + Modes pills tightened but readable */
+  /* Coins + Modes smaller */
   .App.stable .coin-pill,
-  .App.stable .role-btn { padding: 5px 8px; font-size: 11px; }
+  .App.stable .role-btn { font-size: 10px; padding: 4px 7px; }
 
-  /* Safety spacer in case flex-gap isn't supported */
-  .App.stable .name-wrap { margin-right: 8px; }
+  /* Add space between Stranger pill (in name-wrap) and Coins */
+  .App.stable .name-wrap { margin-right: 12px; }
 }
 
 /* ==== Realme 1 / legacy-Android sizing — header stays on one line ==== */
