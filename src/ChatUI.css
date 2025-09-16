@@ -980,6 +980,27 @@ html:not(.ime-open) .App.stable .footer .mic-btn {
   .App.stable .footer .mic-btn { width: 46px; height: 46px; }
   .App.stable .footer input { min-height: 38px; font-size: 16px; }
 }
+/* ==== ANDROID SMALL SCREENS — FORCE COMPACT HEADER (SAFE) ==== */
+@media (max-width: 380px) {
+  /* Header shell a bit tighter */
+  .App.stable .header { padding: 10px 12px; }
+
+  /* Smaller DP so everything fits */
+  .App.stable .profile-pic { width: 44px; height: 44px; margin-right: 10px; }
+
+  /* Name slightly smaller + shorter max width */
+  .App.stable .username { font-size: 19px; max-width: 40vw; }
+
+  /* Stranger pill (and other role badges) a touch smaller */
+  .App.stable .role-badge { font-size: 11px; padding: 2px 7px; }
+
+  /* Coins + Modes pills tightened but readable */
+  .App.stable .coin-pill,
+  .App.stable .role-btn { padding: 5px 8px; font-size: 11px; }
+
+  /* Safety spacer in case flex-gap isn't supported */
+  .App.stable .name-wrap { margin-right: 8px; }
+}
 
 /* ==== Realme 1 / legacy-Android sizing — header stays on one line ==== */
 @media (max-width: 380px), (max-height: 640px) {
