@@ -1369,38 +1369,33 @@ useEffect(() => {
 useEffect(() => {
   const header = document.querySelector('.header');
   const container = header?.querySelector('.username-container');
-  const nameWrap  = header?.querySelector('.name-wrap');
-  if (!header || !container || !nameWrap) return;
+  if (!header || !container) return;
 
   const clamp = () => {
     header.classList.remove('narrow', 'tiny');
-    // Decide compaction based on the *name block*, not the whole row
-    const over1 = nameWrap.scrollWidth > nameWrap.clientWidth + 1;
-    if (over1) {
+    // If row is overflowing, step down sizes; if still overflowing, step down again
+    if (container.scrollWidth > container.clientWidth + 2) {
       header.classList.add('narrow');
-      const over2 = nameWrap.scrollWidth > nameWrap.clientWidth + 18;
-      if (over2) header.classList.add('tiny');
+      if (container.scrollWidth > container.clientWidth + 24) {
+        header.classList.add('tiny');
+      }
     }
   };
 
   clamp();
-
   const ro = typeof window.ResizeObserver !== 'undefined'
-    ? new window.ResizeObserver(clamp)
-    : null;
-
-  if (ro) {
-    ro.observe(container);
-    ro.observe(nameWrap);
-    Array.from(container.children).forEach(el => ro.observe(el));
-  }
-
+  ? new window.ResizeObserver(clamp)
+  : null;
+if (ro) {
+  ro.observe(container);
+  Array.from(container.children).forEach(el => ro.observe(el));
+}
   window.addEventListener('resize', clamp);
 
   return () => {
-    ro?.disconnect();
-    window.removeEventListener('resize', clamp);
-  };
+  if (ro) ro.disconnect();             // <-- null-guard fixes CI crash
+  window.removeEventListener('resize', clamp);
+};
 }, [user, coins, roleMode, roleType]);
   
   // Lock the app to the *exact* visible viewport height (older Android safe)
