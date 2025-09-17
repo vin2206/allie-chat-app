@@ -105,6 +105,13 @@ async function ensureRazorpay() {
 // --- backend base ---
 const BACKEND_BASE = 'https://allie-chat-proxy-production.up.railway.app';
 const authHeaders = (u) => (u?.idToken ? { Authorization: `Bearer ${u.idToken}` } : {});
+// --- CSRF header helper ---
+const getCsrf = () => {
+  try {
+    const m = document.cookie.match(/(?:^|;\s*)bb_csrf=([^;]+)/);
+    return m ? decodeURIComponent(m[1]) : '';
+  } catch { return ''; }
+};
 // === Coins config (Option A agreed) ===
 const TEXT_COST = 10;
 const VOICE_COST = 18; // keep 18; change to 15 only if you insist
@@ -608,7 +615,7 @@ useEffect(() => { refreshWallet(); }, [user]);
   try {
     const r = await fetch(`${BACKEND_BASE}/verify-payment-link`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', ...authHeaders(user) },
+      headers: { 'Content-Type': 'application/json', ...authHeaders(user), 'X-CSRF-Token': getCsrf() },
       body: JSON.stringify({
   link_id, payment_id, reference_id, status, signature,
   userEmail: (user?.email || '').toLowerCase()
@@ -659,11 +666,11 @@ const closeCoins = () => setShowCoins(false);
     let ord = orderCache[pack.id];
     if (!ord) {
       const resp = await fetch(`${BACKEND_BASE}/order/${pack.id}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...authHeaders(user) },
-        body: JSON.stringify({ userEmail: (user.email||'').toLowerCase(), userSub: user.sub }),
-        credentials: 'include'
-      });
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json', ...authHeaders(user), 'X-CSRF-Token': getCsrf() },
+  body: JSON.stringify({}),
+  credentials: 'include'
+});
       const data = await resp.json();
       if (!data?.ok) throw new Error(data?.error || 'order_failed');
       ord = data;
@@ -694,7 +701,7 @@ const closeCoins = () => setShowCoins(false);
         try {
           const v = await fetch(`${BACKEND_BASE}/verify-order`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', ...authHeaders(user) },
+            headers: { 'Content-Type': 'application/json', ...authHeaders(user), 'X-CSRF-Token': getCsrf() },
             body: JSON.stringify(resp), // { razorpay_order_id, razorpay_payment_id, razorpay_signature }
             credentials: 'include'
           });
@@ -724,12 +731,8 @@ const closeCoins = () => setShowCoins(false);
     try {
       const resp = await fetch(`${BACKEND_BASE}/buy/${pack.id}`, {
   method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({
-    userEmail: (user.email||'').toLowerCase(),
-    userSub: user.sub,
-    returnUrl: `${window.location.origin}/payment/thanks`
-  }),
+  headers: { 'Content-Type': 'application/json', ...authHeaders(user), 'X-CSRF-Token': getCsrf() },
+  body: JSON.stringify({ returnUrl: `${window.location.origin}/payment/thanks` }),
   credentials: 'include'
 });
 
@@ -755,11 +758,10 @@ useEffect(() => {
     try {
       const resp = await fetch(`${BACKEND_BASE}/order/${id}`, {
   method: 'POST',
-  headers: { 'Content-Type': 'application/json', ...authHeaders(user) },
-  body: JSON.stringify({ userEmail: (user.email||'').toLowerCase(), userSub: user.sub }),
+  headers: { 'Content-Type': 'application/json', ...authHeaders(user), 'X-CSRF-Token': getCsrf() },
+  body: JSON.stringify({}),
   credentials: 'include'
 });
-
       const data = await resp.json();
       if (data?.ok) {
         setOrderCache(prev => ({ ...prev, [id]: { ...data, at: Date.now() } }));
@@ -1037,7 +1039,7 @@ const sendVoiceBlob = async (blob) => {
     fd.append('roleType', roleType || 'stranger');
     if (shouldResetRef.current) { fd.append('reset', 'true'); shouldResetRef.current = false; }
 
-    const resp = await fetch(`${BACKEND_BASE}/chat`, { method: 'POST', headers: authHeaders(user), body: fd, credentials: 'include' });
+    const resp = await fetch(`${BACKEND_BASE}/chat`, { method: 'POST', headers: { ...authHeaders(user), 'X-CSRF-Token': getCsrf() }, body: fd, credentials: 'include' });
     if (resp.status === 401) {
   setIsTyping(false);
   setShowSigninBanner(true);
@@ -1190,7 +1192,7 @@ const sendVoiceBlob = async (blob) => {
 
       const response = await fetch(`${BACKEND_BASE}/chat`, {
   method: 'POST',
-  headers: { 'Content-Type': 'application/json', ...authHeaders(user) },
+  headers: { 'Content-Type': 'application/json', ...authHeaders(user), 'X-CSRF-Token': getCsrf() },
   body: JSON.stringify(fetchBody),
   credentials: 'include'
 });
@@ -1262,7 +1264,7 @@ bumpVoiceUsed(paid, user); // (optional UI counter)
     await new Promise(r => setTimeout(r, 1200));
     const retryResp = await fetch(`${BACKEND_BASE}/chat`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', ...authHeaders(user) },
+      headers: { 'Content-Type': 'application/json', ...authHeaders(user), 'X-CSRF-Token': getCsrf() },
       body: JSON.stringify(fetchRetryBody),
       credentials: 'include'
     });
