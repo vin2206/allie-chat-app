@@ -1572,7 +1572,27 @@ useEffect(() => {
   // Block UI until user signs in
 if (!user) {
   return (
-    <AuthGate onSignedIn={(u) => { saveUser(u); setUser(u); }} />
+    <AuthGate
+      onSignedIn={async (u) => {
+        // 1) Save locally + update state
+        saveUser(u);
+        setUser(u);
+
+        // 2) PRIME COOKIES on the server:
+        //    This mints bb_sess (14-day session) + bb_csrf in one GET.
+        try {
+          await fetch(`${BACKEND_BASE}/wallet`, {
+            method: 'GET',
+            headers: { Authorization: `Bearer ${u.idToken}` },
+            credentials: 'include'
+          });
+          // We don’t need the response body here — just setting cookies.
+        } catch (e) {
+          // Non-blocking: chat will still work because we send Authorization on first POST.
+          console.warn('Cookie priming failed (non-blocking):', e?.message || e);
+        }
+      }}
+    />
   );
 }
 
