@@ -643,6 +643,7 @@ const [showCoins, setShowCoins] = useState(false);
   // Razorpay UI/flow helpers
 const [isPaying, setIsPaying] = useState(false);  // drives "Connecting…" and disables buttons
 const [orderCache, setOrderCache] = useState({}); // { daily: {...}, weekly: {...} }
+const ORDER_TTL_MS = 15 * 60 * 1000; // match server TTL for freshness
 const [autoRenew] = useState(loadAuto()); // setter not needed
 useEffect(() => saveAuto(autoRenew), [autoRenew]);
   // Auto-unlock Owner mode if signed-in email matches
@@ -676,6 +677,20 @@ const closeCoins = () => setShowCoins(false);
       ord = data;
       setOrderCache(prev => ({ ...prev, [pack.id]: { ...data, at: Date.now() } }));
     }
+    // 🔄 Freshness check: if cached order is too old, create a fresh one (keeps 1-tap feel)
+if (ord?.at && (Date.now() - ord.at > ORDER_TTL_MS)) {
+  const resp2 = await fetch(`${BACKEND_BASE}/order/${pack.id}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...authHeaders(user), 'X-CSRF-Token': getCsrf() },
+    body: JSON.stringify({}),
+    credentials: 'include'
+  });
+  const data2 = await resp2.json();
+  if (data2?.ok) {
+    ord = data2;
+    setOrderCache(prev => ({ ...prev, [pack.id]: { ...data2, at: Date.now() } }));
+  }
+}
 
     // Build Razorpay options (prefill everything to skip extra steps)
     const rzp = new window.Razorpay({
@@ -753,7 +768,7 @@ useEffect(() => {
   const packs = ['daily', 'weekly'];
 
   packs.forEach(async (id) => {
-    if (orderCache[id]) return; // already cached
+    if (orderCache[id] && (Date.now() - (orderCache[id].at || 0) < ORDER_TTL_MS)) return; // cached & fresh
 
     try {
       const resp = await fetch(`${BACKEND_BASE}/order/${id}`, {
