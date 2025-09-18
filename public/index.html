@@ -15,6 +15,19 @@
     <!-- Razorpay warmup (safe + idempotent) -->
   <link rel="dns-prefetch" href="https://checkout.razorpay.com">
   <link rel="preconnect" href="https://checkout.razorpay.com" crossorigin>
+    <!-- Allow Razorpay checkout (iframe + scripts) -->
+<meta http-equiv="Content-Security-Policy" content="
+  default-src 'self';
+  img-src 'self' data: https:;
+  style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+  font-src 'self' https://fonts.gstatic.com;
+  script-src 'self' 'unsafe-inline' https://checkout.razorpay.com https://accounts.google.com;
+  connect-src 'self' https://api.razorpay.com https://checkout.razorpay.com https://rzp.io https://allie-chat-proxy-production.up.railway.app https://accounts.google.com;
+  media-src 'self' blob: https://allie-chat-proxy-production.up.railway.app;
+  frame-src https://checkout.razorpay.com https://api.razorpay.com https://*.razorpay.com https://*.rzp.io https://accounts.google.com;
+  frame-ancestors 'self';
+  upgrade-insecure-requests;
+">
 
   <meta name="theme-color" content="#cc66cc" media="(prefers-color-scheme: light)" />
   <meta name="theme-color" content="#2a1233" media="(prefers-color-scheme: dark)" />
