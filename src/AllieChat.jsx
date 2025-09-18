@@ -302,7 +302,31 @@ const close = (e) => {
             <h3>Welcome!</h3>
             <p>You’ve unlocked a <b>first-time bonus</b>.</p>
             <div className="welcome-amount">+{amount} coins</div>
-            <button className="welcome-btn" onClick={goNext}>Next</button>
+            <button
+  className="welcome-btn"
+  onClick={async (e) => {
+    e?.stopPropagation?.();
+    try {
+      const r = await fetch(`${BACKEND_BASE}/claim-welcome`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...authHeaders(loadUser()), 'X-CSRF-Token': getCsrf() },
+        credentials: 'include',
+        body: JSON.stringify({})
+      });
+      const data = await r.json();
+      if (data?.ok && data?.wallet) {
+        // pull fresh wallet into the parent
+        if (typeof window.refreshWalletGlobal === 'function') window.refreshWalletGlobal();
+        alert(data.claimed ? '✅ +100 coins added!' : 'You’re all set.');
+      } else {
+        // do nothing for old users; just continue
+      }
+    } catch {}
+    goNext(e); // move to instructions step
+  }}
+>
+  Claim 100 coins
+</button>
             <div className="welcome-note">Roleplay models are part of the upgrade.</div>
           </>
         ) : (
@@ -406,12 +430,19 @@ const [layoutClass] = useState(IS_ANDROID ? 'stable' : 'fixed');
 useEffect(() => { prewarmRazorpay().catch(() => {}); }, []);
 useEffect(() => { if (user) setShowSigninBanner(false); }, [user]);
 
-// --- Always show the instructions on each open/refresh (not gated on wallet) ---
+// Show bonus for real newcomers, otherwise just instructions
 useEffect(() => {
-  if (!user) return;
-  setWelcomeDefaultStep(1);   // step 1 = “How to talk to her”
-  setShowWelcome(true);
-}, [user]);
+  if (!user || !walletReady) return;
+  const claimed = !!wallet?.welcome_claimed;
+  const lowCoins = (Number(wallet?.coins || 0) < 50); // “feels new” heuristic
+  if (!claimed && lowCoins) {
+    setWelcomeDefaultStep(0); // show bonus screen
+    setShowWelcome(true);
+  } else {
+    setWelcomeDefaultStep(1); // show instructions only
+    setShowWelcome(true);
+  }
+}, [user, walletReady, wallet?.welcome_claimed, wallet?.coins]);
 
   function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
 
@@ -601,6 +632,11 @@ async function refreshWallet(){
 }
 
 useEffect(() => { refreshWallet(); }, [user]);
+  // Expose a safe global hook for child components (WelcomeFlow) to refresh wallet
+useEffect(() => {
+  window.refreshWalletGlobal = () => refreshWallet();
+  return () => { delete window.refreshWalletGlobal; };
+}, [user]);
   async function maybeFinalizePayment(){
   if (!window.location.pathname.includes('/payment/thanks')) return;
   const qs = new URLSearchParams(window.location.search);
