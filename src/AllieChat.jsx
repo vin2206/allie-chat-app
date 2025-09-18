@@ -1801,17 +1801,18 @@ if (!user) {
     <span className={`bubble-content ${msg.audioUrl ? 'has-audio' : ''}`}>
       {msg.audioUrl ? (
         <div className="audio-wrapper">
-          <audio
-            className="audio-player"
-            controls
-            preload="none"
-            src={msg.audioUrl}
-            onError={(e) => console.warn('audio failed:', e.currentTarget.src)}
-          />
-          <div className="audio-fallback">
-            <a href={msg.audioUrl} target="_blank" rel="noreferrer">Open audio</a>
-          </div>
-        </div>
+  <audio
+    className="audio-player"
+    controls
+    controlsList="nodownload noplaybackrate noremoteplayback"
+    disablePictureInPicture
+    preload="none"
+    playsInline
+    src={msg.audioUrl}
+    onContextMenu={(e) => e.preventDefault()}
+    onError={(e) => console.warn('audio failed:', e.currentTarget.src)}
+  />
+</div>
       ) : (
         msg.text
       )}
