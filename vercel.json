@@ -29,7 +29,7 @@
     { "key": "Cache-Control", "value": "no-transform" },
     {
       "key": "Content-Security-Policy",
-      "value": "default-src 'self'; script-src 'self' https://accounts.google.com https://checkout.razorpay.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' https: data:; connect-src 'self' https://allie-chat-proxy-production.up.railway.app https://checkout.razorpay.com https://api.razorpay.com https://accounts.google.com; frame-src https://checkout.razorpay.com https://accounts.google.com; media-src 'self' blob: https://allie-chat-proxy-production.up.railway.app; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests;"
+      "value": "default-src 'self'; script-src 'self' https://accounts.google.com https://checkout.razorpay.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob:; font-src 'self' https://fonts.gstatic.com data:; connect-src 'self' https://allie-chat-proxy-production.up.railway.app https://checkout.razorpay.com https://api.razorpay.com https://accounts.google.com; frame-src https://checkout.razorpay.com https://accounts.google.com; media-src 'self' blob: https://allie-chat-proxy-production.up.railway.app; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests;"
     }
   ]
 }
