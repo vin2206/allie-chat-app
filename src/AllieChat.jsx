@@ -315,14 +315,17 @@ const close = (e) => {
       });
       const data = await r.json();
       if (data?.ok && data?.wallet) {
-        // pull fresh wallet into the parent
+        // mark as claimed on *this browser* too
+        const uid = (loadUser()?.sub || loadUser()?.email || '');
+        localStorage.setItem(welcomeKeyFor(uid), '1');
+
         if (typeof window.refreshWalletGlobal === 'function') window.refreshWalletGlobal();
         alert(data.claimed ? '✅ +100 coins added!' : 'You’re all set.');
-      } else {
-        // do nothing for old users; just continue
       }
     } catch {}
-    goNext(e); // move to instructions step
+    // move to instructions step either way
+    if (typeof e?.stopPropagation === 'function') e.stopPropagation();
+    setStep(1);
   }}
 >
   Claim 100 coins
@@ -433,8 +436,14 @@ useEffect(() => { if (user) setShowSigninBanner(false); }, [user]);
 // Show bonus for real newcomers, otherwise just instructions
 useEffect(() => {
   if (!user || !walletReady) return;
-  const claimed = !!wallet?.welcome_claimed;
+
+  // also suppress if this browser already claimed it once
+  const uid = user?.sub || user?.email || '';
+  const localClaimed = !!localStorage.getItem(welcomeKeyFor(uid));
+
+  const claimed = !!wallet?.welcome_claimed || localClaimed;
   const lowCoins = (Number(wallet?.coins || 0) < 50); // “feels new” heuristic
+
   if (!claimed && lowCoins) {
     setWelcomeDefaultStep(0); // show bonus screen
     setShowWelcome(true);
