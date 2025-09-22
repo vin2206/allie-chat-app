@@ -1002,8 +1002,9 @@ const startRecording = async () => {
       return;
     }
   }
-  // Coins gate early so we don't record and then block
-if (!isOwner && coins < VOICE_COST) { openCoins(); return; }
+  // Coins gate: allow brand-new users (welcome not yet visible on client) to pass once
+const allowFirstSend = (!walletReady || wallet?.welcome_claimed !== true);
+if (!isOwner && !allowFirstSend && coins < VOICE_COST) { openCoins(); return; }
   
   try {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -1063,8 +1064,9 @@ const stopRecording = () => {
 const sendVoiceBlob = async (blob) => {
   if (isTyping || cooldown) return;
 
-  // Coins gate for VOICE
-  if (!isOwner && coins < VOICE_COST) {
+    // Coins gate for VOICE (respect first-send bypass like startRecording/handleSend)
+  const allowFirstSend = (!walletReady || wallet?.welcome_claimed !== true);
+  if (!isOwner && !allowFirstSend && coins < VOICE_COST) {
     openCoins();
     return;
   }
@@ -1178,6 +1180,7 @@ const sendVoiceBlob = async (blob) => {
 
   // Decide cost before sending
   const wantVoiceNow = askedForVoice(inputValue);
+  const allowFirstSend = (!walletReady || wallet?.welcome_claimed !== true);
     if (wantVoiceNow && !isOwner) {
   const paid = (wallet?.expires_at || 0) > Date.now();
   const limit = paid ? PAID_DAILY_VOICE_LIMIT : FREE_DAILY_VOICE_LIMIT;
@@ -1195,7 +1198,7 @@ const sendVoiceBlob = async (blob) => {
 }
   if (!isOwner) {
     if (wantVoiceNow) {
-      if (coins < VOICE_COST) {
+      if (!allowFirstSend && coins < VOICE_COST) {
         if (coins >= TEXT_COST) {
           openConfirm(
             `Not enough coins for voice`,
@@ -1208,7 +1211,7 @@ const sendVoiceBlob = async (blob) => {
         return;
       }
     } else {
-      if (coins < TEXT_COST) { openCoins(); return; }
+      if (!allowFirstSend && coins < TEXT_COST) { openCoins(); return; }
     }
   }
 
