@@ -1454,7 +1454,7 @@ useEffect(() => {
   const apply = () => {
     // check real overflow (allow a few px of jitter)
     const overflowPx = container.scrollWidth - container.clientWidth;
-    const overflowing = overflowPx > 8;
+    const overflowing = overflowPx > 2;
 
     const enable = overflowing;   // trigger on real overflow, not UA guess
     document.documentElement.classList.toggle('legacy-zoom', !!enable);
@@ -1497,14 +1497,13 @@ useEffect(() => {
   const container = header?.querySelector('.username-container');
   if (!header || !container) return;
 
-  const clamp = () => {
+    const clamp = () => {
     header.classList.remove('narrow', 'tiny');
-    // If row is overflowing, step down sizes; if still overflowing, step down again
-    if (container.scrollWidth > container.clientWidth + 2) {
+    const dist = container.scrollWidth - container.clientWidth; // + = over, - = tight but fits
+    // If it’s even a little tight, go “narrow”; if clearly over, go “tiny”
+    if (dist > -4) {
       header.classList.add('narrow');
-      if (container.scrollWidth > container.clientWidth + 24) {
-        header.classList.add('tiny');
-      }
+      if (dist > 12) header.classList.add('tiny');
     }
   };
 
