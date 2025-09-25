@@ -741,6 +741,9 @@ body { background: linear-gradient(180deg, #fce7f3 0%, #ede9fe 100%); }
 /* shrink the red "Stranger" badge a bit when tight */
 .header.narrow .role-badge { font-size: 11px; padding: 2px 7px; }
 .header.tiny   .role-badge { font-size: 10px; padding: 1px 6px; }
+/* when auto-compact is active, keep a clean gap before the coins pill */
+.header.narrow .name-wrap,
+.header.tiny .name-wrap { margin-right: 12px; }
 
 /* if a wrap still happens on ultra-small screens, keep it neat */
 .header .username-container { align-content: center; }
