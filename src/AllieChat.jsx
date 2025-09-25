@@ -6,7 +6,7 @@ import './ChatUI.css';
 import { startVersionWatcher } from './versionWatcher';
 // Razorpay warm-up + standalone coins modal
 import CoinsModal from './components/CoinsModal';
-import { prewarmRazorpay } from './lib/razorpay';
+import { prewarmRazorpay, handleCoinPurchase } from './lib/razorpay';
 // --- small utility ---
 function debounce(fn, wait = 120) {
   let t;
@@ -90,17 +90,6 @@ function enableSilentReauth(clientId, setUser) {
       }
     }
   });
-}
-async function ensureRazorpay() {
-  if (window.Razorpay) return true;
-  await new Promise((resolve, reject) => {
-    const s = document.createElement('script');
-    s.src = 'https://checkout.razorpay.com/v1/checkout.js';
-    s.onload = resolve;
-    s.onerror = reject;
-    document.head.appendChild(s);
-  });
-  return true;
 }
 // --- backend base ---
 const BACKEND_BASE = 'https://allie-chat-proxy-production.up.railway.app';
@@ -441,8 +430,10 @@ const [walletReady, setWalletReady] = useState(false);
 // Layout chooser: Android → 'stable' (scrollable, no black band); others → 'fixed'
 const IS_ANDROID = /Android/i.test(navigator.userAgent);
 const [layoutClass] = useState(IS_ANDROID ? 'stable' : 'fixed');
+  useEffect(() => {
+  prewarmRazorpay().catch(() => {});
+}, []);
   // Warm Razorpay early so checkout feels instant
-useEffect(() => { prewarmRazorpay().catch(() => {}); }, []);
 useEffect(() => { if (user) setShowSigninBanner(false); }, [user]);
 
 // Show bonus for real newcomers, otherwise just instructions
@@ -683,14 +674,15 @@ credentials: 'include'
     if (data?.ok) {
       setWallet(data.wallet);
       setCoins(data.wallet.coins);
-      alert(`✅ Coins added: +${data.lastCredit.coins}`);
-      window.history.replaceState(null, '', '/');
+      openNotice('All set', `+${data.lastCredit.coins} coins added—she’s waiting for you 🥰`, () => {
+   window.history.replaceState(null, '', '/');
+  });
     } else {
-      alert('Payment not verified yet. If paid, it will reflect shortly.');
+      // stay quiet; webhook/auto refresh will reflect shortly
     }
   } catch (e) {
     console.error(e);
-    alert('Verification failed. If you paid, coins will still auto-credit via webhook shortly.');
+    // stay quiet; wallet will catch up via webhook/refresh
   }
 }
 
@@ -718,8 +710,6 @@ const closeCoins = () => setShowCoins(false);
   setIsPaying(true);
 
   try {
-    await ensureRazorpay();
-
     // Use pre-created order if available; otherwise create now
     let ord = orderCache[pack.id];
     if (!ord) {
@@ -749,72 +739,73 @@ if (ord?.at && (Date.now() - ord.at > ORDER_TTL_MS)) {
   }
 }
 
-    // Build Razorpay options (prefill everything to skip extra steps)
-    const rzp = new window.Razorpay({
-      key: ord.key_id,
-      amount: ord.amount,
-      currency: ord.currency,
-      name: 'BuddyBy',
-      description: `Shraddha ${pack.label}`,
-      order_id: ord.order_id,
-      prefill: {
-        name: user?.name || '',
-        email: (user?.email || '').toLowerCase(),
-        contact: user?.phone || ''   // if you don’t have it, empty is fine
-      },
-      theme: { color: '#ff3fb0' },
-      modal: {
-        ondismiss: () => {
-          // user closed the Razorpay window → clear "Connecting…"
-          setIsPaying(false);
-        }
-      },
-      handler: async (resp) => {
-        try {
-          const v = await fetch(`${BACKEND_BASE}/verify-order`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', ...authHeaders(user), 'X-CSRF-Token': getCsrf() },
-            body: JSON.stringify(resp), // { razorpay_order_id, razorpay_payment_id, razorpay_signature }
-            credentials: 'include'
-          });
-          const out = await v.json();
-          if (out?.ok) {
-            setWallet(out.wallet);
-            setCoins(out.wallet.coins);
-            alert(`✅ Coins added: +${out.lastCredit.coins}`);
-          } else {
-            alert('Paid, verifying… coins will reflect shortly.');
-          }
-        } catch {
-          alert('Could not verify yet; webhook will credit shortly.');
-        } finally {
-          // success path → clear "Connecting…"
-          setIsPaying(false);
-        }
-      }
+    // Build options (exactly what you were passing into new Razorpay)
+const options = {
+  key: ord.key_id,
+  amount: ord.amount,
+  currency: ord.currency,
+  name: 'BuddyBy',
+  description: `Shraddha ${pack.label}`,
+  order_id: ord.order_id,
+  prefill: {
+    name: user?.name || '',
+    email: (user?.email || '').toLowerCase(),
+    contact: user?.phone || ''
+  },
+  theme: { color: '#ff3fb0' },
+  modal: { ondismiss: () => setIsPaying(false) }
+};
+
+// Open checkout → close pricing → verify quietly → toast when credited
+await handleCoinPurchase({
+  options,
+  closePricingModal: closeCoins,
+  verifyPayment: async (resp) => {
+    const v = await fetch(`${BACKEND_BASE}/verify-order`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...authHeaders(user), 'X-CSRF-Token': getCsrf() },
+      body: JSON.stringify(resp), // { razorpay_order_id, razorpay_payment_id, razorpay_signature }
+      credentials: 'include'
+    });
+    const out = await v.json();
+    if (out?.ok) {
+      setWallet(out.wallet);
+      setCoins(out.wallet.coins);
+      return { creditedCoins: out?.lastCredit?.coins || 0 };
+    }
+    // not yet verified → let webhook do its job, but don't alert
+    throw new Error('not_verified_yet');
+  },
+  onWalletRefetch: refreshWallet,
+  toast: (msg) => openNotice('All set', msg) // friendly in-UI popup
+});
+setIsPaying(false);
+  } catch (e) {
+  // If the user simply closed the Razorpay modal, do NOT fallback to payment link.
+  if (e?.type === 'dismissed') {
+    setIsPaying(false);
+    return;
+  }
+
+  console.error('Checkout failed, falling back to Payment Link:', e?.message || e);
+  setIsPaying(false);  // clear state before fallback
+
+  // Fallback to old Payment Link flow (unchanged)
+  try {
+    const resp = await fetch(`${BACKEND_BASE}/buy/${pack.id}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...authHeaders(user), 'X-CSRF-Token': getCsrf() },
+      body: JSON.stringify({ returnUrl: `${window.location.origin}/payment/thanks` }),
+      credentials: 'include'
     });
 
-    rzp.open(); // opens immediately thanks to prewarmed SDK + pre-created order
-  } catch (e) {
-    console.error('Checkout failed, falling back to Payment Link:', e.message);
-    setIsPaying(false);  // clear state before fallback
-
-    // Fallback to old Payment Link flow (unchanged)
-    try {
-      const resp = await fetch(`${BACKEND_BASE}/buy/${pack.id}`, {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json', ...authHeaders(user), 'X-CSRF-Token': getCsrf() },
-  body: JSON.stringify({ returnUrl: `${window.location.origin}/payment/thanks` }),
-  credentials: 'include'
-});
-
-      const data = await resp.json();
-      if (data?.ok) window.location.href = data.short_url;
-      else alert('Could not start payment: ' + (data?.error || e.message));
-    } catch (e2) {
-      alert('Could not start payment: ' + e2.message);
-    }
+    const data = await resp.json();
+    if (data?.ok) window.location.href = data.short_url;
+    else alert('Could not start payment: ' + (data?.error || e?.message || 'unknown_error'));
+  } catch (e2) {
+    alert('Could not start payment: ' + (e2?.message || 'unknown_error'));
   }
+ }
 }
   const [cooldown, setCooldown] = useState(false);
 
