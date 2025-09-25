@@ -744,7 +744,7 @@ body { background: linear-gradient(180deg, #fce7f3 0%, #ede9fe 100%); }
 
 /* when auto-compact is active, keep a clean gap before the coins pill */
 .header.narrow .name-wrap,
-.header.tiny .name-wrap { margin-right: 14px; }
+.header.tiny .name-wrap { margin-right: 18px; }
 
 /* if a wrap still happens on ultra-small screens, keep it neat */
 .header .username-container { align-content: center; }
