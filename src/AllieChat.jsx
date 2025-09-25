@@ -683,7 +683,7 @@ credentials: 'include'
     if (data?.ok) {
       setWallet(data.wallet);
       setCoins(data.wallet.coins);
-      alert(`✅ Coins added: +${data.lastCredit.coins}. Valid till ${new Date(data.wallet.expires_at).toLocaleString()}`);
+      alert(`✅ Coins added: +${data.lastCredit.coins}`);
       window.history.replaceState(null, '', '/');
     } else {
       alert('Payment not verified yet. If paid, it will reflect shortly.');
@@ -781,7 +781,7 @@ if (ord?.at && (Date.now() - ord.at > ORDER_TTL_MS)) {
           if (out?.ok) {
             setWallet(out.wallet);
             setCoins(out.wallet.coins);
-            alert(`✅ Coins added: +${out.lastCredit.coins}. Valid till ${new Date(out.wallet.expires_at).toLocaleString()}`);
+            alert(`✅ Coins added: +${out.lastCredit.coins}`);
           } else {
             alert('Paid, verifying… coins will reflect shortly.');
           }
