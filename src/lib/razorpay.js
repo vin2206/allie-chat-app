@@ -13,7 +13,6 @@ export function ensureRazorpaySDKLoaded(timeoutMs = 10000) {
   }
   if (!sdkPromise) {
     sdkPromise = new Promise((resolve, reject) => {
-      // If someone already injected the script tag, just wait for window.Razorpay.
       const existing = document.querySelector(`#rzp-checkout-js[src="${SDK_URL}"]`);
       if (!existing) {
         const s = document.createElement("script");
@@ -25,7 +24,6 @@ export function ensureRazorpaySDKLoaded(timeoutMs = 10000) {
         s.onerror = () => reject(new Error("Razorpay SDK failed to load"));
         document.head.appendChild(s);
       }
-      // Poll for readiness (covers both paths).
       const t0 = performance.now();
       (function waitReady() {
         if (window.Razorpay) return resolve(window.Razorpay);
@@ -51,7 +49,6 @@ export async function openRazorpay(options) {
   return new Promise((resolve, reject) => {
     const rzp = new Razorpay({
       ...options,
-      // keep your own options intact; just normalize callbacks into a Promise:
       handler: (response) => resolve({ type: "success", response }),
       modal: {
         ...(options.modal || {}),
@@ -60,4 +57,37 @@ export async function openRazorpay(options) {
     });
     try { rzp.open(); } catch (e) { reject(e); }
   });
+}
+
+// --- START: add this helper exactly below openRazorpay (keep it at file bottom) ---
+export async function handleCoinPurchase({
+  options,                // Razorpay checkout options
+  closePricingModal,      // () => void
+  verifyPayment,          // (payload) => Promise<{ creditedCoins: number }>
+  onWalletRefetch,        // () => void
+  toast = (msg) => {},    // (string) => void
+}) {
+  const result = await openRazorpay(options).catch((e) => { throw e; });
+
+  // Close the pricing modal right away
+  try { closePricingModal?.(); } catch {}
+
+  // Verify & credit quietly in background
+  const payload = result?.response || {};
+  let credited = 0;
+  try {
+    const vr = await verifyPayment(payload);     // server should be idempotent
+    credited = Number(vr?.creditedCoins || 0);
+  } catch {
+    // If verify lags, webhook will handle credit; no scary alerts.
+    return;
+  }
+
+  // Update wallet UI now that credit landed
+  try { await onWalletRefetch?.(); } catch {}
+
+  // Friendly, on-brand toast
+  if (credited > 0) {
+    toast(`+${credited} coins added—she’s waiting for you 🥰`);
+  }
 }
