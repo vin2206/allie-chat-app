@@ -753,9 +753,6 @@ body { background: linear-gradient(180deg, #fce7f3 0%, #ede9fe 100%); }
 
 /* keep multi-row alignment neat if a wrap ever happens */
 .header .username-container { align-content: center; }
-
-/* if a wrap still happens on ultra-small screens, keep it neat */
-.header .username-container { align-content: center; }
 /* —— Coins popup polishing —— */
 .coins-modal-title{
   margin: 0 0 4px;
@@ -1102,6 +1099,42 @@ html:not(.ime-open) .App.stable .footer .mic-btn {
   box-shadow: 0 10px 22px rgba(0,0,0,.18);
 }
 .welcome-note{ margin-top: 8px; font-size: 12px; opacity: .75; }
+/* Keep the CTA visible while the instructions scroll */
+.welcome-card {
+  /* already has max-height + overflow; this just ensures nice layout */
+  display: flex;
+  flex-direction: column;
+}
+
+.welcome-btn {
+  position: sticky;
+  bottom: 0;
+  z-index: 1;
+  /* small buffer so the sticky button doesn't cover last lines */
+  margin-top: 12px;
+}
+/* subtle fade behind the sticky button for readability */
+.welcome-card::after {
+  content: "";
+  position: sticky;
+  bottom: 48px;           /* roughly the button’s height */
+  display: block;
+  height: 0;              /* only draws the shadow */
+  box-shadow: 0 -12px 20px rgba(255,255,255,0.9);
+}
+/* Short/tiny screens: make the instructions a touch denser */
+@media (max-height: 700px), (max-width: 360px) {
+  .welcome-card { padding: 16px 16px; }
+  .welcome-burst { font-size: 36px; }
+  .welcome-amount { font-size: 24px; }
+
+  .instr-title { font-size: 18px; margin: 0 0 6px; }
+  .instr-sub   { font-size: 12px; margin-bottom: 8px; }
+  .instr-list li,
+  .tips-list  li { font-size: 13px; line-height: 1.30; margin: 6px 0; }
+
+  .welcome-btn { padding: 10px 12px; } /* slightly shorter button */
+}
 
 /* === Character Insight popup === */
 .charpop-overlay{
