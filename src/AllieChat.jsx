@@ -1464,7 +1464,7 @@ useEffect(() => {
       const need = container.scrollWidth;
       const avail = container.clientWidth;
       const ratio = need > 0 ? (avail / need) : 1;
-      const scale = Math.max(0.86, Math.min(1, ratio)); // never smaller than 0.86
+      const scale = Math.max(0.85, Math.min(1, ratio)); // never smaller than 0.86
       header.style.setProperty('--hz-scale', String(scale));
     } else {
       header.style.removeProperty('--hz-scale');
