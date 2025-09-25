@@ -745,7 +745,7 @@ body { background: linear-gradient(180deg, #fce7f3 0%, #ede9fe 100%); }
 
 /* NEW: reserve a slightly bigger gap before coins when tight */
 .header.narrow .name-wrap,
-.header.tiny  .name-wrap { margin-right: 18px; }
+.header.tiny  .name-wrap { margin-right: 20px; }
 
 /* NEW: micro-shrink DP only when tight (does not affect normal phones) */
 .header.narrow .profile-pic { width: 48px; height: 48px; margin-right: 10px; }
