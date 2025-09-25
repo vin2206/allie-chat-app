@@ -273,6 +273,7 @@ if (!document.querySelector('script[src*="gsi/client"]')) {
 function WelcomeFlow({ open, onClose, amount = 100, defaultStep = 0 }) {
   // defaultStep: 0 = show bonus screen first, 1 = jump directly to instructions
   const [step, setStep] = React.useState(defaultStep);
+  const [claimed, setClaimed] = React.useState(false);
 
   // Reset to the right step every time the modal is opened
   React.useEffect(() => {
@@ -304,31 +305,42 @@ const close = (e) => {
             <div className="welcome-amount">+{amount} coins</div>
             <button
   className="welcome-btn"
+  disabled={claimed}
   onClick={async (e) => {
     e?.stopPropagation?.();
     try {
       const r = await fetch(`${BACKEND_BASE}/claim-welcome`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...authHeaders(loadUser()), 'X-CSRF-Token': getCsrf() },
+        headers: {
+          'Content-Type': 'application/json',
+          ...authHeaders(loadUser()),
+          'X-CSRF-Token': getCsrf()
+        },
         credentials: 'include',
         body: JSON.stringify({})
       });
       const data = await r.json();
       if (data?.ok && data?.wallet) {
-        // mark as claimed on *this browser* too
+        // mark claimed in this browser too
         const uid = (loadUser()?.sub || loadUser()?.email || '');
         localStorage.setItem(welcomeKeyFor(uid), '1');
-
         if (typeof window.refreshWalletGlobal === 'function') window.refreshWalletGlobal();
-        alert(data.claimed ? '✅ +100 coins added!' : 'You’re all set.');
+
+        // inline success (no native alert)
+        setClaimed(true);
+        // auto-advance to instructions after a short beat
+        setTimeout(() => setStep(1), 700);
+      } else {
+        // even if backend says “already claimed”, move on quietly
+        setStep(1);
       }
-    } catch {}
-    // move to instructions step either way
-    if (typeof e?.stopPropagation === 'function') e.stopPropagation();
-    setStep(1);
+    } catch {
+      // on network hiccup, still move to instructions to avoid trapping user
+      setStep(1);
+    }
   }}
 >
-  Claim 100 coins
+  {claimed ? '✅ +100 added' : 'Claim 100 coins'}
 </button>
             <div className="welcome-note">Roleplay models are part of the upgrade.</div>
           </>
