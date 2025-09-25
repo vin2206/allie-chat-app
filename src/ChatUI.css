@@ -729,7 +729,7 @@ body { background: linear-gradient(180deg, #fce7f3 0%, #ede9fe 100%); }
   box-shadow: 0 2px 6px rgba(0,0,0,.18); /* same depth as the main .role-badge */
 }
 /* Auto-compact header when content would wrap */
-.header.narrow .username { font-size: 19px; max-width: 39vw; }
+.header.narrow .username { font-size: 19px; max-width: 38.5vw; }
 .header.tiny   .username { font-size: 17.5px; max-width: 36vw; }
 
 /* pills stay small (same as before) */
