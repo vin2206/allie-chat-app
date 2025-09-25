@@ -1456,7 +1456,7 @@ useEffect(() => {
     const overflowPx = container.scrollWidth - container.clientWidth;
     const overflowing = overflowPx > 8;
 
-    const enable = uaIsLegacy && overflowing;
+    const enable = overflowing;   // trigger on real overflow, not UA guess
     document.documentElement.classList.toggle('legacy-zoom', !!enable);
 
     if (enable) {
