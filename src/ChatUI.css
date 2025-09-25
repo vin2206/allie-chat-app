@@ -729,22 +729,30 @@ body { background: linear-gradient(180deg, #fce7f3 0%, #ede9fe 100%); }
   box-shadow: 0 2px 6px rgba(0,0,0,.18); /* same depth as the main .role-badge */
 }
 /* Auto-compact header when content would wrap */
-.header.narrow .username { font-size: 20px; max-width: 40vw; }
-.header.tiny   .username { font-size: 18px; max-width: 38vw; }
+.header.narrow .username { font-size: 19px; max-width: 39vw; }
+.header.tiny   .username { font-size: 17.5px; max-width: 36vw; }
 
+/* pills stay small (same as before) */
 .header.narrow .coin-pill,
 .header.narrow .role-btn { padding: 4px 7px; font-size: 11px; }
 
 .header.tiny .coin-pill,
 .header.tiny .role-btn { padding: 4px 7px; font-size: 10px; }
 
-/* shrink the red "Stranger" badge a bit when tight */
+/* “Stranger” pill just a hair smaller */
 .header.narrow .role-badge { font-size: 11px; padding: 2px 6px; }
 .header.tiny   .role-badge { font-size: 10px; padding: 1px 6px; }
 
-/* when auto-compact is active, keep a clean gap before the coins pill */
+/* NEW: reserve a slightly bigger gap before coins when tight */
 .header.narrow .name-wrap,
-.header.tiny .name-wrap { margin-right: 18px; }
+.header.tiny  .name-wrap { margin-right: 18px; }
+
+/* NEW: micro-shrink DP only when tight (does not affect normal phones) */
+.header.narrow .profile-pic { width: 48px; height: 48px; margin-right: 10px; }
+.header.tiny   .profile-pic { width: 46px; height: 46px; margin-right: 9px; }
+
+/* keep multi-row alignment neat if a wrap ever happens */
+.header .username-container { align-content: center; }
 
 /* if a wrap still happens on ultra-small screens, keep it neat */
 .header .username-container { align-content: center; }
