@@ -501,6 +501,8 @@ function getOpener(mode, type) {
   const bottomRef = useRef(null);
   // NEW: track if we should auto-stick to bottom (strict, WhatsApp-like)
 const scrollerRef = useRef(null);
+ // ADD BELOW your other refs/state in AllieChat()
+const walletReqIdRef = useRef(0); // last-write-wins guard for /wallet fetches 
 const stickToBottomRef = useRef(true); // true only when truly at bottom
 const readingUpRef = useRef(false);    // true when user scrolled up (locks auto-scroll)
 const imeLockRef = useRef(false); // ignore scroll logic during IME open/close animation
@@ -616,29 +618,38 @@ useEffect(() => {
 
 async function refreshWallet(){
   if (!user) return;
+
+  setWalletReady(false);
+
+  const reqId = ++walletReqIdRef.current; // mark this as the latest request
+
   try {
     const r = await fetch(`${BACKEND_BASE}/wallet`, { headers: authHeaders(user), credentials: 'include' });
 
     // If our 14-day cookie is missing/invalid, show the quiet banner and stop here.
     if (r.status === 401 || r.status === 403) {
+      if (reqId !== walletReqIdRef.current) return; // stale response
       setShowSigninBanner(true);
       setWalletReady(false);
       return;
     }
 
-    // Normal success path (HTTP 200)
     const data = await r.json();
+
+    // Ignore stale responses (older than the most recent call)
+    if (reqId !== walletReqIdRef.current) return;
+
     if (data?.ok) {
       setWallet(data.wallet);
       setCoins(Number(data.wallet.coins || 0));  // source of truth = server
       setWalletReady(true);
     } else {
-      // Don’t block the UI forever; still let the app proceed
-      setWalletReady(true);
+      setWalletReady(true); // allow UI to settle even if not ok
     }
   } catch (e) {
     console.error('refreshWallet failed:', e);
-    // Network/CORS hiccup → proceed without blocking the app
+    // Only touch readiness if this is still the latest request
+    if (reqId !== walletReqIdRef.current) return;
     setWalletReady(true);
   }
 }
@@ -648,6 +659,21 @@ useEffect(() => { refreshWallet(); }, [user]);
 useEffect(() => {
   window.refreshWalletGlobal = () => refreshWallet();
   return () => { delete window.refreshWalletGlobal; };
+}, [user]);
+  // ADD BELOW the window.refreshWalletGlobal effect
+useEffect(() => {
+  const onVisible = () => {
+    if (document.visibilityState === 'visible') refreshWallet();
+  };
+  const onPageShow = () => refreshWallet();
+
+  document.addEventListener('visibilitychange', onVisible);
+  window.addEventListener('pageshow', onPageShow);
+
+  return () => {
+    document.removeEventListener('visibilitychange', onVisible);
+    window.removeEventListener('pageshow', onPageShow);
+  };
 }, [user]);
   async function maybeFinalizePayment(){
   if (!window.location.pathname.includes('/payment/thanks')) return;
@@ -1698,7 +1724,7 @@ if (!user) {
   title={isOwner ? "Owner: unlimited" : "Your balance (tap to buy coins)"}
   aria-label="Coins"
 >
-  🪙 {isOwner ? '∞' : coins}
+  🪙 {isOwner ? '∞' : (walletReady ? coins : '…')}
 </button>
 
   <button
