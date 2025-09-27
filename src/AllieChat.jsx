@@ -159,7 +159,7 @@ function ConfirmDialog({ open, title, message, onCancel, onConfirm, okOnly=false
     <div className="confirm-backdrop" role="dialog" aria-modal="true">
       <div className="confirm-modal">
         <h3>{title}</h3>
-        <p>{message}</p>
+        <p aria-live="polite">{message}</p>
         <div className="confirm-buttons">
           {!okOnly && <button className="btn-secondary" onClick={onCancel}>{cancelText}</button>}
           <button className="btn-primary" onClick={onConfirm}>{okText}</button>
@@ -896,6 +896,53 @@ const openNotice = (title, message, after) =>
 
 const closeConfirm = () =>
   setConfirmState(s => ({ ...s, open: false, onConfirm: null, okOnly: false }));
+  // ---- Paid voice-limit countdown (local midnight) ----
+const limitTimerRef = useRef(null);
+
+function msUntilLocalMidnight() {
+  const now = new Date();
+  const mid = new Date(now);
+  mid.setHours(24, 0, 0, 0);            // today → next local midnight
+  return Math.max(0, mid - now);
+}
+function fmtHMS(ms) {
+  const t = Math.floor(ms / 1000);
+  const h = String(Math.floor(t / 3600)).padStart(2, '0');
+  const m = String(Math.floor((t % 3600) / 60)).padStart(2, '0');
+  const s = String(t % 60).padStart(2, '0');
+  return `${h}:${m}:${s}`;
+}
+
+// Opens the existing ConfirmDialog and live-updates the "Resets in HH:MM:SS" line.
+const showPaidLimitTimer = React.useCallback(() => {
+  const tick = () => {
+    const ms = msUntilLocalMidnight();
+    const line = ms > 0 ? `Resets in ${fmtHMS(ms)}` : 'Resetting now…';
+    setConfirmState({
+      open: true,
+      title: 'Daily voice limit reached',
+      message: `You’ve used all your voice replies for today. ${line}`,
+      okOnly: true,
+      onConfirm: () => { closeConfirm(); }
+    });
+    if (ms <= 0 && limitTimerRef.current) {
+      clearInterval(limitTimerRef.current);
+      limitTimerRef.current = null;
+    }
+  };
+
+  if (limitTimerRef.current) clearInterval(limitTimerRef.current);
+  tick();                                    // immediate render
+  limitTimerRef.current = setInterval(tick, 1000);
+}, [closeConfirm, setConfirmState]);
+
+// Clean up ticker whenever the dialog closes
+useEffect(() => {
+  if (!confirmState.open && limitTimerRef.current) {
+    clearInterval(limitTimerRef.current);
+    limitTimerRef.current = null;
+  }
+}, [confirmState.open]);
   // Next request should clear server context after a role switch
 const shouldResetRef = useRef(false);
   const roleMenuRef = useRef(null);
@@ -1021,15 +1068,17 @@ const startRecording = async () => {
     const limit = paid ? PAID_DAILY_VOICE_LIMIT : FREE_DAILY_VOICE_LIMIT;
     const used  = getVoiceUsed(paid, user);
     if (used >= limit) {
-      openNotice(
-        paid ? 'Daily voice limit reached' : 'Free voice limit over',
-        paid
-          ? 'You’ve used all your voice replies for today. It resets at midnight.'
-          : 'Aapne 2 free voice replies use kar liye. Daily ya Weekly plan recharge karke aur voice/text replies unlock karein.',
-        paid ? null : openCoins
-      );
-      return;
-    }
+  if (paid) {
+    showPaidLimitTimer();
+  } else {
+    openNotice(
+      'Free voice limit over',
+      'Aapne 2 free voice replies use kar liye. Daily ya Weekly plan recharge karke aur voice/text replies unlock karein.',
+      openCoins
+    );
+  }
+  return;
+}
   }
   // Coins gate: allow brand-new users (welcome not yet visible on client) to pass once
 const allowFirstSend = (!walletReady || wallet?.welcome_claimed !== true);
@@ -1215,13 +1264,15 @@ const sendVoiceBlob = async (blob) => {
   const limit = paid ? PAID_DAILY_VOICE_LIMIT : FREE_DAILY_VOICE_LIMIT;
   const used  = getVoiceUsed(paid, user);
   if (used >= limit) {
-    openNotice(
-      paid ? 'Daily voice limit reached' : 'Free voice limit over',
-      paid
-        ? 'You’ve used all your voice replies for today. It resets at midnight.'
-        : 'Aapne 2 free voice replies use kar liye. Daily ya Weekly plan recharge karke aur voice/text replies unlock karein.',
-      paid ? null : openCoins
-    );
+    if (paid) {
+      showPaidLimitTimer();
+    } else {
+      openNotice(
+        'Free voice limit over',
+        'Aapne 2 free voice replies use kar liye. Daily ya Weekly plan recharge karke aur voice/text replies unlock karein.',
+        openCoins
+      );
+    }
     return;
   }
 }
