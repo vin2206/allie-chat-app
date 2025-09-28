@@ -104,6 +104,41 @@ const ROLE_LABELS = {
 // === Voice quota per day ===
 const FREE_DAILY_VOICE_LIMIT = 2;     // Free users
 const PAID_DAILY_VOICE_LIMIT = 8;    // Paid users (tweak anytime)
+// --- Paid-ever flags & upgrade-day cap ---
+const PAID_EVER_KEY = (u) => `paid_ever_${userIdFor(u)}`;
+const FIRST_PAID_DATE_KEY = (u) => `first_paid_local_date_${userIdFor(u)}`;
+
+// read flags
+function isPaidEver(u) {
+  try { return localStorage.getItem(PAID_EVER_KEY(u)) === '1'; } catch { return false; }
+}
+function getFirstPaidLocalDate(u) {
+  try { return localStorage.getItem(FIRST_PAID_DATE_KEY(u)) || ''; } catch { return ''; }
+}
+// set once on first successful recharge
+function markFirstRechargeIfNeeded(u) {
+  try {
+    if (!isPaidEver(u)) localStorage.setItem(PAID_EVER_KEY(u), '1');
+    if (!getFirstPaidLocalDate(u)) localStorage.setItem(FIRST_PAID_DATE_KEY(u), isoDay());
+  } catch {}
+}
+
+// --- unify daily counter (one key per user/day, regardless of free/paid) ---
+const voiceTotalKey = (u) => `voice_used_total_${userIdFor(u)}_${isoDay()}`;
+const getVoiceUsed = (_paidIgnored, u) => Number(localStorage.getItem(voiceTotalKey(u)) || 0);
+const bumpVoiceUsed = (_paidIgnored, u) => {
+  const k = voiceTotalKey(u);
+  const n = Number(localStorage.getItem(k) || 0) + 1;
+  localStorage.setItem(k, String(n));
+};
+
+// --- compute today's cap by your rules ---
+function getTodayCap(u) {
+  if (!isPaidEver(u)) return FREE_DAILY_VOICE_LIMIT; // 2
+  const firstDay = getFirstPaidLocalDate(u);
+  if (firstDay && firstDay === isoDay()) return 10;  // upgrade-day bonus
+  return PAID_DAILY_VOICE_LIMIT;                     // 8
+}
 
 // Use local day so quota resets at the user's midnight
 const isoDay = () => {
@@ -114,13 +149,6 @@ const isoDay = () => {
   return `${y}-${m}-${day}`; // YYYY-MM-DD (local)
 };
 const userIdFor = (u) => (u?.sub || u?.email || 'anon').toLowerCase();
-const voiceKey = (paid, u) => `voice_used_${paid ? 'paid' : 'free'}_${userIdFor(u)}_${isoDay()}`;
-
-const getVoiceUsed = (paid, u) => Number(localStorage.getItem(voiceKey(paid, u)) || 0);
-const bumpVoiceUsed = (paid, u) => {
-  const k = voiceKey(paid, u);
-  localStorage.setItem(k, String(getVoiceUsed(paid, u) + 1));
-};
 
 // localStorage helpers
 const AUTORENEW_KEY = 'autorenew_v1'; // {daily:bool, weekly:bool}
@@ -773,6 +801,7 @@ credentials: 'include'
     if (data?.ok) {
       setWallet(data.wallet);
       setCoins(data.wallet.coins);
+      markFirstRechargeIfNeeded(user);
       openNotice('All set', `+${data.lastCredit.coins} coins added—she’s waiting for you 🥰`, () => {
    window.history.replaceState(null, '', '/');
   });
@@ -870,6 +899,7 @@ await handleCoinPurchase({
     if (out?.ok) {
       setWallet(out.wallet);
       setCoins(out.wallet.coins);
+      markFirstRechargeIfNeeded(user);
       return { creditedCoins: out?.lastCredit?.coins || 0 };
     }
     // not yet verified → let webhook do its job, but don't alert
@@ -1103,13 +1133,13 @@ const askedForVoice = (text = "") => {
 const applyRoleChange = (mode, type) => {
   // premium gate for roleplay
   if (mode === 'roleplay' && roleplayNeedsPremium && !isOwner) {
-    const active = (wallet?.expires_at || 0) > Date.now();
-    if (!active) {
-      setShowRoleMenu(false);
-      openCoins();
-      return;
-    }
+  const active = (wallet?.expires_at || 0) > Date.now();
+  if (!active) {
+    setShowRoleMenu(false);
+    openCoins();
+    return;
   }
+}
 
   // set state, but DO NOT save to localStorage
 setRoleMode(mode);
@@ -1140,24 +1170,21 @@ setTimeout(() => scrollToBottomNow(true), 0);
   // --------- PRESS & HOLD mic handlers ---------
 const startRecording = async () => {
   if (isTyping || cooldown) return;
-  // 🚫 Daily voice limit guard (same as startRecording/handleSend)
+  // 🚫 Daily voice limit guard (unified rules)
 if (!isOwner) {
-  const paid  = (wallet?.expires_at || 0) > Date.now();
-  const limit = paid ? PAID_DAILY_VOICE_LIMIT : FREE_DAILY_VOICE_LIMIT;
-  const used  = getVoiceUsed(paid, user);
-  if (used >= limit) {
-    if (paid) {
-      // Paid users: show countdown-to-midnight popup
+  const cap  = getTodayCap(user);
+  const used = getVoiceUsed(true, user); // arg ignored
+  if (used >= cap) {
+    if (isPaidEver(user)) {
       showPaidLimitTimer();
     } else {
-      // Free users: show upsell notice
       openNotice(
         'Free voice limit over',
         'Aapne 2 free voice replies use kar liye. Daily ya Weekly plan recharge karke aur voice/text replies unlock karein.',
         openCoins
       );
     }
-    return; // ⛔ stop here; don’t post to server
+    return; // stop here
   }
 }
   // Coins gate: allow brand-new users (welcome not yet visible on client) to pass once
@@ -1223,20 +1250,19 @@ const sendVoiceBlob = async (blob) => {
   if (isTyping || cooldown) return;
 // Daily voice limit guard (prevents server call + reply bubble)
 if (!isOwner) {
-  const paid  = (wallet?.expires_at || 0) > Date.now();
-  const limit = paid ? PAID_DAILY_VOICE_LIMIT : FREE_DAILY_VOICE_LIMIT;
-  const used  = getVoiceUsed(paid, user);
-  if (used >= limit) {
-    if (paid) {
-      showPaidLimitTimer();   // popup with countdown to midnight
+  const cap  = getTodayCap(user);
+  const used = getVoiceUsed(true, user); // arg ignored
+  if (used >= cap) {
+    if (isPaidEver(user)) {
+      showPaidLimitTimer();
     } else {
       openNotice(
         'Free voice limit over',
-        'Aapne 2 free voice replies use kar liye. Daily ya Weekly plan recharge karke aur voice/text replies unlock karein.',
+        'Aapne 2 free voice replies use kar liye. Daily ya Weekly plan recharge karke voice/text replies unlock karein.',
         openCoins
       );
     }
-    return; // stop: no local preview, no POST
+    return; // no preview, no POST
   }
 }
     // Coins gate for VOICE (respect first-send bypass like startRecording/handleSend)
@@ -1311,9 +1337,8 @@ if (!isOwner) {
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       }]);
       if (data.wallet) setCoins(data.wallet.coins);
-      if (!isOwner) {
-    const paid = (wallet?.expires_at || 0) > Date.now();
-    bumpVoiceUsed(paid, user);
+        if (!isOwner) {
+    bumpVoiceUsed(true, user);
   }
     } else {
       setMessages(prev => [...prev, {
@@ -1357,21 +1382,20 @@ if (!isOwner) {
   const wantVoiceNow = askedForVoice(inputValue);
   const allowFirstSend = (!walletReady || wallet?.welcome_claimed !== true);
     if (wantVoiceNow && !isOwner) {
-  const paid = (wallet?.expires_at || 0) > Date.now();
-  const limit = paid ? PAID_DAILY_VOICE_LIMIT : FREE_DAILY_VOICE_LIMIT;
-  const used  = getVoiceUsed(paid, user);
-  if (used >= limit) {
-    if (paid) {
-      showPaidLimitTimer();
-    } else {
-      openNotice(
-        'Free voice limit over',
-        'Aapne 2 free voice replies use kar liye. Daily ya Weekly plan recharge karke aur voice/text replies unlock karein.',
-        openCoins
-      );
-    }
-    return;
+  const cap  = getTodayCap(user);
+const used = getVoiceUsed(true, user); // arg ignored
+if (used >= cap) {
+  if (isPaidEver(user)) {
+    showPaidLimitTimer();
+  } else {
+    openNotice(
+      'Free voice limit over',
+      'Aapne 2 free voice replies use kar liye. Daily ya Weekly plan recharge karke voice/text replies unlock karein.',
+      openCoins
+    );
   }
+  return;
+}
 }
   if (!isOwner) {
     if (wantVoiceNow) {
@@ -1457,8 +1481,7 @@ if (response.status === 401) {
   const fullUrl = data.audioUrl.startsWith('http') ? data.audioUrl : `${BACKEND_BASE}${data.audioUrl}`;
   setMessages(prev => [...prev, { audioUrl: fullUrl, sender: 'allie', time: currentTime }]);
   if (data.wallet) setCoins(data.wallet.coins);
-const paid = (wallet?.expires_at || 0) > Date.now();
-bumpVoiceUsed(paid, user); // (optional UI counter)
+bumpVoiceUsed(true, user); // (optional UI counter)
   return;
 }
 
@@ -1529,8 +1552,7 @@ bumpVoiceUsed(paid, user); // (optional UI counter)
       const fullUrl = data.audioUrl.startsWith('http') ? data.audioUrl : `${BACKEND_BASE}${data.audioUrl}`;
       setMessages(prev => [...prev, { audioUrl: fullUrl, sender: 'allie', time: t }]);
       if (data.wallet) setCoins(data.wallet.coins);
-      const paid = (wallet?.expires_at || 0) > Date.now();
-      bumpVoiceUsed(paid, user);
+     bumpVoiceUsed(true, user);
     } else {
       const reply = data.reply || "Hmm… thoda slow tha. Ab batao?";
       setMessages(prev => [...prev, { text: reply, sender: 'allie', time: t }]);
@@ -2022,8 +2044,8 @@ if (!user) {
       </div>
 
       {(roleplayNeedsPremium && !isOwner && !(wallet?.expires_at > Date.now())) ? (
-        <div className="role-upsell">Roleplay requires recharge.</div>
-      ) : null}
+  <div className="role-upsell">Roleplay requires recharge.</div>
+) : null}
     </div>
   </div>
 )}
