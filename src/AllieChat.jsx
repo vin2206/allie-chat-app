@@ -66,7 +66,6 @@ function scheduleIdRefresh(u) {
     }, fireIn);
   } catch {}
 }
-
 // Initialize GIS for background credential refresh (no UI)
 function enableSilentReauth(clientId, setUser) {
   window.google.accounts.id.initialize({
@@ -142,6 +141,38 @@ const AUTORENEW_KEY = 'autorenew_v1'; // {daily:bool, weekly:bool}
 // --- NEW: lightweight auth (local only) ---
 const USER_KEY = 'user_v1';
 const welcomeKeyFor = (id) => `welcome_${id}_v1`; // id = sub (preferred) or email
+// ---------- Chat persistence helpers (per user + role) ----------
+const THREAD_KEY = (u, roleMode, roleType) =>
+  `thread_v3_${userIdFor(u)}_${roleMode || 'stranger'}_${roleType || 'stranger'}`;
+const DRAFT_KEY  = (u, roleMode, roleType) =>
+  `draft_v1_${userIdFor(u)}_${roleMode || 'stranger'}_${roleType || 'stranger'}`;
+const ROLE_KEY   = (u) => `role_sel_v1_${userIdFor(u)}`;
+const WELCOME_SEEN_KEY = (u) => `welcome_seen_v2_${userIdFor(u)}`;
+
+function serializeMsgs(arr = []) {
+  return arr.map(m => {
+    // persist a safe textual marker for blob:// audio to avoid broken URLs after restore
+    if (m.audioUrl && !/^https?:/i.test(m.audioUrl)) {
+      return { sender: m.sender, text: m.text || '🔊 (voice note)', time: m.time };
+    }
+    return { sender: m.sender, text: m.text, audioUrl: m.audioUrl, time: m.time };
+  });
+}
+function saveThread(u, roleMode, roleType, msgs) {
+  try { localStorage.setItem(THREAD_KEY(u, roleMode, roleType), JSON.stringify(serializeMsgs(msgs))); } catch {}
+}
+function loadThread(u, roleMode, roleType) {
+  try {
+    const raw = localStorage.getItem(THREAD_KEY(u, roleMode, roleType));
+    return raw ? JSON.parse(raw) : null;
+  } catch { return null; }
+}
+function saveDraft(u, roleMode, roleType, text) {
+  try { localStorage.setItem(DRAFT_KEY(u, roleMode, roleType), text || ''); } catch {}
+}
+function loadDraft(u, roleMode, roleType) {
+  try { return localStorage.getItem(DRAFT_KEY(u, roleMode, roleType)) || ''; } catch { return ''; }
+}
 
 const loadUser = () => {
   try { return JSON.parse(localStorage.getItem(USER_KEY)); }
@@ -425,6 +456,7 @@ const [welcomeDefaultStep, setWelcomeDefaultStep] = useState(0);
 const [coins, setCoins] = useState(0);
   // server-driven wallet
 const [wallet, setWallet] = useState({ coins: 0, expires_at: 0, welcome_claimed: false });
+const welcomeDecidedRef = useRef(false);
   // --- NEW: wallet load gate + welcome "seen once" helpers ---
 const [walletReady, setWalletReady] = useState(false);
 // Layout chooser: Android → 'stable' (scrollable, no black band); others → 'fixed'
@@ -436,24 +468,24 @@ const [layoutClass] = useState(IS_ANDROID ? 'stable' : 'fixed');
   // Warm Razorpay early so checkout feels instant
 useEffect(() => { if (user) setShowSigninBanner(false); }, [user]);
 
-// Show bonus for real newcomers, otherwise just instructions
+// Show welcome only once per user per browser
 useEffect(() => {
-  if (!user || !walletReady) return;
+  if (!user || !walletReady || welcomeDecidedRef.current) return;
 
-  // also suppress if this browser already claimed it once
+  // if seen once for this user on this browser, never show again
+  if (localStorage.getItem(WELCOME_SEEN_KEY(user))) {
+    welcomeDecidedRef.current = true;
+    return;
+  }
+
   const uid = user?.sub || user?.email || '';
   const localClaimed = !!localStorage.getItem(welcomeKeyFor(uid));
-
   const claimed = !!wallet?.welcome_claimed || localClaimed;
-  const lowCoins = (Number(wallet?.coins || 0) < 50); // “feels new” heuristic
+  const lowCoins = (Number(wallet?.coins || 0) < 50);
 
-  if (!claimed && lowCoins) {
-    setWelcomeDefaultStep(0); // show bonus screen
-    setShowWelcome(true);
-  } else {
-    setWelcomeDefaultStep(1); // show instructions only
-    setShowWelcome(true);
-  }
+  setWelcomeDefaultStep(!claimed && lowCoins ? 0 : 1);
+  setShowWelcome(true);
+  welcomeDecidedRef.current = true;
 }, [user, walletReady, wallet?.welcome_claimed, wallet?.coins]);
 
   function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
@@ -493,11 +525,40 @@ function getOpener(mode, type) {
     default:
       return "Hi… kaise ho? 🙂";
   }
+  // --- Role bootstrap + initial thread (MUST come before seedOpener/messages) ---
+const initialRole = (() => {
+  const u = loadUser();
+  try {
+    if (!u) return { mode: 'stranger', type: null };
+    const raw = localStorage.getItem(ROLE_KEY(u));
+    if (!raw) return { mode: 'stranger', type: null };
+    const { mode, type } = JSON.parse(raw);
+    return { mode: mode || 'stranger', type: type || null };
+  } catch {
+    return { mode: 'stranger', type: null };
+  }
+})();
+
+const [roleMode, setRoleMode] = useState(initialRole.mode);
+const [roleType, setRoleType] = useState(initialRole.type);
+
+// Seed opener based on initial role
+const seedOpener = [
+  { text: getOpener(initialRole.mode, initialRole.type), sender: 'allie' }
+];
+
+// Messages/draft must read using initialRole to avoid order issues
+const [messages, setMessages] = useState(() => {
+  const u = loadUser();
+  const saved = u ? loadThread(u, initialRole.mode, initialRole.type) : null;
+  return Array.isArray(saved) && saved.length ? saved : seedOpener;
+});
+
+const [inputValue, setInputValue] = useState(() => {
+  const u = loadUser();
+  return u ? loadDraft(u, initialRole.mode, initialRole.type) : '';
+});
 }
-  const [messages, setMessages] = useState([
-  { text: getOpener('stranger', null), sender: 'allie' }
-]);
-  const [inputValue, setInputValue] = useState('');
   const bottomRef = useRef(null);
   // NEW: track if we should auto-stick to bottom (strict, WhatsApp-like)
 const scrollerRef = useRef(null);
@@ -517,6 +578,32 @@ const scrollToBottomNow = (force = false) => {
   // Let the browser scroll the *active* container (inner or page)
   anchor.scrollIntoView({ block: 'end', inline: 'nearest', behavior: 'auto' });
 };
+  // persist thread on changes (debounced)
+useEffect(() => {
+  if (!user) return;
+  const t = setTimeout(() => saveThread(user, roleMode, roleType, messages), 150);
+  return () => clearTimeout(t);
+}, [user, roleMode, roleType, messages]);
+
+// persist input draft on changes (debounced)
+useEffect(() => {
+  if (!user) return;
+  const t = setTimeout(() => saveDraft(user, roleMode, roleType, inputValue), 150);
+  return () => clearTimeout(t);
+}, [user, roleMode, roleType, inputValue]);
+
+// final save on tab close / app background unload
+useEffect(() => {
+  const onBeforeUnload = () => {
+    if (user) {
+      saveThread(user, roleMode, roleType, messages);
+      saveDraft(user, roleMode, roleType, inputValue);
+    }
+  };
+  window.addEventListener('beforeunload', onBeforeUnload);
+  return () => window.removeEventListener('beforeunload', onBeforeUnload);
+}, [user, roleMode, roleType, messages, inputValue]);
+
   // Does roleplay require premium? (server-controlled)
 const [roleplayNeedsPremium, setRoleplayNeedsPremium] = useState(true);
 
@@ -861,9 +948,6 @@ useEffect(() => {
     }
   });
 }, [showCoins, user]);
-  // --- Roleplay wiring (Step 1) ---
-const [roleMode, setRoleMode] = useState('stranger');
-const [roleType, setRoleType] = useState(null);
   // DP lightbox
 const [showAvatarFull, setShowAvatarFull] = useState(false);
 
@@ -1042,18 +1126,26 @@ const applyRoleChange = (mode, type) => {
   }
 
   // set state, but DO NOT save to localStorage
-  setRoleMode(mode);
-  setRoleType(type);
+setRoleMode(mode);
+setRoleType(type);
+try { if (user) localStorage.setItem(ROLE_KEY(user), JSON.stringify({ mode, type })); } catch {}
 
-  // close menu
-  setShowRoleMenu(false);
+// close menu
+setShowRoleMenu(false);
 
-  // show the correct opener
+// load existing thread if any; else seed opener
+const existing = user ? loadThread(user, mode, type) : null;
+if (Array.isArray(existing) && existing.length) {
+  setMessages(existing);
+  setInputValue(loadDraft(user, mode, type) || '');
+} else {
   const opener = getOpener(mode, type);
   setMessages([{ text: opener, sender: 'allie' }]);
-  readingUpRef.current = false;
-  stickToBottomRef.current = true;
-  setTimeout(() => scrollToBottomNow(true), 0);
+  setInputValue('');
+}
+readingUpRef.current = false;
+stickToBottomRef.current = true;
+setTimeout(() => scrollToBottomNow(true), 0);
 
   // clear server context on next request
   shouldResetRef.current = true;
@@ -1992,9 +2084,10 @@ if (!user) {
 <WelcomeFlow
   open={showWelcome}
   onClose={() => {
-    setShowWelcome(false);
-    setShowCharPopup(true);
-  }}
+  setShowWelcome(false);
+  if (user) { try { localStorage.setItem(WELCOME_SEEN_KEY(user), '1'); } catch {} }
+  setShowCharPopup(true);
+}}
   amount={100}
   defaultStep={welcomeDefaultStep}
 />
