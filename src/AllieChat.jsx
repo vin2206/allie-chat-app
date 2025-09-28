@@ -1170,8 +1170,15 @@ setTimeout(() => scrollToBottomNow(true), 0);
   // --------- PRESS & HOLD mic handlers ---------
 const startRecording = async () => {
   if (isTyping || cooldown) return;
+
+  // NEW: don’t let users record until wallet/cookies are ready
+  if (!walletReady) {
+    openNotice('Connecting…', 'Give me a second to reconnect.');
+    return;
+  }
+
   // 🚫 Daily voice limit guard (unified rules)
-if (!isOwner) {
+  if (!isOwner) {
   const cap  = getTodayCap(user);
   const used = getVoiceUsed(true, user); // arg ignored
   if (used >= cap) {
@@ -1248,6 +1255,10 @@ const stopRecording = () => {
 // Upload the voice to backend as multipart/form-data
 const sendVoiceBlob = async (blob) => {
   if (isTyping || cooldown) return;
+    if (!walletReady) {
+    openNotice('Connecting…', 'Give me a second to reconnect.');
+    return;
+  }
 // Daily voice limit guard (prevents server call + reply bubble)
 if (!isOwner) {
   const cap  = getTodayCap(user);
@@ -1377,6 +1388,11 @@ if (!isOwner) {
   setTimeout(() => scrollToBottomNow(true), 0);
   return;
 }
+      // prevent sending while wallet/cookies are still loading
+  if (!walletReady) {
+    openNotice('Connecting…', 'Give me a second to reconnect.');
+    return;
+  }
 
   // Decide cost before sending
   const wantVoiceNow = askedForVoice(inputValue);
