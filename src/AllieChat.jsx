@@ -1140,24 +1140,26 @@ setTimeout(() => scrollToBottomNow(true), 0);
   // --------- PRESS & HOLD mic handlers ---------
 const startRecording = async () => {
   if (isTyping || cooldown) return;
-  // Daily voice quota check
-  if (!isOwner) {
-    const paid = (wallet?.expires_at || 0) > Date.now();
-    const limit = paid ? PAID_DAILY_VOICE_LIMIT : FREE_DAILY_VOICE_LIMIT;
-    const used  = getVoiceUsed(paid, user);
-    if (used >= limit) {
-  if (paid) {
-    showPaidLimitTimer();
-  } else {
-    openNotice(
-      'Free voice limit over',
-      'Aapne 2 free voice replies use kar liye. Daily ya Weekly plan recharge karke aur voice/text replies unlock karein.',
-      openCoins
-    );
+  // 🚫 Daily voice limit guard (same as startRecording/handleSend)
+if (!isOwner) {
+  const paid  = (wallet?.expires_at || 0) > Date.now();
+  const limit = paid ? PAID_DAILY_VOICE_LIMIT : FREE_DAILY_VOICE_LIMIT;
+  const used  = getVoiceUsed(paid, user);
+  if (used >= limit) {
+    if (paid) {
+      // Paid users: show countdown-to-midnight popup
+      showPaidLimitTimer();
+    } else {
+      // Free users: show upsell notice
+      openNotice(
+        'Free voice limit over',
+        'Aapne 2 free voice replies use kar liye. Daily ya Weekly plan recharge karke aur voice/text replies unlock karein.',
+        openCoins
+      );
+    }
+    return; // ⛔ stop here; don’t post to server
   }
-  return;
 }
-  }
   // Coins gate: allow brand-new users (welcome not yet visible on client) to pass once
 const allowFirstSend = (!walletReady || wallet?.welcome_claimed !== true);
 if (!isOwner && !allowFirstSend && coins < VOICE_COST) { openCoins(); return; }
@@ -1219,7 +1221,24 @@ const stopRecording = () => {
 // Upload the voice to backend as multipart/form-data
 const sendVoiceBlob = async (blob) => {
   if (isTyping || cooldown) return;
-
+// Daily voice limit guard (prevents server call + reply bubble)
+if (!isOwner) {
+  const paid  = (wallet?.expires_at || 0) > Date.now();
+  const limit = paid ? PAID_DAILY_VOICE_LIMIT : FREE_DAILY_VOICE_LIMIT;
+  const used  = getVoiceUsed(paid, user);
+  if (used >= limit) {
+    if (paid) {
+      showPaidLimitTimer();   // popup with countdown to midnight
+    } else {
+      openNotice(
+        'Free voice limit over',
+        'Aapne 2 free voice replies use kar liye. Daily ya Weekly plan recharge karke aur voice/text replies unlock karein.',
+        openCoins
+      );
+    }
+    return; // stop: no local preview, no POST
+  }
+}
     // Coins gate for VOICE (respect first-send bypass like startRecording/handleSend)
   const allowFirstSend = (!walletReady || wallet?.welcome_claimed !== true);
   if (!isOwner && !allowFirstSend && coins < VOICE_COST) {
