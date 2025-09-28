@@ -38,20 +38,6 @@ const parseJwt = (t) => {
 // --- Silent re-auth helpers ---
 let __idRefreshTimer = null;
 
-// Wait until GIS is available (shared)
-const ensureGisLoaded = () =>
-  new Promise((resolve, reject) => {
-    if (window.google?.accounts?.id) return resolve();
-    const start = Date.now();
-    const t = setInterval(() => {
-      if (window.google?.accounts?.id) {
-        clearInterval(t); resolve();
-      } else if (Date.now() - start > 8000) {
-        clearInterval(t); reject(new Error('GIS load timeout'));
-      }
-    }, 50);
-  });
-
 // Schedule a refresh ~5 min before token expiry
 function scheduleIdRefresh(u) {
   try {
@@ -525,6 +511,7 @@ function getOpener(mode, type) {
     default:
       return "Hi… kaise ho? 🙂";
   }
+}
   // --- Role bootstrap + initial thread (MUST come before seedOpener/messages) ---
 const initialRole = (() => {
   const u = loadUser();
@@ -558,7 +545,6 @@ const [inputValue, setInputValue] = useState(() => {
   const u = loadUser();
   return u ? loadDraft(u, initialRole.mode, initialRole.type) : '';
 });
-}
   const bottomRef = useRef(null);
   // NEW: track if we should auto-stick to bottom (strict, WhatsApp-like)
 const scrollerRef = useRef(null);
@@ -1620,8 +1606,6 @@ useEffect(() => {
   const header = document.querySelector('.header');
   const container = header?.querySelector('.username-container');
   if (!header || !container) return;
-
-  const uaIsLegacy = looksLegacyAndroidWebView();
 
   const apply = () => {
     // check real overflow (allow a few px of jitter)
