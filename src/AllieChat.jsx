@@ -77,7 +77,7 @@ function enableSilentReauth(clientId, setUser) {
   });
 }
 // --- backend base ---
-const BACKEND_BASE = 'https://allie-chat-proxy-production.up.railway.app';
+const BACKEND_BASE = 'https://api.chat.buddyby.com';
 const authHeaders = (u) => (u?.idToken ? { Authorization: `Bearer ${u.idToken}` } : {});
 // --- CSRF header helper ---
 const getCsrf = () => {
