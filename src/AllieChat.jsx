@@ -1044,7 +1044,7 @@ async function submitFeedback() {
     setFbMessage('');
     setFbFile(null);
     openNotice(ok ? 'Thanks!' : 'Sent',
-      ok ? 'Your note reached us. We appreciate it!' : 'Submitted. If anything failed we’ll still check logs.');
+      ok ? 'Your note reached us. We appreciate it!' : 'We’ll review this shortly. If we need more info, we’ll reach out.');
   } catch {
     setShowFeedback(false);
     setFbMessage('');
