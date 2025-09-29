@@ -987,6 +987,12 @@ const [confirmState, setConfirmState] = useState({
 });
 const openConfirm = (title, message, onConfirm) =>
   setConfirmState({ open: true, title, message, onConfirm, okOnly: false });
+  // —— Feedback state (tiny modal opened from Modes) ——
+const [showFeedback, setShowFeedback] = useState(false);
+const [fbMessage, setFbMessage] = useState('');
+const [fbFile, setFbFile] = useState(null);
+const [fbSending, setFbSending] = useState(false);
+const lastActionRef = useRef(''); // 'focused_input' | 'sent_text' | 'opened_mic'
 
 const openNotice = (title, message, after) =>
   setConfirmState({
@@ -996,6 +1002,58 @@ const openNotice = (title, message, after) =>
 
 const closeConfirm = () =>
   setConfirmState(s => ({ ...s, open: false, onConfirm: null, okOnly: false }));
+  // Submit feedback to backend (server will forward to email privately)
+async function submitFeedback() {
+  if (!fbMessage.trim() || fbSending) return;
+  setFbSending(true);
+  try {
+    const meta = {
+      ua: navigator.userAgent || '',
+      os: navigator.platform || '',
+      layout: layoutClass,
+      imeOpen: document.documentElement.classList.contains('ime-open'),
+      vvH: (window.visualViewport && Math.round(window.visualViewport.height)) || 0,
+      vvW: (window.visualViewport && Math.round(window.visualViewport.width)) || 0,
+      vpH: window.innerHeight || 0,
+      vpW: window.innerWidth || 0,
+      scrollTop: (() => {
+        const s = scrollerRef.current || document.querySelector('.chat-container');
+        return s ? s.scrollTop : (document.scrollingElement?.scrollTop || 0);
+      })(),
+      lastAction: lastActionRef.current || '',
+      ts: new Date().toISOString()
+    };
+
+    const fd = new FormData();
+    fd.append('message', fbMessage.trim());
+    fd.append('meta', JSON.stringify(meta));
+    if (fbFile) fd.append('screenshot', fbFile);
+    // Optional: give server the user id (so it can include in email)
+    if (user?.email) fd.append('userEmail', (user.email || '').toLowerCase());
+    if (user?.sub) fd.append('userSub', user.sub);
+
+    const r = await fetch(`${BACKEND_BASE}/feedback`, {
+      method: 'POST',
+      headers: { ...authHeaders(user), 'X-CSRF-Token': getCsrf() }, // email is handled server-side
+      body: fd,
+      credentials: 'include'
+    });
+
+    const ok = r.ok;
+    setShowFeedback(false);
+    setFbMessage('');
+    setFbFile(null);
+    openNotice(ok ? 'Thanks!' : 'Sent',
+      ok ? 'Your note reached us. We appreciate it!' : 'Submitted. If anything failed we’ll still check logs.');
+  } catch {
+    setShowFeedback(false);
+    setFbMessage('');
+    setFbFile(null);
+    openNotice('Thanks!', 'Your note was captured.');
+  } finally {
+    setFbSending(false);
+  }
+}
   // ---- Paid voice-limit countdown (local midnight) ----
 const limitTimerRef = useRef(null);
 
@@ -1197,6 +1255,7 @@ const allowFirstSend = (!walletReady || wallet?.welcome_claimed !== true);
 if (!isOwner && !allowFirstSend && coins < VOICE_COST) { openCoins(); return; }
   
   try {
+    lastActionRef.current = 'opened_mic';
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
 
     if (!window.MediaRecorder) {
@@ -1434,6 +1493,7 @@ if (used >= cap) {
 
   async function actuallySend(wantVoice) {
     const currentTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    lastActionRef.current = 'sent_text';
     const newMessage = { text: inputValue, sender: 'user', time: currentTime, seen: false };
     const updatedMessages = [...messages, newMessage];
     setMessages(updatedMessages);
@@ -2060,6 +2120,17 @@ if (!user) {
       {(roleplayNeedsPremium && !isOwner && !(wallet?.expires_at > Date.now())) ? (
   <div className="role-upsell">Roleplay requires recharge.</div>
 ) : null}
+      {/* ——— Tiny feedback entry at the bottom of Modes ——— */}
+<div className="role-section" style={{ marginTop: 10 }}>
+  <button
+    className="role-row"
+    onClick={() => { setShowRoleMenu(false); setShowFeedback(true); }}
+    aria-label="Ask anything (feedback)"
+    title="Ask anything (feedback)"
+  >
+    Ask anything (feedback)
+  </button>
+</div>
     </div>
   </div>
 )}
@@ -2119,6 +2190,43 @@ if (!user) {
   onConfirm={confirmState.onConfirm || closeConfirm}
   okOnly={confirmState.okOnly}
 />
+      {/* —— Minimal feedback modal —— */}
+{showFeedback && (
+  <div className="confirm-backdrop" role="dialog" aria-modal="true" onClick={() => setShowFeedback(false)}>
+    <div className="confirm-modal" onClick={(e) => e.stopPropagation()}>
+      <h3>Ask anything</h3>
+      <p style={{ marginBottom: 10, color: '#444' }}>Share praise or a quick issue (3 lines max).</p>
+
+      <textarea
+        value={fbMessage}
+        onChange={(e) => setFbMessage(e.target.value.slice(0, 280))}
+        placeholder="What went wrong? or say hi 👋"
+        rows={3}
+        style={{ width: '100%', resize: 'none', padding: 10, borderRadius: 10, border: '1px solid #eee', background: '#fafafa' }}
+      />
+
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 10 }}>
+        <input
+          type="file"
+          accept="image/*"
+          onChange={(e) => setFbFile(e.target.files?.[0] || null)}
+          aria-label="Attach screenshot"
+        />
+        {fbFile && <small>{fbFile.name}</small>}
+      </div>
+
+      <div className="confirm-buttons" style={{ marginTop: 12 }}>
+        <button className="btn-secondary" onClick={() => { setShowFeedback(false); setFbMessage(''); setFbFile(null); }} disabled={fbSending}>
+          Cancel
+        </button>
+        <button className="btn-primary" onClick={submitFeedback} disabled={!fbMessage.trim() || fbSending}>
+          {fbSending ? 'Sending…' : 'Submit'}
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
  {/* show Character popup after instructions */}
 <WelcomeFlow
   open={showWelcome}
@@ -2142,6 +2250,7 @@ if (!user) {
   onChange={(e) => setInputValue(e.target.value)}
   onKeyDown={(e) => e.key === 'Enter' && handleSend()}
   onFocus={() => {
+  lastActionRef.current = 'focused_input';
   setShowEmoji(false);
   setShowCharPopup(false);           // hide insight as soon as they try to type
   const bumps = [0, 120, 260, 520];
