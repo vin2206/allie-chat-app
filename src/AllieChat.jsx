@@ -173,19 +173,19 @@ function serializeMsgs(arr = []) {
   });
 }
 function saveThread(u, roleMode, roleType, msgs) {
-  try { localStorage.setItem(THREAD_KEY(u, roleMode, roleType), JSON.stringify(serializeMsgs(msgs))); } catch {}
+  try { sessionStorage.setItem(THREAD_KEY(u, roleMode, roleType), JSON.stringify(serializeMsgs(msgs))); } catch {}
 }
 function loadThread(u, roleMode, roleType) {
   try {
-    const raw = localStorage.getItem(THREAD_KEY(u, roleMode, roleType));
+    const raw = sessionStorage.getItem(THREAD_KEY(u, roleMode, roleType));
     return raw ? JSON.parse(raw) : null;
   } catch { return null; }
 }
 function saveDraft(u, roleMode, roleType, text) {
-  try { localStorage.setItem(DRAFT_KEY(u, roleMode, roleType), text || ''); } catch {}
+  try { sessionStorage.setItem(DRAFT_KEY(u, roleMode, roleType), text || ''); } catch {}
 }
 function loadDraft(u, roleMode, roleType) {
-  try { return localStorage.getItem(DRAFT_KEY(u, roleMode, roleType)) || ''; } catch { return ''; }
+  try { return sessionStorage.getItem(DRAFT_KEY(u, roleMode, roleType)) || ''; } catch { return ''; }
 }
 
 const loadUser = () => {
@@ -482,12 +482,12 @@ const [layoutClass] = useState(IS_ANDROID ? 'stable' : 'fixed');
   // Warm Razorpay early so checkout feels instant
 useEffect(() => { if (user) setShowSigninBanner(false); }, [user]);
 
-// Show welcome only once per user per browser
+// Show welcome only once per TAB/session
 useEffect(() => {
   if (!user || !walletReady || welcomeDecidedRef.current) return;
 
   // if seen once for this user on this browser, never show again
-  if (localStorage.getItem(WELCOME_SEEN_KEY(user))) {
+  if (sessionStorage.getItem(WELCOME_SEEN_KEY(user))) {
     welcomeDecidedRef.current = true;
     return;
   }
@@ -545,7 +545,7 @@ const initialRole = (() => {
   const u = loadUser();
   try {
     if (!u) return { mode: 'stranger', type: null };
-    const raw = localStorage.getItem(ROLE_KEY(u));
+    const raw = sessionStorage.getItem(ROLE_KEY(u));
     if (!raw) return { mode: 'stranger', type: null };
     const { mode, type } = JSON.parse(raw);
     return { mode: mode || 'stranger', type: type || null };
@@ -1140,25 +1140,23 @@ const applyRoleChange = (mode, type) => {
     return;
   }
 }
-
-  // set state, but DO NOT save to localStorage
+ // set state, but DO NOT save to localStorage
 setRoleMode(mode);
 setRoleType(type);
-try { if (user) localStorage.setItem(ROLE_KEY(user), JSON.stringify({ mode, type })); } catch {}
-
+try { if (user) sessionStorage.setItem(ROLE_KEY(user), JSON.stringify({ mode, type })); } catch {}
 // close menu
 setShowRoleMenu(false);
 
-// load existing thread if any; else seed opener
-const existing = user ? loadThread(user, mode, type) : null;
-if (Array.isArray(existing) && existing.length) {
-  setMessages(existing);
-  setInputValue(loadDraft(user, mode, type) || '');
-} else {
-  const opener = getOpener(mode, type);
-  setMessages([{ text: opener, sender: 'allie' }]);
-  setInputValue('');
-}
+// Always start a fresh chat on role/model change
+try {
+  if (user) {
+    sessionStorage.removeItem(THREAD_KEY(user, mode, type));
+    sessionStorage.removeItem(DRAFT_KEY(user, mode, type));
+  }
+} catch {}
+const opener = getOpener(mode, type);
+setMessages([{ text: opener, sender: 'allie' }]);
+setInputValue('');
 readingUpRef.current = false;
 stickToBottomRef.current = true;
 setTimeout(() => scrollToBottomNow(true), 0);
@@ -2126,7 +2124,7 @@ if (!user) {
   open={showWelcome}
   onClose={() => {
   setShowWelcome(false);
-  if (user) { try { localStorage.setItem(WELCOME_SEEN_KEY(user), '1'); } catch {} }
+  if (user) { try { sessionStorage.setItem(WELCOME_SEEN_KEY(user), '1'); } catch {} }
   setShowCharPopup(true);
 }}
   amount={100}
