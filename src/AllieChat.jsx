@@ -1007,26 +1007,8 @@ async function submitFeedback() {
   if (!fbMessage.trim() || fbSending) return;
   setFbSending(true);
   try {
-    const meta = {
-      ua: navigator.userAgent || '',
-      os: navigator.platform || '',
-      layout: layoutClass,
-      imeOpen: document.documentElement.classList.contains('ime-open'),
-      vvH: (window.visualViewport && Math.round(window.visualViewport.height)) || 0,
-      vvW: (window.visualViewport && Math.round(window.visualViewport.width)) || 0,
-      vpH: window.innerHeight || 0,
-      vpW: window.innerWidth || 0,
-      scrollTop: (() => {
-        const s = scrollerRef.current || document.querySelector('.chat-container');
-        return s ? s.scrollTop : (document.scrollingElement?.scrollTop || 0);
-      })(),
-      lastAction: lastActionRef.current || '',
-      ts: new Date().toISOString()
-    };
-
     const fd = new FormData();
     fd.append('message', fbMessage.trim());
-    fd.append('meta', JSON.stringify(meta));
     if (fbFile) fd.append('screenshot', fbFile);
     // Optional: give server the user id (so it can include in email)
     if (user?.email) fd.append('userEmail', (user.email || '').toLowerCase());
