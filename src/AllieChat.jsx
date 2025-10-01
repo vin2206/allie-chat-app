@@ -139,6 +139,14 @@ function getTodayCap(u) {
   if (firstDay && firstDay === isoDay()) return 10;  // upgrade-day bonus
   return PAID_DAILY_VOICE_LIMIT;                     // 8
 }
+// Server-aware cap (prefers /wallet data; falls back to local if missing)
+function getTodayCapServerAware(u, wallet) {
+  if (wallet?.paid_ever) {
+    if (wallet?.first_paid_date && wallet.first_paid_date === isoDay()) return 10;
+    return PAID_DAILY_VOICE_LIMIT;
+  }
+  return getTodayCap(u);
+}
 
 // Use local day so quota resets at the user's midnight
 const isoDay = () => {
@@ -756,6 +764,14 @@ async function refreshWallet(){
 }
 
 useEffect(() => { refreshWallet(); }, [user]);
+  useEffect(() => {
+  if (wallet?.paid_ever && user) {
+    try {
+      localStorage.setItem(PAID_EVER_KEY(user), '1');
+      if (wallet.first_paid_date) localStorage.setItem(FIRST_PAID_DATE_KEY(user), wallet.first_paid_date);
+    } catch {}
+  }
+}, [wallet?.paid_ever, wallet?.first_paid_date, user]);
   // Expose a safe global hook for child components (WelcomeFlow) to refresh wallet
 useEffect(() => {
   window.refreshWalletGlobal = () => refreshWallet();
@@ -1217,7 +1233,7 @@ const startRecording = async () => {
 
   // 🚫 Daily voice limit guard (unified rules)
   if (!isOwner) {
-  const cap  = getTodayCap(user);
+  const cap  = getTodayCapServerAware(user, wallet);
   const used = getVoiceUsed(true, user); // arg ignored
   if (used >= cap) {
     if (isPaidEver(user)) {
@@ -1300,7 +1316,7 @@ const sendVoiceBlob = async (blob) => {
   }
 // Daily voice limit guard (prevents server call + reply bubble)
 if (!isOwner) {
-  const cap  = getTodayCap(user);
+  const cap  = getTodayCapServerAware(user, wallet);
   const used = getVoiceUsed(true, user); // arg ignored
   if (used >= cap) {
     if (isPaidEver(user)) {
@@ -1437,7 +1453,7 @@ if (!isOwner) {
   const wantVoiceNow = askedForVoice(inputValue);
   const allowFirstSend = (!walletReady || wallet?.welcome_claimed !== true);
     if (wantVoiceNow && !isOwner) {
-  const cap  = getTodayCap(user);
+  const cap  = getTodayCapServerAware(user, wallet);
 const used = getVoiceUsed(true, user); // arg ignored
 if (used >= cap) {
   if (isPaidEver(user)) {
