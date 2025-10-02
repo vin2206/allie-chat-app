@@ -59,8 +59,11 @@
   (function () {
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', function () {
-        navigator.serviceWorker.register('/sw.js', { scope: '/' })
-          .catch(() => {}); // silent fail keeps current behavior
+        try {
+          // works at root or subpaths
+          var swUrl = new URL('sw.js', document.baseURI).toString();
+          navigator.serviceWorker.register(swUrl, { scope: './' }).catch(function(){});
+        } catch(_) {}
       });
     }
   })();
