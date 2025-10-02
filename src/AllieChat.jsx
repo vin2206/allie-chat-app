@@ -100,7 +100,50 @@ const ROLE_LABELS = {
   exgf: 'Ex-GF',
   stranger: 'Stranger'
 };
+// --- Browser helpers (safe, additive) ---
+function isAndroid() { return /Android/i.test(navigator.userAgent || ''); }
 
+function isChromeLike() {
+  // Prefer UA-CH when available
+  try {
+    const brands = navigator.userAgentData?.brands || [];
+    const names = brands.map(b => (b.brand || '').toLowerCase());
+    if (names.length) {
+      const isChromium = names.some(n => n.includes('chromium') || n.includes('google chrome'));
+      const isEdge     = names.some(n => n.includes('edge'));
+      const isOpera    = names.some(n => n.includes('opera'));
+      return isChromium && !isEdge && !isOpera;
+    }
+  } catch {}
+  // Fallback to UA sniff (best-effort)
+  const ua = (navigator.userAgent || '').toLowerCase();
+  const hasChrome = ua.includes('chrome/');
+  const bad = /edg\/|edge\/|opr\/|opera|brave|samsungbrowser|duckduckgo|firefox|fxios/.test(ua);
+  return hasChrome && !bad;
+}
+
+// Try to open the same URL in Chrome (Android only); fallback to Play Store
+function tryOpenInChromeCurrentUrl() {
+  const url = window.location.href;
+  // Android Chrome Intent
+  if (isAndroid()) {
+    // Attempt Chrome intent for https
+    const intent = `intent://${url.replace(/^https?:\/\//,'')}` +
+      '#Intent;scheme=https;package=com.android.chrome;end';
+    // Give it a shot
+    window.location.href = intent;
+    // As a backup (if Chrome missing), nudge Play Store after a short beat
+    setTimeout(() => {
+      window.location.href = 'https://play.google.com/store/apps/details?id=com.android.chrome';
+    }, 900);
+  } else {
+    // Non-Android: best we can do is copy/open same link; browsers may not hand off
+    try {
+      navigator.clipboard?.writeText(url).catch(()=>{});
+    } catch {}
+    alert('Open this link in Chrome for the best experience. The link is copied to your clipboard.');
+  }
+}
 // === Voice quota per day ===
 const FREE_DAILY_VOICE_LIMIT = 2;     // Free users
 const PAID_DAILY_VOICE_LIMIT = 8;    // Paid users (tweak anytime)
@@ -636,6 +679,19 @@ useEffect(() => {
     .catch(() => {}); // keep safe default = true
 }, []);
   const [isOwner, setIsOwner] = useState(false);
+  // Chrome bar state (session-scoped)
+const [showChromeBar, setShowChromeBar] = useState(false);
+useEffect(() => {
+  // Show once per TAB, only if NOT Chrome-like
+  const seen = sessionStorage.getItem('seen_chrome_nudge') === '1';
+  if (!seen && !isChromeLike()) {
+    setShowChromeBar(true);
+  }
+}, []);
+function dismissChromeBar() {
+  sessionStorage.setItem('seen_chrome_nudge', '1');
+  setShowChromeBar(false);
+}
   const [isTyping, setIsTyping] = useState(false);
   useEffect(() => {
   // Listen on the correct scroller: window (fallback) or .chat-container (normal)
@@ -953,6 +1009,53 @@ setIsPaying(false);
  }
 }
   const [cooldown, setCooldown] = useState(false);
+  // --- PWA install control (Chrome) ---
+const deferredPromptRef = useRef(null);
+const PWA_INSTALLED_KEY = 'pwa_installed_v1';
+const PWA_DISMISSED_AT  = 'pwa_dismissed_at';
+const PWA_MSG_COUNT     = 'pwa_msg_count_v1';
+const PWA_COOLDOWN_DAYS = 14; // backoff after dismissal
+
+// Capture beforeinstallprompt (Chromium only)
+useEffect(() => {
+  const onBIP = (e) => {
+    // Only stash if not already installed & no cooldown
+    if (localStorage.getItem(PWA_INSTALLED_KEY) === '1') return;
+    e.preventDefault(); // we’ll prompt later
+    deferredPromptRef.current = e;
+  };
+  window.addEventListener('beforeinstallprompt', onBIP);
+
+  const onInstalled = () => {
+    localStorage.setItem(PWA_INSTALLED_KEY, '1');
+    deferredPromptRef.current = null;
+  };
+  window.addEventListener('appinstalled', onInstalled);
+
+  return () => {
+    window.removeEventListener('beforeinstallprompt', onBIP);
+    window.removeEventListener('appinstalled', onInstalled);
+  };
+}, []);
+
+// Helper: count user messages (text or voice)
+function bumpMsgCount() {
+  const n = Number(localStorage.getItem(PWA_MSG_COUNT) || 0) + 1;
+  localStorage.setItem(PWA_MSG_COUNT, String(n));
+  return n;
+}
+function cooldownActive() {
+  const ts = Number(localStorage.getItem(PWA_DISMISSED_AT) || 0);
+  if (!ts) return false;
+  const ms = 1000 * 60 * 60 * 24 * PWA_COOLDOWN_DAYS;
+  return (Date.now() - ts) < ms;
+}
+function shouldOfferPWA(n) {
+  if (localStorage.getItem(PWA_INSTALLED_KEY) === '1') return false;
+  if (cooldownActive()) return false;
+  // Offer at message #8 exactly (first time), otherwise do nothing
+  return n === 8;
+}
 
   // Pre-create Razorpay orders as soon as the Coins modal opens (so click opens instantly)
 useEffect(() => {
@@ -1010,11 +1113,65 @@ const [fbFile, setFbFile] = useState(null);
 const [fbSending, setFbSending] = useState(false);
 const lastActionRef = useRef(''); // 'focused_input' | 'sent_text' | 'opened_mic'
 
-const openNotice = (title, message, after) =>
+  // --- PWA nudge dialog helper (uses ConfirmDialog) ---
+function maybeShowPwaNudge() {
+  // If Chromium event available → show ConfirmDialog with Install
+  const canPrompt = !!deferredPromptRef.current;
+  const isiOS = /iphone|ipad|ipod/i.test(navigator.userAgent || '') && !window.MSStream;
+
+  if (canPrompt) {
+    setConfirmState({
+      open: true,
+      title: 'Install Shraddha?',
+      message: 'Use it like a real app — faster access from your home screen.',
+      okOnly: false,
+      onConfirm: async () => {
+        try {
+          const ev = deferredPromptRef.current;
+          if (!ev) return closeConfirm();
+          ev.prompt();
+          const choice = await ev.userChoice;
+          deferredPromptRef.current = null; // one shot
+          closeConfirm();
+          if (choice?.outcome === 'accepted') {
+            localStorage.setItem(PWA_INSTALLED_KEY, '1');
+          } else {
+            localStorage.setItem(PWA_DISMISSED_AT, String(Date.now()));
+          }
+        } catch {
+          localStorage.setItem(PWA_DISMISSED_AT, String(Date.now()));
+          closeConfirm();
+        }
+      }
+    });
+  } else if (isiOS) {
+    // iOS: show a tiny guide once
+    setConfirmState({
+      open: true,
+      title: 'Add to Home Screen',
+      message: 'Tap the Share button ↑ then “Add to Home Screen” to install.',
+      okOnly: true,
+      onConfirm: () => {
+        localStorage.setItem(PWA_DISMISSED_AT, String(Date.now()));
+        closeConfirm();
+      }
+    });
+  } else {
+    // Non-Chromium with no prompt support → quietly start cooldown
+    localStorage.setItem(PWA_DISMISSED_AT, String(Date.now()));
+  }
+}
+
+// Simple notice modal
+const openNotice = (title, message, after) => {
   setConfirmState({
-    open: true, title, message, okOnly: true,
+    open: true,
+    title,
+    message,
+    okOnly: true,
     onConfirm: () => { closeConfirm(); if (typeof after === 'function') after(); }
   });
+};
 
 const closeConfirm = () =>
   setConfirmState(s => ({ ...s, open: false, onConfirm: null, okOnly: false }));
@@ -1488,6 +1645,10 @@ if (used >= cap) {
   }
 
   await actuallySend(wantVoiceNow);
+    try {
+  const n = bumpMsgCount();
+  if (shouldOfferPWA(n)) maybeShowPwaNudge();
+} catch {}
 
   async function actuallySend(wantVoice) {
     const currentTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -1540,6 +1701,10 @@ if (response.status === 401) {
     sender: 'allie',
     time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
   }]);
+  try {
+  const n = bumpMsgCount();
+  if (shouldOfferPWA(n)) maybeShowPwaNudge();
+} catch {}
   return;
 }  
       const data = await response.json();
@@ -1929,6 +2094,38 @@ if (!user) {
 
   return (
     <div className={`App ${layoutClass} ${user ? 'signed-in' : 'auth'}`}>
+          {showChromeBar && (
+      <div
+        role="region"
+        aria-label="Chrome recommendation"
+        style={{
+          position:'sticky', top:0, zIndex:9999,
+          background:'#fff4e5', color:'#663c00',
+          padding:'8px 12px', borderBottom:'1px solid #ffe0b2',
+          display:'flex', alignItems:'center', gap:8, justifyContent:'space-between'
+        }}
+      >
+        <div style={{fontSize:14}}>
+          <b>This site works best on Chrome.</b>
+        </div>
+        <div style={{display:'flex', gap:8}}>
+          <button
+            className="btn-primary"
+            style={{padding:'6px 10px', borderRadius:8, border:'none', cursor:'pointer', background:'#ff9800', color:'#fff'}}
+            onClick={() => { sessionStorage.setItem('seen_chrome_nudge','1'); tryOpenInChromeCurrentUrl(); }}
+          >
+            Open in Chrome
+          </button>
+          <button
+            className="btn-secondary"
+            style={{padding:'6px 10px', borderRadius:8, border:'1px solid #e0e0e0', background:'#fff', cursor:'pointer'}}
+            onClick={dismissChromeBar}
+          >
+            Continue here
+          </button>
+        </div>
+      </div>
+    )}
       <div className="header">
         <div className="profile-pic">
           <img
