@@ -55,15 +55,13 @@
       To create a production bundle, use `npm run build` or `yarn build`.
     -->
     <script>
-  // Hard kill any previous service worker + its caches
+  // Minimal SW registration (no fetch interception in sw.js)
   (function () {
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.getRegistrations()
-        .then(regs => regs.forEach(r => r.unregister()))
-        .catch(() => {});
-    }
-    if (window.caches && caches.keys) {
-      caches.keys().then(keys => keys.forEach(k => caches.delete(k)));
+      window.addEventListener('load', function () {
+        navigator.serviceWorker.register('/sw.js', { scope: '/' })
+          .catch(() => {}); // silent fail keeps current behavior
+      });
     }
   })();
 </script>
