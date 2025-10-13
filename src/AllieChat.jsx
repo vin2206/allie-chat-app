@@ -507,7 +507,7 @@ function AllieChat() {
   // NEW: auth + welcome
 const [user, setUser] = useState(loadUser());
 const [showIntro, setShowIntro] = useState(() => {
-  try { return sessionStorage.getItem('intro_seen_v1') !== '1'; } catch { return true; }
+  try { return localStorage.getItem('intro_seen_v1') !== '1'; } catch { return true; }
 });
 const [showSigninBanner, setShowSigninBanner] = useState(false);
  // --- Stop background Google prompts; rely on our 14-day server cookie ---
@@ -2076,8 +2076,8 @@ if (!user) {
     return (
       <IntroSlides
         onDone={() => {
-          try { sessionStorage.setItem('intro_seen_v1', '1'); } catch {}
-          setShowIntro(false);
+          try { localStorage.setItem('intro_seen_v1', '1'); } catch {}
+         setShowIntro(false);
         }}
       />
     );
