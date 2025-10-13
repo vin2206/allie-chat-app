@@ -6,6 +6,7 @@ import './ChatUI.css';
 import { startVersionWatcher } from './versionWatcher';
 // Razorpay warm-up + standalone coins modal
 import CoinsModal from './components/CoinsModal';
+import IntroSlides from './ui/IntroSlides';
 import { prewarmRazorpay, handleCoinPurchase } from './lib/razorpay';
 // --- small utility ---
 function debounce(fn, wait = 120) {
@@ -323,11 +324,11 @@ if (!document.querySelector('script[src*="gsi/client"]')) {
             const w = Math.min(320, Math.max(240, Math.floor((host.clientWidth || host.getBoundingClientRect().width) || 280)));
             el.innerHTML = '';
             window.google.accounts.id.renderButton(el, {
-              theme: 'outline',
-              size: 'large',
-              text: 'continue_with',
-              shape: 'pill',
-              width: w,
+             theme: 'outline',
+             size: 'medium',     // smaller
+             text: 'continue_with',
+             shape: 'pill',
+             width: 220,         // fixed medium width
             });
             requestAnimationFrame(() => host.classList.add('ready')); // reveal
           });
@@ -505,6 +506,9 @@ function CharacterPopup({ open, roleMode, roleType, onClose }) {
 function AllieChat() {
   // NEW: auth + welcome
 const [user, setUser] = useState(loadUser());
+const [showIntro, setShowIntro] = useState(() => {
+  try { return sessionStorage.getItem('intro_seen_v1') !== '1'; } catch { return true; }
+});
 const [showSigninBanner, setShowSigninBanner] = useState(false);
  // --- Stop background Google prompts; rely on our 14-day server cookie ---
 useEffect(() => {
@@ -2067,24 +2071,32 @@ useEffect(() => {
   const displayedMessages = messages;
   // Block UI until user signs in
 if (!user) {
+  // Show intro first (once per tab); then show normal sign-in
+  if (showIntro) {
+    return (
+      <IntroSlides
+        onDone={() => {
+          try { sessionStorage.setItem('intro_seen_v1', '1'); } catch {}
+          setShowIntro(false);
+        }}
+      />
+    );
+  }
+
   return (
     <AuthGate
       onSignedIn={async (u) => {
         // 1) Save locally + update state
         saveUser(u);
         setUser(u);
-
         // 2) PRIME COOKIES on the server:
-        //    This mints bb_sess (14-day session) + bb_csrf in one GET.
         try {
           await fetch(`${BACKEND_BASE}/wallet`, {
             method: 'GET',
             headers: { Authorization: `Bearer ${u.idToken}` },
             credentials: 'include'
           });
-          // We don’t need the response body here — just setting cookies.
         } catch (e) {
-          // Non-blocking: chat will still work because we send Authorization on first POST.
           console.warn('Cookie priming failed (non-blocking):', e?.message || e);
         }
       }}
