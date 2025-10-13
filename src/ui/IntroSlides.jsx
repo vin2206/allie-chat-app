@@ -1,9 +1,17 @@
 import React, { useState } from "react";
 
 /**
- * Simple, self-contained 4-slide intro shown BEFORE sign-in.
- * Uses your images in /public/intro and no external CSS.
- * Call <IntroSlides onDone={() => ... } />
+ * Full-screen, vertical onboarding (no popup card)
+ * - Edge-to-edge panels with a centered, tall column
+ * - Sticky footer (Back / Next / Get started)
+ * - Proper tall previews for Modes (uncropped phone-like aspect)
+ * - Razorpay logo smaller on pricing; only Google shown on "Private & safe"
+ *
+ * Required assets in /public/intro (recommended ~900×1950):
+ *   preview_wife.jpg, preview_girlfriend.jpg, preview_bhabhi.jpg,
+ *   preview_exgf.jpg, preview_stranger.jpg
+ * Optional tiny logos:
+ *   logo_google.svg, logo_razorpay.svg
  */
 export default function IntroSlides({ onDone }) {
   const [i, setI] = useState(0);
@@ -13,34 +21,26 @@ export default function IntroSlides({ onDone }) {
       key: "what",
       title: "Chat naturally with Shraddha",
       subtitle: "Realistic AI for talk, advice, and role-play.",
-      bullets: ["Feels real", "Switch vibes anytime", "Quick voice replies"],
-      img: null, // no GIF/video by request
-      cta: null,
+      pills: ["Feels real", "Switch vibes anytime", "Quick voice replies"],
     },
     {
       key: "modes",
       title: "Pick a vibe, switch anytime",
       subtitle: "",
-      bullets: [],
-      // You uploaded these already:
       grid: [
-        { label: "Wife", src: "/intro/mode_wife.jpg" },
-        { label: "Girlfriend", src: "/intro/mode_girlfriend.jpg" },
-        { label: "Bhabhi", src: "/intro/mode_bhabhi.jpg" },
-        { label: "Ex-GF", src: "/intro/mode_exgf.jpg" },
-        { label: "Stranger", src: "/intro/mode_stranger.jpg" },
+        { label: "Wife",       src: "/intro/preview_wife.jpg" },
+        { label: "Girlfriend", src: "/intro/preview_girlfriend.jpg" },
+        { label: "Bhabhi",     src: "/intro/preview_bhabhi.jpg" },
+        { label: "Ex-GF",      src: "/intro/preview_exgf.jpg" },
+        { label: "Stranger",   src: "/intro/preview_stranger.jpg" },
       ],
-      cta: null,
     },
     {
       key: "coins",
       title: "Simple and transparent",
       subtitle: "Text = 10 coins · Voice = 18 coins",
       bullets: ["Free starter coins", "Secure payment by Razorpay", "See your balance at the top right"],
-      badges: [
-        { alt: "Razorpay", src: "/intro/logo_razorpay.svg", w: 130 },
-      ],
-      cta: null,
+      badges: [{ alt: "Razorpay", src: "/intro/logo_razorpay.svg" }], // auto-height 22px
     },
     {
       key: "trust",
@@ -49,91 +49,168 @@ export default function IntroSlides({ onDone }) {
       bullets: [
         "Only you can access your chats.",
         "Google sign-in verifies your email.",
-        "Payments handled securely by Razorpay.",
         "Have a concern? Use “Ask anything (feedback)” in Modes.",
       ],
-      badges: [
-        { alt: "Google", src: "/intro/logo_google.svg", w: 60 },
-        { alt: "Razorpay", src: "/intro/logo_razorpay.svg", w: 130 },
-      ],
+      badges: [{ alt: "Google", src: "/intro/logo_google.svg" }], // only Google here
       cta: { label: "Get started", action: () => onDone?.() },
     },
   ];
 
   const s = slides[i];
-
-  const goNext = () => setI((v) => Math.min(v + 1, slides.length - 1));
-  const goBack = () => setI((v) => Math.max(v - 1, 0));
+  const next = () => setI(v => Math.min(v + 1, slides.length - 1));
+  const back = () => setI(v => Math.max(v - 1, 0));
 
   return (
-    <div className="intro-wrap" role="dialog" aria-modal="true">
+    <div className="intro-viewport">
       <style>{`
-        .intro-wrap { position: fixed; inset: 0; background: radial-gradient(120% 120% at 50% -10%, #ff6ec4 0%, #7c4dff 55%, #2b1e4a 100%); display:flex; align-items:center; justify-content:center; padding:20px; z-index:99999; }
-        .intro-card { width:min(720px, 92vw); background:#fff; border-radius:22px; box-shadow: 0 10px 40px rgba(0,0,0,.25); padding:20px 20px 16px; }
-        .intro-head { padding:8px 4px 6px; }
-        .intro-title { font-size:22px; font-weight:800; letter-spacing:.2px; color:#1b1b1b; }
-        .intro-sub { color:#585a5c; margin-top:4px; }
-        .intro-body { margin-top:12px; }
-        .intro-bullets { display:grid; gap:8px; margin:12px 0 6px; }
-        .intro-bullets li { list-style:none; background:#f6f7fb; padding:10px 12px; border-radius:12px; font-weight:500; color:#2f3140; }
-        .intro-grid { display:grid; gap:10px; grid-template-columns: repeat(2, 1fr); }
-        @media (min-width: 560px){ .intro-grid { grid-template-columns: repeat(3, 1fr); } }
-        .mode-tile { border-radius:14px; overflow:hidden; background:#fafafa; border:1px solid #eee; }
-        .mode-tile img { width:100%; height:160px; object-fit:cover; display:block; }
-        .mode-tile .cap { padding:8px 10px; font-weight:600; text-align:center; }
-        .badges { display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-top:8px; }
-        .intro-foot { display:flex; justify-content:space-between; align-items:center; margin-top:14px; }
-        .intro-btn { padding:10px 14px; border-radius:12px; border:none; font-weight:700; cursor:pointer; }
-        .intro-btn.secondary { background:#eef0f5; color:#23262b; }
-        .intro-btn.primary { background:#ff3fb0; color:#fff; }
-        .dots { display:flex; gap:6px; align-items:center; }
-        .dot { width:8px; height:8px; border-radius:50%; background:#d9dbe7; }
-        .dot.on { background:#ff3fb0; }
+        /* Full-screen gradient canvas */
+        .intro-viewport {
+          position: fixed; inset: 0; z-index: 99999;
+          background: radial-gradient(120% 120% at 50% -10%, #ff6ec4 0%, #7c4dff 55%, #2b1e4a 100%);
+          display: flex; flex-direction: column;
+          color: #121212;
+        }
+
+        /* Tall centered column */
+        .intro-col {
+          width: 100%;
+          max-width: 480px;
+          margin: 0 auto;
+          padding: 24px 18px 92px; /* extra bottom for sticky footer */
+          box-sizing: border-box;
+          min-height: 100%;
+          display: flex; flex-direction: column;
+        }
+
+        /* Header */
+        .intro-title { font-size: 28px; line-height: 1.15; font-weight: 800; color: #fff; letter-spacing: .2px; }
+        .intro-sub   { font-size: 16px; color: rgba(255,255,255,.9); margin-top: 6px; }
+
+        /* Content blocks (white cards, but full-width & vertical) */
+        .block {
+          margin-top: 16px;
+          background: #ffffff;
+          border-radius: 16px;
+          padding: 14px;
+          box-shadow: 0 8px 30px rgba(0,0,0,.18);
+        }
+
+        /* Non-interactive pills to avoid “should I click?” confusion */
+        .pill-row { display: flex; flex-wrap: wrap; gap: 8px; }
+        .pill {
+          font-size: 14px; font-weight: 600; color: #2f3140;
+          background: #f0f2f8; border-radius: 999px; padding: 8px 12px;
+          display: inline-flex; align-items: center; gap: 8px;
+          user-select: none; cursor: default;
+        }
+        .pill::before {
+          content: "✓"; font-weight: 800; opacity: .75;
+        }
+
+        /* Bullets */
+        .bullets { display: grid; gap: 8px; }
+        .bullets li { list-style: none; background: #f7f8fc; padding: 10px 12px; border-radius: 12px; font-size: 15px; color:#2f3140; }
+
+        /* Modes grid with tall previews (phone-ish 9:19.5) */
+        .modes-grid { display: grid; gap: 12px; grid-template-columns: 1fr 1fr; }
+        @media (min-width: 560px) { .modes-grid { grid-template-columns: 1fr 1fr 1fr; } }
+        .mode-tile { background: #fff; border-radius: 16px; border: 1px solid #eee; overflow: hidden; }
+        .mode-frame { position: relative; width: 100%; /* 9:19.5 */ padding-top: calc(100% * 19.5 / 9); background: #fafafa; }
+        .mode-frame img {
+          position: absolute; inset: 0; width: 100%; height: 100%;
+          object-fit: contain; /* show full page vertically, not cropped */
+        }
+        .mode-cap { padding: 8px 10px 12px; font-weight: 700; text-align: center; color: #1b1b1b; }
+
+        /* Small badges row (logos) */
+        .badges { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+        .badges img[alt="Razorpay"] { height: 22px; width: auto; }
+        .badges img[alt="Google"]   { height: 22px; width: auto; }
+
+        /* Sticky footer (safe-area aware) */
+        .intro-footer {
+          position: fixed; left: 0; right: 0; bottom: 0; z-index: 1;
+          padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px));
+          background: rgba(255,255,255,.9); backdrop-filter: blur(6px);
+          display: flex; align-items: center; justify-content: space-between; gap: 8px;
+          border-top: 1px solid rgba(255,255,255,.5);
+        }
+        .dots { display: flex; gap: 6px; }
+        .dot { width: 8px; height: 8px; border-radius: 50%; background: #c7c9d9; }
+        .dot.on { background: #ff3fb0; }
+
+        .btn { border: 0; border-radius: 12px; padding: 10px 14px; font-weight: 800; cursor: pointer; }
+        .btn.secondary { background: #eef0f5; color: #23262b; }
+        .btn.primary   { background: #ff3fb0; color: #fff; }
       `}</style>
 
-      <div className="intro-card">
-        <div className="intro-head">
+      <div className="intro-col">
+        {/* Headline */}
+        <div>
           <div className="intro-title">{s.title}</div>
           {s.subtitle ? <div className="intro-sub">{s.subtitle}</div> : null}
         </div>
 
-        <div className="intro-body">
-          {s.grid ? (
-            <div className="intro-grid" aria-label="Modes preview">
-              {s.grid.map((g) => (
+        {/* Content blocks */}
+        {s.pills && s.pills.length > 0 && (
+          <div className="block">
+            <div className="pill-row">
+              {s.pills.map((p, idx) => (
+                <span key={idx} className="pill">{p}</span>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {s.grid && (
+          <div className="block">
+            <div className="modes-grid" aria-label="Modes preview">
+              {s.grid.map(g => (
                 <div key={g.label} className="mode-tile">
-                  <img src={g.src} alt={g.label} />
-                  <div className="cap">{g.label}</div>
+                  <div className="mode-frame">
+                    <img src={g.src} alt={g.label} loading="lazy" />
+                  </div>
+                  <div className="mode-cap">{g.label}</div>
                 </div>
               ))}
             </div>
-          ) : null}
+          </div>
+        )}
 
-          {s.bullets?.length ? (
-            <ul className="intro-bullets">
+        {s.bullets && s.bullets.length > 0 && (
+          <div className="block">
+            <ul className="bullets">
               {s.bullets.map((b, idx) => <li key={idx}>{b}</li>)}
             </ul>
-          ) : null}
+            {s.badges && s.badges.length > 0 && (
+              <div className="badges" style={{ marginTop: 10 }}>
+                {s.badges.map((b, idx) => (
+                  <img key={idx} src={b.src} alt={b.alt} loading="lazy" />
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
 
-          {s.badges?.length ? (
-            <div className="badges">
-              {s.badges.map((b, idx) => (
-                <img key={idx} src={b.src} alt={b.alt} style={{ height: 28, width: "auto", maxWidth: b.w || 120 }} />
-              ))}
-            </div>
-          ) : null}
+      {/* Sticky footer */}
+      <div className="intro-footer">
+        <div className="dots" aria-label="Slide progress">
+          {slides.map((_, idx) => (
+            <div key={idx} className={`dot ${idx === i ? "on" : ""}`} />
+          ))}
         </div>
-
-        <div className="intro-foot">
-          <div className="dots" aria-label="Slide progress">
-            {slides.map((_, idx) => <div key={idx} className={`dot ${idx === i ? "on" : ""}`} />)}
-          </div>
-          <div style={{ display:"flex", gap:8 }}>
-            {i > 0 && <button className="intro-btn secondary" onClick={goBack}>Back</button>}
-            {s.cta
-              ? <button className="intro-btn primary" onClick={s.cta.action}>{s.cta.label}</button>
-              : <button className="intro-btn primary" onClick={goNext}>Next</button>}
-          </div>
+        <div style={{ display: "flex", gap: 8 }}>
+          {i > 0 && (
+            <button className="btn secondary" onClick={back} aria-label="Back">Back</button>
+          )}
+          {s.cta ? (
+            <button className="btn primary" onClick={s.cta.action} aria-label="Get started">
+              {s.cta.label}
+            </button>
+          ) : (
+            <button className="btn primary" onClick={next} aria-label="Next">Next</button>
+          )}
         </div>
       </div>
     </div>
