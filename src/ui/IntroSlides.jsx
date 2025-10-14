@@ -162,46 +162,58 @@ export default function IntroSlides({ onDone }) {
 .introX.is-hero .introX-inner {
   padding-bottom: 72px;
 }
-/* === Slide 2 (modes) — compact grid, no black bands, floating Next === */
+/* === Slide 2 (modes) — compact grid, no captions, proper footer === */
 .introX.is-modes .introHead h1{
   font-size: 26px;
   margin-top: 4px;
 }
+
 .introX.is-modes .introX-inner{
-  /* less bottom padding so invisible footer doesn't steal space */
+  /* leave room for floating footer buttons only */
   padding-bottom: 72px;
 }
+
 .introX.is-modes .footer{
   background: transparent;
   border-top: 0;
   backdrop-filter: none;
-  justify-content: flex-end;                  /* only “Next” at right */
+  justify-content: space-between;          /* Back on left, Next on right */
   padding: 8px 12px calc(10px + env(safe-area-inset-bottom, 0px));
+}
+
+/* make Back look subtle on the gradient */
+.introX.is-modes .btn.sec{
+  background: rgba(255,255,255,.22);
+  color: #fff;
+  border: 1px solid rgba(255,255,255,.35);
 }
 
 /* Grid sizing so all 4 tiles fit on one phone screen */
 .introX.is-modes .gridWrap{
   margin-top: 8px;
-  gap: 10px;                                  /* a touch tighter */
+  gap: 8px;                                 /* a touch tighter */
 }
 
 /* Simple rounded rectangle frames; no bezel, no black background */
 .introX.is-modes .tile{
   border-radius: 14px;
 }
+
+/* slightly shorter frames to prevent bottom crop on many phones */
 .introX.is-modes .tile .frame{
-  /* shorter aspect so two rows fit; was very tall earlier */
-  padding-top: 170%;
-  background: transparent;                    /* remove dark fill */
-}
-.introX.is-modes .tile img{
-  object-fit: cover;                           /* fill frame (no bars) */
-  object-position: 50% 8%;                     /* slight top bias */
+  padding-top: 162%;                         /* tweak 160–168% if needed */
   background: transparent;
 }
+
+.introX.is-modes .tile img{
+  object-fit: cover;                         /* fill frame (no bars) */
+  object-position: 50% 8%;                   /* slight top bias */
+  background: transparent;
+}
+
+/* remove the white caption slab entirely on slide 2 */
 .introX.is-modes .tile .cap{
-  padding: 8px 8px 10px;
-  font-size: 18px;
+  display: none;
 }
         .btn { border: 0; border-radius: 12px; padding: 10px 14px; font-weight: 800; cursor: pointer; }
         .btn.sec { background: #eef0f5; color: #23262b; }
