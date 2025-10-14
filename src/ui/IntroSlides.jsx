@@ -22,7 +22,7 @@ export default function IntroSlides({ onDone }) {
     },
     {
       key: "modes",
-      title: "Pick a vibe — switch anytime",
+      title: "Choose modes & switch anytime",
       grid: [
         { label: "Wife",       src: "/intro/mode_wife.jpg" },
         { label: "Girlfriend", src: "/intro/mode_girlfriend.jpg" },
@@ -56,7 +56,7 @@ export default function IntroSlides({ onDone }) {
   const back = () => setI((v) => Math.max(v - 1, 0));
 
   return (
-    <div className={`introX ${s.key === "hero" ? "is-hero" : ""}`}>
+    <div className={`introX ${s.key === "hero" ? "is-hero" : ""} ${s.key === "modes" ? "is-modes" : ""}`}>
       <style>{`
         .introX {
           position: fixed; inset: 0; z-index: 99999;
@@ -161,6 +161,47 @@ export default function IntroSlides({ onDone }) {
 /* Reduce bottom padding on Slide 1 so the invisible footer doesn't steal space */
 .introX.is-hero .introX-inner {
   padding-bottom: 72px;
+}
+/* === Slide 2 (modes) — compact grid, no black bands, floating Next === */
+.introX.is-modes .introHead h1{
+  font-size: 26px;
+  margin-top: 4px;
+}
+.introX.is-modes .introX-inner{
+  /* less bottom padding so invisible footer doesn't steal space */
+  padding-bottom: 72px;
+}
+.introX.is-modes .footer{
+  background: transparent;
+  border-top: 0;
+  backdrop-filter: none;
+  justify-content: flex-end;                  /* only “Next” at right */
+  padding: 8px 12px calc(10px + env(safe-area-inset-bottom, 0px));
+}
+
+/* Grid sizing so all 4 tiles fit on one phone screen */
+.introX.is-modes .gridWrap{
+  margin-top: 8px;
+  gap: 10px;                                  /* a touch tighter */
+}
+
+/* Simple rounded rectangle frames; no bezel, no black background */
+.introX.is-modes .tile{
+  border-radius: 14px;
+}
+.introX.is-modes .tile .frame{
+  /* shorter aspect so two rows fit; was very tall earlier */
+  padding-top: 170%;
+  background: transparent;                    /* remove dark fill */
+}
+.introX.is-modes .tile img{
+  object-fit: cover;                           /* fill frame (no bars) */
+  object-position: 50% 8%;                     /* slight top bias */
+  background: transparent;
+}
+.introX.is-modes .tile .cap{
+  padding: 8px 8px 10px;
+  font-size: 18px;
 }
         .btn { border: 0; border-radius: 12px; padding: 10px 14px; font-weight: 800; cursor: pointer; }
         .btn.sec { background: #eef0f5; color: #23262b; }
