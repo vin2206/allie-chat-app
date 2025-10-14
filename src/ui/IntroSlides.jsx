@@ -16,7 +16,7 @@ export default function IntroSlides({ onDone }) {
     {
       key: "hero",
       title: "Chat naturally with Shraddha",
-      sub: "Realistic AI for talk, advice & role-play.",
+      sub: "Real talk, confessions & role-play.",
       hero: { src: "/intro/mode_stranger.jpg", alt: "Shraddha chat preview" },
       pills: ["Feels real", "Quick voice", "Switch vibes"],
     },
@@ -56,7 +56,7 @@ export default function IntroSlides({ onDone }) {
   const back = () => setI((v) => Math.max(v - 1, 0));
 
   return (
-    <div className="introX">
+    <div className={`introX ${s.key === "hero" ? "is-hero" : ""}`}>
       <style>{`
         .introX {
           position: fixed; inset: 0; z-index: 99999;
@@ -78,7 +78,7 @@ export default function IntroSlides({ onDone }) {
           letter-spacing: .2px;
         }
         .introX .sub { font-size: 16px; opacity: .95; }
-
+        .introHead { text-align: center; }
         /* Pills (inline, subtle) */
         .pillRow { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
         .pill {
@@ -105,9 +105,12 @@ export default function IntroSlides({ onDone }) {
           padding-top: calc(100% * 19.5 / 9);
         }
         .phoneFrame img {
-          position: absolute; inset: 0; width: 100%; height: 100%;
-          object-fit: contain; background: #0b0b14;
-        }
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  object-fit: cover;            /* fill the frame */
+  object-position: 50% 0%;      /* anchor to top */
+  background: #0b0b14;          /* keeps edge color if any */
+  transform: translateY(-2%);   /* tiny lift to crop any black bar */
+}
 
         /* Modes grid (2x2 on phones, 3-wide from 560px) */
         .gridWrap {
@@ -146,15 +149,28 @@ export default function IntroSlides({ onDone }) {
           border-top: 1px solid rgba(255,255,255,.55);
           backdrop-filter: blur(6px);
         }
+        /* Slide 1: make footer invisible and keep only the button at bottom-right */
+.introX.is-hero .footer {
+  background: transparent;
+  border-top: 0;
+  backdrop-filter: none;
+  justify-content: flex-end;              /* only "Next" on the right */
+  padding: 8px 12px calc(10px + env(safe-area-inset-bottom, 0px));
+}
+
+/* Reduce bottom padding on Slide 1 so the invisible footer doesn't steal space */
+.introX.is-hero .introX-inner {
+  padding-bottom: 72px;
+}
         .btn { border: 0; border-radius: 12px; padding: 10px 14px; font-weight: 800; cursor: pointer; }
         .btn.sec { background: #eef0f5; color: #23262b; }
         .btn.pri { background: #ff3fb0; color: #fff; }
       `}</style>
 
       <div className="introX-inner">
-        <header>
-          <h1>{s.title}</h1>
-          {s.sub ? <div className="sub">{s.sub}</div> : null}
+        <header className="introHead">
+         <h1>{s.title}</h1>
+         {s.sub ? <div className="sub">{s.sub}</div> : null}
         </header>
 
         {/* Slide 1: hero */}
