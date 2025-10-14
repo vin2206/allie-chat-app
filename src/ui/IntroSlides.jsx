@@ -29,7 +29,6 @@ export default function IntroSlides({ onDone }) {
         { label: "Bhabhi",     src: "/intro/mode_bhabhi.jpg" },
         { label: "Ex-GF",      src: "/intro/mode_exgf.jpg" },
       ],
-      footNote: "Stranger is the default — you can change anytime.",
     },
     {
       key: "trust",
@@ -181,13 +180,6 @@ export default function IntroSlides({ onDone }) {
   padding: 8px 12px calc(10px + env(safe-area-inset-bottom, 0px));
 }
 
-/* make Back look subtle on the gradient */
-.introX.is-modes .btn.sec{
-  background: rgba(255,255,255,.22);
-  color: #fff;
-  border: 1px solid rgba(255,255,255,.35);
-}
-
 /* Grid sizing so all 4 tiles fit on one phone screen */
 .introX.is-modes .gridWrap{
   margin-top: 8px;
@@ -201,7 +193,7 @@ export default function IntroSlides({ onDone }) {
 
 /* slightly shorter frames to prevent bottom crop on many phones */
 .introX.is-modes .tile .frame{
-  padding-top: 162%;                         /* tweak 160–168% if needed */
+  padding-top: 166%;                         /* tweak 160–168% if needed */
   background: transparent;
 }
 
@@ -218,6 +210,12 @@ export default function IntroSlides({ onDone }) {
         .btn { border: 0; border-radius: 12px; padding: 10px 14px; font-weight: 800; cursor: pointer; }
         .btn.sec { background: #eef0f5; color: #23262b; }
         .btn.pri { background: #ff3fb0; color: #fff; }
+        /* Slide 2: force subtle Back button (wins over generic .btn.sec) */
+.introX.is-modes .footer .btn.sec{
+  background: rgba(255,255,255,.22) !important;
+  color: #fff !important;
+  border: 1px solid rgba(255,255,255,.35) !important;
+}
       `}</style>
 
       <div className="introX-inner">
