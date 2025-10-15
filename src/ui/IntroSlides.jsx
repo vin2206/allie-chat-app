@@ -221,8 +221,8 @@ export default function IntroSlides({ onDone }) {
 
 /* Glass wrapper that groups the points and fills space nicely */
 .trustGlass{
-  margin-top: 12px;
-  padding: 14px;
+  margin-top: 16px;
+  padding: 18px 18px 26px;
   border-radius: 22px;
   background: linear-gradient(180deg, rgba(255,255,255,.18), rgba(255,255,255,.10));
   border: 1px solid rgba(255,255,255,.28);
@@ -234,7 +234,7 @@ export default function IntroSlides({ onDone }) {
 .trustGrid{
   display: grid;
   grid-template-columns: 1fr;  /* single column */
-  gap: 12px;
+  gap: 16px;
 }
 
 .trustCard{
@@ -242,12 +242,12 @@ export default function IntroSlides({ onDone }) {
   background: rgba(255,255,255,.94);
   color: #111;
   border-radius: 18px;
-  padding: 14px 16px 14px 16px;
+  padding: 16px 18px;
   display: grid;
   grid-template-columns: auto 1fr;
   align-items: center;
   gap: 12px;
-  min-height: 74px;                 /* a bit taller for premium feel */
+  min-height: 82px;
   border: 1px solid rgba(0,0,0,.05);
   box-shadow: 0 4px 16px rgba(0,0,0,.08);
   transition: transform .15s ease, box-shadow .15s ease;
@@ -266,7 +266,7 @@ export default function IntroSlides({ onDone }) {
 }
 
 .trustIcon{
-  font-size: 30px;
+  font-size: 32px;
   line-height: 1;
   filter: drop-shadow(0 1px 1px rgba(0,0,0,.12));
 }
