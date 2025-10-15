@@ -39,6 +39,7 @@ export default function IntroSlides({ onDone }) {
     { icon: "💳", h: "Secure Razorpay", sub: "UPI, cards — bank-grade checkout." },
     { icon: "📮", h: "Support assured", sub: "Reach us anytime via feedback." },
     { icon: "🎁", h: "Free starter coins", sub: "Bonus on first sign-in." },
+    { icon: "🗣️", h: "Keep chat or talk — enjoy voice with chat", sub: "Text 10 · Voice 18" },
   ],
   cta: { label: "Get started", action: () => onDone?.() },
 },
