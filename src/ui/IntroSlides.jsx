@@ -201,7 +201,7 @@ export default function IntroSlides({ onDone }) {
   color: #fff !important;
   border: 1px solid rgba(255,255,255,.35) !important;
 }
-/* === Slide 3 (trust) — icon cards, floating footer, no logos === */
+/* === Slide 3 (trust) — single-column icon cards, floating footer === */
 .introX.is-trust .introX-inner{
   padding-bottom: 72px; /* leave room for floating footer */
 }
@@ -212,37 +212,44 @@ export default function IntroSlides({ onDone }) {
   justify-content: space-between; /* Back left, Get started right */
   padding: 8px 12px calc(10px + env(safe-area-inset-bottom, 0px));
 }
+/* make Back look like Slide 2 (subtle + translucent) */
+.introX.is-trust .footer .btn.sec{
+  background: rgba(255,255,255,.22) !important;
+  color: #fff !important;
+  border: 1px solid rgba(255,255,255,.35) !important;
+}
 
-/* Icon cards grid (2×3) */
+/* Icon cards — ONE per row */
 .trustGrid{
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-  margin-top: 10px;
+  grid-template-columns: 1fr;  /* single column */
+  gap: 12px;
+  margin-top: 14px;
 }
 .trustCard{
   background: rgba(255,255,255,.92);
   color: #111;
-  border-radius: 16px;
-  padding: 12px;
+  border-radius: 18px;
+  padding: 14px 16px;
   display: grid;
   grid-template-columns: auto 1fr;
   align-items: center;
-  gap: 10px;
-  box-shadow: 0 2px 10px rgba(0,0,0,.08);
+  gap: 12px;
+  min-height: 72px;                        /* bigger, more premium */
+  box-shadow: 0 4px 18px rgba(0,0,0,.10);
 }
 .trustIcon{
-  font-size: 20px;
+  font-size: 30px;                         /* larger icon */
   line-height: 1;
 }
 .trustText .h{
   font-weight: 800;
-  font-size: 15px;
+  font-size: 17px;                         /* bigger headline */
 }
 .trustText .sub{
-  font-size: 13px;
-  opacity: .8;
-  margin-top: 2px;
+  font-size: 14px;                         /* bigger subline */
+  opacity: .85;
+  margin-top: 6px;
 }
       `}</style>
 
