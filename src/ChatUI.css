@@ -895,6 +895,42 @@ body { background: linear-gradient(180deg, #fce7f3 0%, #ede9fe 100%); }
   align-items: center;
   justify-content: center;
 }
+/* === Sign-in: Bottom-sheet presentation (no extra content) === */
+.auth-backdrop.bottomsheet {
+  display: flex;
+  align-items: flex-end; /* anchor sheet to bottom */
+  padding: 0 env(safe-area-inset-right) calc(16px + env(safe-area-inset-bottom)) env(safe-area-inset-left);
+  backdrop-filter: none; /* let the page gradient show through */
+}
+
+.auth-card.sheet {
+  width: 100%;
+  max-width: 520px;
+  height: min(72vh, 640px);     /* tall, app-like */
+  margin: 0 auto;
+  border-radius: 20px 20px 0 0; /* top corners only */
+  background: linear-gradient(180deg, rgba(255,255,255,.86), rgba(255,255,255,.80));
+  border: 1px solid rgba(0,0,0,.08);
+  box-shadow: 0 -6px 30px rgba(0,0,0,.10), 0 10px 30px rgba(0,0,0,.06) inset;
+  backdrop-filter: blur(10px);
+  display: flex;
+  flex-direction: column;
+  padding: 18px 16px 14px;
+}
+
+/* Slightly tuned sizing inside the sheet */
+.auth-card.sheet .auth-logo { width: min(64%, 260px); margin: 6px auto 4px; }
+.auth-card.sheet .auth-sub  { text-align: center; font-size: 14.5px; color: #444; margin-bottom: 10px; }
+
+/* Keep Google button pinned near the bottom inside the sheet */
+.auth-card.sheet .google-row { margin-top: auto; padding-top: 6px; }
+.auth-card.sheet .gbtn-wrap { display: flex; justify-content: center; }
+.auth-card.sheet .gbtn-wrap > div { transform: translateZ(0); }
+
+@media (max-height: 640px) {
+  .auth-card.sheet { height: 68vh; }
+}
+
 .App.stable {
   /* keep a stable viewport; do NOT use dvh here */
   height: 100vh;
