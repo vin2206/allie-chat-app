@@ -32,7 +32,7 @@ export default function IntroSlides({ onDone }) {
     },
     {
   key: "trust",
-  title: "Good to know",
+  title: "Essentials before you start",
   cards: [
     { icon: "🏆", h: "Most realistic ever", sub: "Human-like chat & voice." },
     { icon: "🛡️", h: "Private, end-to-end", sub: "Your chats stay on your device." },
@@ -201,9 +201,9 @@ export default function IntroSlides({ onDone }) {
   color: #fff !important;
   border: 1px solid rgba(255,255,255,.35) !important;
 }
-/* === Slide 3 (trust) — single-column icon cards, floating footer === */
+/* === Slide 3 (trust) — single-column cards inside a glass panel === */
 .introX.is-trust .introX-inner{
-  padding-bottom: 72px; /* leave room for floating footer */
+  padding-bottom: 72px; /* room for floating footer */
 }
 .introX.is-trust .footer{
   background: transparent;
@@ -212,11 +212,22 @@ export default function IntroSlides({ onDone }) {
   justify-content: space-between; /* Back left, Get started right */
   padding: 8px 12px calc(10px + env(safe-area-inset-bottom, 0px));
 }
-/* make Back look like Slide 2 (subtle + translucent) */
+/* make Back match slide 2 (subtle + translucent) */
 .introX.is-trust .footer .btn.sec{
   background: rgba(255,255,255,.22) !important;
   color: #fff !important;
   border: 1px solid rgba(255,255,255,.35) !important;
+}
+
+/* Glass wrapper that groups the points and fills space nicely */
+.trustGlass{
+  margin-top: 12px;
+  padding: 14px;
+  border-radius: 22px;
+  background: linear-gradient(180deg, rgba(255,255,255,.18), rgba(255,255,255,.10));
+  border: 1px solid rgba(255,255,255,.28);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 10px 30px rgba(0,0,0,.18) inset, 0 6px 24px rgba(0,0,0,.10);
 }
 
 /* Icon cards — ONE per row */
@@ -224,30 +235,48 @@ export default function IntroSlides({ onDone }) {
   display: grid;
   grid-template-columns: 1fr;  /* single column */
   gap: 12px;
-  margin-top: 14px;
 }
+
 .trustCard{
-  background: rgba(255,255,255,.92);
+  position: relative;
+  background: rgba(255,255,255,.94);
   color: #111;
   border-radius: 18px;
-  padding: 14px 16px;
+  padding: 14px 16px 14px 16px;
   display: grid;
   grid-template-columns: auto 1fr;
   align-items: center;
   gap: 12px;
-  min-height: 72px;                        /* bigger, more premium */
-  box-shadow: 0 4px 18px rgba(0,0,0,.10);
+  min-height: 74px;                 /* a bit taller for premium feel */
+  border: 1px solid rgba(0,0,0,.05);
+  box-shadow: 0 4px 16px rgba(0,0,0,.08);
+  transition: transform .15s ease, box-shadow .15s ease;
 }
+.trustCard:before{
+  /* thin left accent bar */
+  content:"";
+  position:absolute; left:0; top:8px; bottom:8px; width:3px;
+  border-radius: 3px;
+  background: linear-gradient(180deg,#ffb4e6,#b29bff);
+  opacity:.85;
+}
+.trustCard:active{ transform: scale(0.995); }
+@media (hover:hover){
+  .trustCard:hover{ transform: translateY(-1px); box-shadow: 0 6px 20px rgba(0,0,0,.12); }
+}
+
 .trustIcon{
-  font-size: 30px;                         /* larger icon */
+  font-size: 30px;
   line-height: 1;
+  filter: drop-shadow(0 1px 1px rgba(0,0,0,.12));
 }
+
 .trustText .h{
   font-weight: 800;
-  font-size: 17px;                         /* bigger headline */
+  font-size: 17px;
 }
 .trustText .sub{
-  font-size: 14px;                         /* bigger subline */
+  font-size: 14px;
   opacity: .85;
   margin-top: 6px;
 }
@@ -296,18 +325,20 @@ export default function IntroSlides({ onDone }) {
 
         {/* Slide 3: trust icon cards */}
 {s.cards && (
-  <div className="trustGrid" aria-label="Good to know">
-    {s.cards.map((c, idx) => (
-      <div key={idx} className="trustCard">
-        <div className="trustIcon">{c.icon}</div>
-        <div className="trustText">
-          <div className="h">{c.h}</div>
-          <div className="sub">{c.sub}</div>
+  <div className="trustGlass">
+    <div className="trustGrid" aria-label="Essentials before you start">
+      {s.cards.map((c, idx) => (
+        <div key={idx} className="trustCard">
+          <div className="trustIcon">{c.icon}</div>
+          <div className="trustText">
+            <div className="h">{c.h}</div>
+            <div className="sub">{c.sub}</div>
+          </div>
         </div>
-      </div>
-    ))}
+      ))}
+    </div>
   </div>
- )}
+)}
 </div>
 
       <div className="footer">
