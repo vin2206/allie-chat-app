@@ -193,7 +193,7 @@ export default function IntroSlides({ onDone }) {
 
 /* slightly shorter frames to prevent bottom crop on many phones */
 .introX.is-modes .tile .frame{
-  padding-top: 166%;                         /* tweak 160–168% if needed */
+  padding-top: 168%;                         /* tweak 160–168% if needed */
   background: transparent;
 }
 
