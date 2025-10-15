@@ -31,23 +31,17 @@ export default function IntroSlides({ onDone }) {
       ],
     },
     {
-      key: "trust",
-      title: "Simple & safe",
-      sub: "Text 10 · Voice 18",
-      bullets: [
-        "Free starter coins",
-        "Razorpay checkout",
-        "Balance at top-right",
-        "Sign in with Google",
-        "Only you see your chats",
-        "Ask anything via feedback",
-      ],
-      logos: [
-        { alt: "Razorpay", src: "/intro/logo_razorpay.svg" },
-        { alt: "Google",   src: "/intro/logo_google.svg" },
-      ],
-      cta: { label: "Get started", action: () => onDone?.() },
-    },
+  key: "trust",
+  title: "Good to know",
+  cards: [
+    { icon: "🏆", h: "Most realistic ever", sub: "Human-like chat & voice." },
+    { icon: "🛡️", h: "Private, end-to-end", sub: "Your chats stay on your device." },
+    { icon: "💳", h: "Secure Razorpay", sub: "UPI, cards — bank-grade checkout." },
+    { icon: "📮", h: "Support assured", sub: "Reach us anytime via feedback." },
+    { icon: "🎁", h: "Free starter coins", sub: "Bonus on first sign-in." },
+  ],
+  cta: { label: "Get started", action: () => onDone?.() },
+},
   ];
 
   const s = slides[i];
@@ -55,7 +49,7 @@ export default function IntroSlides({ onDone }) {
   const back = () => setI((v) => Math.max(v - 1, 0));
 
   return (
-    <div className={`introX ${s.key === "hero" ? "is-hero" : ""} ${s.key === "modes" ? "is-modes" : ""}`}>
+    <div className={`introX ${s.key === "hero" ? "is-hero" : ""} ${s.key === "modes" ? "is-modes" : ""} ${s.key === "trust" ? "is-trust" : ""}`}>
       <style>{`
         .introX {
           position: fixed; inset: 0; z-index: 99999;
@@ -129,15 +123,6 @@ export default function IntroSlides({ onDone }) {
         .tile .cap { text-align: center; font-weight: 800; padding: 8px 10px 10px; }
 
         .footNote { font-size: 12.5px; opacity: .9; margin-top: 2px; }
-
-        /* Bullets + logos (no cards) */
-        .bullets { display: grid; gap: 8px; margin-top: 10px; }
-        .bullets .b {
-          background: rgba(255,255,255,.92); color: #13131a;
-          border-radius: 12px; padding: 10px 12px; font-size: 15px; font-weight: 600;
-        }
-        .logos { display: flex; align-items: center; gap: 14px; margin-top: 12px; opacity: .95; }
-        .logos img { height: 22px; width: auto; filter: grayscale(1) contrast(1.05); }
 
         /* Sticky footer (no dots) */
         .footer {
@@ -216,6 +201,49 @@ export default function IntroSlides({ onDone }) {
   color: #fff !important;
   border: 1px solid rgba(255,255,255,.35) !important;
 }
+/* === Slide 3 (trust) — icon cards, floating footer, no logos === */
+.introX.is-trust .introX-inner{
+  padding-bottom: 72px; /* leave room for floating footer */
+}
+.introX.is-trust .footer{
+  background: transparent;
+  border-top: 0;
+  backdrop-filter: none;
+  justify-content: space-between; /* Back left, Get started right */
+  padding: 8px 12px calc(10px + env(safe-area-inset-bottom, 0px));
+}
+
+/* Icon cards grid (2×3) */
+.trustGrid{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 10px;
+}
+.trustCard{
+  background: rgba(255,255,255,.92);
+  color: #111;
+  border-radius: 16px;
+  padding: 12px;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 2px 10px rgba(0,0,0,.08);
+}
+.trustIcon{
+  font-size: 20px;
+  line-height: 1;
+}
+.trustText .h{
+  font-weight: 800;
+  font-size: 15px;
+}
+.trustText .sub{
+  font-size: 13px;
+  opacity: .8;
+  margin-top: 2px;
+}
       `}</style>
 
       <div className="introX-inner">
@@ -259,24 +287,21 @@ export default function IntroSlides({ onDone }) {
           </>
         )}
 
-        {/* Slide 3: bullets + logos */}
-        {s.bullets && (
-          <>
-            <div className="bullets">
-              {s.bullets.map((b, idx) => (
-                <div key={idx} className="b">{b}</div>
-              ))}
-            </div>
-            {s.logos && (
-              <div className="logos">
-                {s.logos.map((l, idx) => (
-                  <img key={idx} src={l.src} alt={l.alt} loading="lazy" />
-                ))}
-              </div>
-            )}
-          </>
-        )}
+        {/* Slide 3: trust icon cards */}
+{s.cards && (
+  <div className="trustGrid" aria-label="Good to know">
+    {s.cards.map((c, idx) => (
+      <div key={idx} className="trustCard">
+        <div className="trustIcon">{c.icon}</div>
+        <div className="trustText">
+          <div className="h">{c.h}</div>
+          <div className="sub">{c.sub}</div>
+        </div>
       </div>
+    ))}
+  </div>
+ )}
+</div>
 
       <div className="footer">
         <div>
