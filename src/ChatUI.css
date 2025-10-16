@@ -1252,24 +1252,25 @@ html.legacy-zoom .username-container {
 /* SCOPE auth buttons so slides' .btn are untouched */
 .auth-card .btn{
   all: unset;
+  position: relative;                 /* new */
   display:flex;
   align-items:center;
-  justify-content:center;
-  gap: 8px;                       /* was 10px */
+  justify-content:center;             /* center label like Google */
+  gap: 8px;
   width:100%;
   height:44px;
   background:#fff;
   color:#3c4043;
-  border: 1px solid rgba(218,220,224,0.85);  /* was #dadce0 */
+  border: 1px solid rgba(218,220,224,.70);
   border-radius:9999px;
-  font-weight: 500;               /* was 600 */
+  font-weight:500;
   font-size:14px;
   line-height:1;
   user-select:none;
   -webkit-user-select:none;
   cursor:pointer;
   box-shadow:none;
-  padding-left: 12px;             /* added: aligns icon with Google */
+  padding-left:14px;                  /* keeps same left inset */
 }
 
 /* grey, non-interactive look */
@@ -1285,11 +1286,13 @@ html.legacy-zoom .username-container {
 
 /* small leading icon box */
 .auth-card .btn-ico{
+  position:absolute;                  /* new */
+  left:14px;                          /* aligns with Google button */
   display:inline-flex;
   align-items:center;
   justify-content:center;
-  width: 18px;     /* was 22px */
-  height: 18px;    /* was 22px */
+  width:20px;
+  height:20px;
   font-size:18px;
   line-height:1;
   opacity:.9;
