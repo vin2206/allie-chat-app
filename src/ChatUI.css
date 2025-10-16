@@ -1277,7 +1277,7 @@ html.legacy-zoom .username-container {
   justify-content:center;
 }
 .auth-card .google-row .gbtn-wrap{
-  width:100%;               /* same as .btn (full width of the card) */
+  width: min(320px, 82vw);              /* same as .btn (full width of the card) */
   max-width: none;          /* prevent narrower look */
   height:44px;              /* same height as the others */
 }
@@ -1289,13 +1289,14 @@ html.legacy-zoom .username-container {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 100%;
-  height: 42px;                         /* Google large height */
+  margin: 0 auto;
+  width: min(320px, 82vw);
+  height: 44px;                         /* Google large height */
   padding: 0 48px;               /* room for left icon */
   background: #fff;
   color: #3c4043;
   border: 1px solid rgba(218,220,224,.70);
-  border-radius: 20px;                    /* match GIS corners */
+  border-radius: 22px;                    /* match GIS corners */
   font: 500 14px/1 system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
   cursor: pointer;
   box-sizing: border-box;
