@@ -1295,9 +1295,10 @@ html.legacy-zoom .username-container {
   background: #fff;
   color: #3c4043;
   border: 1px solid rgba(218,220,224,.70);
-  border-radius: 4px;                    /* match GIS corners */
+  border-radius: 9999px;                    /* match GIS corners */
   font: 500 14px/1 system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
   cursor: pointer;
+  box-sizing: border-box;
 }
 
 .auth-card .btn--disabled[disabled]{
