@@ -346,10 +346,23 @@ if (!document.querySelector('script[src*="gsi/client"]')) {
 
         <div className="auth-sub">Sign in to chat with a Realistic AI Girlfriend</div>
 
-        <div className="google-row">
+        <div className="auth-actions">
+  {/* Disabled Apple */}
+  <button className="btn btn--disabled" disabled>
+    <span className="btn-ico"></span>
+    Continue with Apple
+  </button>
+
+  {/* Google (unchanged – GIS will render here) */}
   <div className="gbtn-wrap">
     <div id="googleSignIn" />
   </div>
+
+  {/* Disabled Email */}
+  <button className="btn btn--disabled" disabled>
+    <span className="btn-ico">@</span>
+    Continue with Email
+  </button>
 </div>
       </div>
     </div>
