@@ -1255,32 +1255,32 @@ html.legacy-zoom .username-container {
   display:flex;
   align-items:center;
   justify-content:center;
-  gap:10px;
+  gap: 8px;                       /* was 10px */
   width:100%;
   height:44px;
-  /* New: make it look like Google’s outline pill */
   background:#fff;
   color:#3c4043;
-  border:1px solid #dadce0;
+  border: 1px solid rgba(218,220,224,0.85);  /* was #dadce0 */
   border-radius:9999px;
-  font-weight:600;          /* medium like Google */
+  font-weight: 500;               /* was 600 */
   font-size:14px;
   line-height:1;
   user-select:none;
   -webkit-user-select:none;
   cursor:pointer;
-  box-shadow:none;          /* no shadow (Google outline style) */
+  box-shadow:none;
+  padding-left: 12px;             /* added: aligns icon with Google */
 }
 
 /* grey, non-interactive look */
 .auth-card .btn--disabled[disabled]{
   background:#fff;
   color:#3c4043;
-  border:1px solid #dadce0;
+  border: 1px solid rgba(218,220,224,0.85);  /* was #dadce0 */
   border-radius:9999px;
   cursor:not-allowed;
   box-shadow:none;
-  opacity:1;               /* match Google button opacity */
+  opacity:1;
 }
 
 /* small leading icon box */
@@ -1288,12 +1288,11 @@ html.legacy-zoom .username-container {
   display:inline-flex;
   align-items:center;
   justify-content:center;
-  width:22px;
-  height:22px;
+  width: 18px;     /* was 22px */
+  height: 18px;    /* was 22px */
   font-size:18px;
   line-height:1;
   opacity:.9;
-  /* New: no extra background/border so it matches Google’s logo spacing */
   background:transparent;
   border:0;
 }
