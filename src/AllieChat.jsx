@@ -340,8 +340,8 @@ if (!document.querySelector('script[src*="gsi/client"]')) {
   }, [onSignedIn]);
 
   return (
-    <div className="auth-backdrop bottomsheet">
-      <div className="auth-card sheet" role="dialog" aria-modal="true">
+    <div className="auth-backdrop">
+      <div className="auth-card">
         <img className="auth-logo" src="/shraddha-logo.png" alt="Shraddha — AI Girlfriend" />
 
         <div className="auth-sub">Sign in to chat with a Realistic AI Girlfriend</div>
