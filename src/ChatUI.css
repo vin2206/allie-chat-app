@@ -1249,8 +1249,8 @@ html.legacy-zoom .username-container {
   margin-top: 6px;
 }
 
-/* shared button shell for the fake providers */
-.btn{
+/* SCOPE auth buttons so slides' .btn are untouched */
+.auth-card .btn{
   all: unset;
   display:flex;
   align-items:center;
@@ -1269,7 +1269,7 @@ html.legacy-zoom .username-container {
 }
 
 /* grey, non-interactive look */
-.btn--disabled[disabled]{
+.auth-card .btn--disabled[disabled]{
   background:#f3f4f6;
   color:#9aa0a6;
   border:1px solid #e5e7eb;
@@ -1279,13 +1279,13 @@ html.legacy-zoom .username-container {
 }
 
 /* small leading icon box */
-.btn-ico{
+.auth-card .btn-ico{
   display:inline-flex;
   align-items:center;
   justify-content:center;
   width:22px;
   height:22px;
-  font-size:18px;       /* Apple glyph looks crisp at ~18px */
+  font-size:18px;
   line-height:1;
   opacity:.9;
 }
@@ -1293,14 +1293,32 @@ html.legacy-zoom .username-container {
 /* keep layout tidy on tiny screens */
 @media (max-width: 360px){
   .auth-actions{ gap:8px; }
-  .btn{ height:42px; font-size:13px; }
+  .auth-card .btn{ height:42px; font-size:13px; }
 }
 
 /* nicer keyboard focus for accessibility */
-.btn:focus-visible{
+.auth-card .btn:focus-visible{
   outline: 2px solid #7b61ff;
   outline-offset: 2px;
 }
-.btn--disabled[disabled]:focus-visible{
+.auth-card .btn--disabled[disabled]:focus-visible{
   outline: none;
+}
+
+/* --- Make Google row first & same size without changing markup --- */
+/* Put the Google row ABOVE the Apple/Email stack visually */
+.auth-card{ display:flex; flex-direction:column; }  /* already set, re-assert */
+.auth-card .google-row{ order: 30; }   /* will move as a group */
+.auth-card .auth-actions{ order: 40; } /* sits below Google */
+
+/* Match widths/heights so all three look identical */
+.auth-card .google-row{
+  width:100%;
+  display:flex;
+  justify-content:center;
+}
+.auth-card .google-row .gbtn-wrap{
+  width:100%;               /* same as .btn (full width of the card) */
+  max-width: none;          /* prevent narrower look */
+  height:44px;              /* same height as the others */
 }
