@@ -1246,7 +1246,7 @@ html.legacy-zoom .username-container {
   flex-direction:column;
   gap:14px;
   width:100%;
-  margin-top: 6px;
+  margin-top: 2px;
 }
 
 /* keep layout tidy on tiny screens */
