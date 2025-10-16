@@ -324,12 +324,13 @@ if (!document.querySelector('script[src*="gsi/client"]')) {
             const w = Math.min(320, Math.max(240, Math.floor((host.clientWidth || host.getBoundingClientRect().width) || 280)));
             el.innerHTML = '';
             window.google.accounts.id.renderButton(el, {
-             theme: 'outline',
-             size: 'medium',     // smaller
-             text: 'continue_with',
-             shape: 'pill',
-             width: 220,         // fixed medium width
-            });
+  theme: 'outline',
+  size: 'large',
+  text: 'continue_with',
+  shape: 'pill',
+  logo_alignment: 'left',
+  width: w,                // let it fill .gbtn-wrap
+});
             requestAnimationFrame(() => host.classList.add('ready')); // reveal
           });
         }
@@ -346,17 +347,20 @@ if (!document.querySelector('script[src*="gsi/client"]')) {
 
         <div className="auth-sub">Sign in to chat with a Realistic AI Girlfriend</div>
 
-        <div className="auth-actions">
+        {/* Google on its own full-width row */}
+<div className="google-row">
+  <div className="gbtn-wrap">
+    <div id="googleSignIn" />
+  </div>
+</div>
+
+{/* Apple + Email (disabled) */}
+<div className="auth-actions">
   {/* Disabled Apple */}
   <button className="btn btn--disabled" disabled>
     <span className="btn-ico"></span>
     Continue with Apple
   </button>
-
-  {/* Google (unchanged – GIS will render here) */}
-  <div className="gbtn-wrap">
-    <div id="googleSignIn" />
-  </div>
 
   {/* Disabled Email */}
   <button className="btn btn--disabled" disabled>
