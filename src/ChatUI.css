@@ -1249,61 +1249,10 @@ html.legacy-zoom .username-container {
   margin-top: 6px;
 }
 
-/* SCOPE auth buttons so slides' .btn are untouched */
-.auth-card .btn{
-  all: unset;
-  position: relative;                 /* new */
-  display:flex;
-  align-items:center;
-  justify-content:center;             /* center label like Google */
-  gap: 8px;
-  width:100%;
-  height:44px;
-  background:#fff;
-  color:#3c4043;
-  border: 1px solid rgba(218,220,224,.70);
-  border-radius:9999px;
-  font-weight:500;
-  font-size:14px;
-  line-height:1;
-  user-select:none;
-  -webkit-user-select:none;
-  cursor:pointer;
-  box-shadow:none;
-  padding-left:14px;                  /* keeps same left inset */
-}
-
-/* grey, non-interactive look */
-.auth-card .btn--disabled[disabled]{
-  background:#fff;
-  color:#3c4043;
-  border: 1px solid rgba(218,220,224,0.85);  /* was #dadce0 */
-  border-radius:9999px;
-  cursor:not-allowed;
-  box-shadow:none;
-  opacity:1;
-}
-
-/* small leading icon box */
-.auth-card .btn-ico{
-  position:absolute;                  /* new */
-  left:14px;                          /* aligns with Google button */
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  width:20px;
-  height:20px;
-  font-size:18px;
-  line-height:1;
-  opacity:.9;
-  background:transparent;
-  border:0;
-}
-
 /* keep layout tidy on tiny screens */
 @media (max-width: 360px){
   .auth-actions{ gap:8px; }
-  .auth-card .btn{ height:42px; font-size:13px; }
+  .auth-card .btn{ height:44px; font-size:13px; }
 }
 
 /* nicer keyboard focus for accessibility */
@@ -1331,4 +1280,42 @@ html.legacy-zoom .username-container {
   width:100%;               /* same as .btn (full width of the card) */
   max-width: none;          /* prevent narrower look */
   height:44px;              /* same height as the others */
+}
+
+/* Apple & Email = Google spec */
+.auth-card .btn{
+  all: unset;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 44px;                         /* Google large height */
+  padding: 0 12px 0 48px;               /* room for left icon */
+  background: #fff;
+  color: #3c4043;
+  border: 1px solid rgba(218,220,224,.70);
+  border-radius: 4px;                    /* match GIS corners */
+  font: 500 14px/1 system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  cursor: pointer;
+}
+
+.auth-card .btn--disabled[disabled]{
+  opacity: 1;
+  cursor: not-allowed;
+  border-color: rgba(218,220,224,.85);
+}
+
+.auth-card .btn-ico{
+  position: absolute;
+  left: 14px;                            /* same inset as Google */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  font-size: 18px;
+  line-height: 1;
+  background: transparent;
+  border: 0;
 }
