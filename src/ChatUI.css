@@ -1239,3 +1239,68 @@ html.legacy-zoom .username-container {
 }
 .bb-toast small{ font-weight: 600; opacity: .95; }
 @keyframes bb-toast-in{ from{ transform: translate(-50%,8px); opacity:.2 } to{ transform: translate(-50%,0); opacity:1 } }
+
+/* --- Auth actions row + disabled buttons (Apple / Email) --- */
+.auth-actions{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  width:100%;
+  margin-top: 6px;
+}
+
+/* shared button shell for the fake providers */
+.btn{
+  all: unset;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+  width:100%;
+  height:44px;
+  border-radius:12px;
+  font-weight:800;
+  font-size:14px;
+  line-height:1;
+  user-select:none;
+  -webkit-user-select:none;
+  cursor:pointer;
+  box-shadow: 0 10px 22px rgba(0,0,0,.12);
+}
+
+/* grey, non-interactive look */
+.btn--disabled[disabled]{
+  background:#f3f4f6;
+  color:#9aa0a6;
+  border:1px solid #e5e7eb;
+  cursor:not-allowed;
+  box-shadow:none;
+  opacity:.95;
+}
+
+/* small leading icon box */
+.btn-ico{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:22px;
+  height:22px;
+  font-size:18px;       /* Apple glyph looks crisp at ~18px */
+  line-height:1;
+  opacity:.9;
+}
+
+/* keep layout tidy on tiny screens */
+@media (max-width: 360px){
+  .auth-actions{ gap:8px; }
+  .btn{ height:42px; font-size:13px; }
+}
+
+/* nicer keyboard focus for accessibility */
+.btn:focus-visible{
+  outline: 2px solid #7b61ff;
+  outline-offset: 2px;
+}
+.btn--disabled[disabled]:focus-visible{
+  outline: none;
+}
