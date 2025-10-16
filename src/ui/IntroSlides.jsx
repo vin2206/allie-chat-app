@@ -294,8 +294,16 @@ export default function IntroSlides({ onDone }) {
           <>
             <div className="hero">
               <div className="phoneFrame">
-                <img src={s.hero.src} alt={s.hero.alt} loading="eager" />
-              </div>
+  <img
+    src={s.hero.src}
+    alt={s.hero.alt}
+    loading="eager"
+    fetchpriority="high"
+    decoding="async"
+    width="900"
+    height="1950"
+  />
+</div>
             </div>
             {s.pills && (
               <div className="pillRow">
@@ -314,8 +322,15 @@ export default function IntroSlides({ onDone }) {
               {s.grid.map((g) => (
                 <div key={g.label} className="tile">
                   <div className="frame">
-                    <img src={g.src} alt={g.label} loading="lazy" />
-                  </div>
+  <img
+    src={g.src}
+    alt={g.label}
+    loading="lazy"
+    decoding="async"
+    width="900"
+    height="1500"
+  />
+</div>
                   <div className="cap">{g.label}</div>
                 </div>
               ))}
