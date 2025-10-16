@@ -358,7 +358,7 @@ if (!document.querySelector('script[src*="gsi/client"]')) {
 <div className="auth-actions">
   {/* Disabled Apple */}
   <button className="btn btn--disabled" disabled>
-    <span className="btn-ico"></span>
+    <span className="btn-ico apple" aria-hidden="true"></span>
     Continue with Apple
   </button>
 
