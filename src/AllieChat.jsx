@@ -8,6 +8,23 @@ import { startVersionWatcher } from './versionWatcher';
 import CoinsModal from './components/CoinsModal';
 import IntroSlides from './ui/IntroSlides';
 import { prewarmRazorpay, handleCoinPurchase } from './lib/razorpay';
+// --- App context (TWA) flag — OFF on normal web ---
+// Reads ?src=twa once per tab; persists only for this tab/session.
+function detectAppModeOnce() {
+  try {
+    const KEY = 'is_app_mode_v1';
+    // already decided in this tab?
+    const saved = sessionStorage.getItem(KEY);
+    if (saved === '1' || saved === '0') return saved === '1';
+
+    const params = new URLSearchParams(window.location.search);
+    const isTwa = params.get('src') === 'twa';
+    sessionStorage.setItem(KEY, isTwa ? '1' : '0');
+    return isTwa;
+  } catch { return false; }
+}
+// Single source of truth for this runtime
+const IS_ANDROID_APP = detectAppModeOnce();
 // --- small utility ---
 function debounce(fn, wait = 120) {
   let t;
@@ -694,10 +711,11 @@ useEffect(() => {
 const [roleplayNeedsPremium, setRoleplayNeedsPremium] = useState(true);
 
 useEffect(() => {
-  fetch(`${BACKEND_BASE}/config`, { credentials: 'include' })
+  const url = `${BACKEND_BASE}/config${IS_ANDROID_APP ? '?src=twa' : ''}`;
+  fetch(url, { credentials: 'include' })
     .then(r => r.json())
     .then(d => setRoleplayNeedsPremium(!!d.roleplayNeedsPremium))
-    .catch(() => {}); // keep safe default = true
+    .catch(() => {}); // safe default = true
 }, []);
   const [isOwner, setIsOwner] = useState(false);
   // Chrome bar state (session-scoped)
