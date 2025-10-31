@@ -96,7 +96,12 @@ function enableSilentReauth(clientId, setUser) {
 }
 // --- backend base ---
 const BACKEND_BASE = 'https://api.buddyby.com';
-const authHeaders = (u) => (u?.idToken ? { Authorization: `Bearer ${u.idToken}` } : {});
+const authHeaders = (u) => {
+  const base = u?.idToken ? { Authorization: `Bearer ${u.idToken}` } : {};
+  // Tell backend this is the Android app (TWA) when loaded with ?src=twa
+  if (IS_ANDROID_APP) base['X-App-Mode'] = 'twa';
+  return base;
+};
 // --- CSRF header helper ---
 const getCsrf = () => {
   try {
@@ -509,7 +514,8 @@ function CharacterPopup({ open, roleMode, roleType, onClose }) {
       ? (ROLE_LABELS[roleType] || 'Stranger')
       : 'Stranger';
 
-  const INSIGHTS = {
+    // Web (default) — current copy
+  const INSIGHTS_WEB = {
     stranger:
       "A 24-yr girl who loves acting but family doesn't support. She helps her father in a small business and is an introvert who opens up online.",
     wife:
@@ -521,6 +527,22 @@ function CharacterPopup({ open, roleMode, roleType, onClose }) {
     exgf:
       "A 26-yr spicy girl who gets bored quickly. Confused right now — loves her boyfriend but also likes her ex and chats with him when alone."
   };
+
+  // App (TWA) — toned-down, PG-13 copy
+  const INSIGHTS_TWA = {
+    stranger:
+      "A 24-yr aspiring actor; introvert, kind, and supportive. She helps her father’s small business and opens up slowly online.",
+    wife:
+      "A 28-yr housewife, who loves to fulfill her husband's every wish — a little jealous too.",
+    bhabhi:
+      "A 30-yr confident, mature woman who gets witty and affectionate toward her neighbour.",
+    girlfriend:
+      "A 25-yr possessive girl who loves her boyfriend more than anyone, but her jealousy often causes problems.",
+    exgf:
+      "A 26-yr independent girl who gets bored quickly. Confused right now — likes her boyfriend but also loves her ex and chats with him when alone."
+  };
+
+  const INSIGHTS = IS_ANDROID_APP ? INSIGHTS_TWA : INSIGHTS_WEB;
 
   const key = roleMode === 'roleplay' ? (roleType || 'stranger') : 'stranger';
   const text = INSIGHTS[key];
