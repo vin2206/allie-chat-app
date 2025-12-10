@@ -12,7 +12,7 @@ import React, { useState } from "react";
 export default function IntroSlides({ onDone }) {
   const [i, setI] = useState(0);
 
-  const slides = [
+    const slides = [
     {
       key: "hero",
       title: "Chat naturally with Shraddha",
@@ -21,30 +21,19 @@ export default function IntroSlides({ onDone }) {
       pills: ["Feels real", "Quick voice", "Switch vibes"],
     },
     {
-      key: "modes",
-      title: "Choose modes & switch anytime",
-      grid: [
-        { label: "Wife",       src: "/intro/mode_wife.jpg" },
-        { label: "Girlfriend", src: "/intro/mode_girlfriend.jpg" },
-        { label: "Bhabhi",     src: "/intro/mode_bhabhi.jpg" },
-        { label: "Ex-GF",      src: "/intro/mode_exgf.jpg" },
+      key: "trust",
+      title: "Essentials before you start",
+      cards: [
+        { icon: "🏆", h: "Most realistic ever", sub: "Human-like chat & voice." },
+        { icon: "🛡️", h: "Private, end-to-end", sub: "Your chats stay on your device." },
+        { icon: "💳", h: "Secure Razorpay", sub: "UPI, cards — bank-grade checkout." },
+        { icon: "📮", h: "Support assured", sub: "Reach us anytime via feedback." },
+        { icon: "🎁", h: "Free starter coins", sub: "Bonus on first sign-in." },
+        { icon: "🗣️", h: "Keep chat or talk — enjoy voice with chat", sub: "Text 10 · Voice 18" },
       ],
+      cta: { label: "Get started", action: () => onDone?.() },
     },
-    {
-  key: "trust",
-  title: "Essentials before you start",
-  cards: [
-    { icon: "🏆", h: "Most realistic ever", sub: "Human-like chat & voice." },
-    { icon: "🛡️", h: "Private, end-to-end", sub: "Your chats stay on your device." },
-    { icon: "💳", h: "Secure Razorpay", sub: "UPI, cards — bank-grade checkout." },
-    { icon: "📮", h: "Support assured", sub: "Reach us anytime via feedback." },
-    { icon: "🎁", h: "Free starter coins", sub: "Bonus on first sign-in." },
-    { icon: "🗣️", h: "Keep chat or talk — enjoy voice with chat", sub: "Text 10 · Voice 18" },
-  ],
-  cta: { label: "Get started", action: () => onDone?.() },
-},
   ];
-
   const s = slides[i];
   const next = () => setI((v) => Math.min(v + 1, slides.length - 1));
   const back = () => setI((v) => Math.max(v - 1, 0));
