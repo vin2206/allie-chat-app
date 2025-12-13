@@ -631,13 +631,6 @@ const [walletReady, setWalletReady] = useState(false);
 // Layout chooser: Android → 'stable' (scrollable, no black band); others → 'fixed'
 const IS_ANDROID = /Android/i.test(navigator.userAgent);
 const [layoutClass] = useState(IS_ANDROID ? 'stable' : 'fixed');
-  useEffect(() => {
-  // Don’t load/warm Razorpay unless it’s allowed for this platform
-  const allowed = IS_ANDROID_APP ? allowAppRazorpay : allowWebRazorpay;
-  if (!allowed) return;
-
-  prewarmRazorpay().catch(() => {});
-}, [allowWebRazorpay, allowAppRazorpay]);
   // Warm Razorpay early so checkout feels instant
 useEffect(() => { if (user) setShowSigninBanner(false); }, [user]);
   // --- Server config (single source of truth) ---
