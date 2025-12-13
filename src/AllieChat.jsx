@@ -97,7 +97,12 @@ function enableSilentReauth(clientId, setUser) {
 // --- backend base ---
 const BACKEND_BASE = 'https://api.buddyby.com';
 const authHeaders = (u) => {
-  const base = u?.idToken ? { Authorization: `Bearer ${u.idToken}` } : {};
+  const base = {};
+  if (u?.idToken) base.Authorization = `Bearer ${u.idToken}`;
+
+  // Always send guest id if we have it (lets backend merge Guest -> Google for shared trial)
+  if (u?.guestId) base['X-Guest-Id'] = u.guestId;
+
   // Tell backend this is the Android app (TWA) when loaded with ?src=twa
   if (IS_ANDROID_APP) base['X-App-Mode'] = 'twa';
   return base;
@@ -109,9 +114,10 @@ const getCsrf = () => {
     return m ? decodeURIComponent(m[1]) : '';
   } catch { return ''; }
 };
-// === Coins config (Option A agreed) ===
-const TEXT_COST = 10;
-const VOICE_COST = 18; // keep 18; change to 15 only if you insist
+// === Coins config (server-driven prices; fallback) ===
+const DEFAULT_TEXT_COST = 10;
+const DEFAULT_VOICE_COST = 18;
+
 const DAILY_PACK = { id: 'daily',  label: 'Daily Pack',  price: 49,  coins: 420 };
 const WEEKLY_PACK= { id: 'weekly', label: 'Weekly Pack', price: 199, coins: 2000 };
 const OWNER_EMAILS = ['vinayvedic23@gmail.com'];
@@ -222,7 +228,7 @@ const isoDay = () => {
   const day = String(d.getDate()).padStart(2, '0');
   return `${y}-${m}-${day}`; // YYYY-MM-DD (local)
 };
-const userIdFor = (u) => (u?.sub || u?.email || 'anon').toLowerCase();
+const userIdFor = (u) => (u?.sub || u?.email || u?.guestId || 'anon').toLowerCase();
 
 // localStorage helpers
 const AUTORENEW_KEY = 'autorenew_v1'; // {daily:bool, weekly:bool}
@@ -325,13 +331,20 @@ if (!document.querySelector('script[src*="gsi/client"]')) {
           callback: (res) => {
             try {
               const p = parseJwt(res.credential);
-              onSignedIn({
-      name: p.name || '',
-      email: (p.email || '').toLowerCase(),
-      sub: p.sub,
-      picture: p.picture || '',
-      idToken: res.credential     // <<— add this
-    });
+              // attach existing guest id (if any) so backend can merge the trial
+const GKEY = 'guest_id_v1';
+let gid = '';
+try { gid = localStorage.getItem(GKEY) || ''; } catch {}
+
+onSignedIn({
+  name: p.name || '',
+  email: (p.email || '').toLowerCase(),
+  sub: p.sub,
+  picture: p.picture || '',
+  idToken: res.credential,
+  guestId: gid,     // may be '' if never used guest
+  guest: false
+});
             } catch (e) {
               console.error('GIS parse failed', e);
             }
@@ -376,8 +389,38 @@ if (!document.querySelector('script[src*="gsi/client"]')) {
   </div>
 </div>
 
-{/* Apple + Email (disabled) */}
+{/* Actions */}
 <div className="auth-actions">
+  {/* Guest (working) */}
+  <button
+  className="btn"
+  onClick={() => {
+    const GKEY = 'guest_id_v1';
+    let gid = '';
+    try { gid = localStorage.getItem(GKEY) || ''; } catch {}
+
+    if (!gid) {
+      gid =
+        (window.crypto && typeof window.crypto.randomUUID === 'function')
+          ? window.crypto.randomUUID()
+          : String(Date.now());
+      try { localStorage.setItem(GKEY, gid); } catch {}
+    }
+
+    onSignedIn({
+      guestId: gid,
+      guest: true,
+      name: 'Guest',
+      email: '',
+      sub: '',
+      picture: '',
+      idToken: ''
+    });
+  }}
+>
+  Continue as Guest
+</button>
+
   {/* Disabled Apple */}
   <button className="btn btn--disabled" disabled>
     <span className="btn-ico apple" aria-hidden="true"></span>
@@ -447,7 +490,7 @@ const close = (e) => {
       const data = await r.json();
       if (data?.ok && data?.wallet) {
         // mark claimed in this browser too
-        const uid = (loadUser()?.sub || loadUser()?.email || '');
+        const uid = userIdFor(loadUser());
         localStorage.setItem(welcomeKeyFor(uid), '1');
         if (typeof window.refreshWalletGlobal === 'function') window.refreshWalletGlobal();
 
@@ -465,7 +508,7 @@ const close = (e) => {
     }
   }}
 >
-  {claimed ? '✅ +100 added' : 'Claim 100 coins'}
+  {claimed ? `✅ +${amount} added` : `Claim ${amount} coins`}
 </button>
             <div className="welcome-note">Roleplay models are part of the upgrade.</div>
           </>
@@ -579,6 +622,7 @@ const [showWelcome, setShowWelcome] = useState(false);
 const [showCharPopup, setShowCharPopup] = useState(false);
 const [welcomeDefaultStep, setWelcomeDefaultStep] = useState(0);
 const [coins, setCoins] = useState(0);
+const [prices, setPrices] = useState({ text: DEFAULT_TEXT_COST, voice: DEFAULT_VOICE_COST });
   // server-driven wallet
 const [wallet, setWallet] = useState({ coins: 0, expires_at: 0, welcome_claimed: false });
 const welcomeDecidedRef = useRef(false);
@@ -588,14 +632,47 @@ const [walletReady, setWalletReady] = useState(false);
 const IS_ANDROID = /Android/i.test(navigator.userAgent);
 const [layoutClass] = useState(IS_ANDROID ? 'stable' : 'fixed');
   useEffect(() => {
+  // Don’t load/warm Razorpay unless it’s allowed for this platform
+  const allowed = IS_ANDROID_APP ? allowAppRazorpay : allowWebRazorpay;
+  if (!allowed) return;
+
   prewarmRazorpay().catch(() => {});
-}, []);
+}, [allowWebRazorpay, allowAppRazorpay]);
   // Warm Razorpay early so checkout feels instant
 useEffect(() => { if (user) setShowSigninBanner(false); }, [user]);
+  // --- Server config (single source of truth) ---
+const [roleplayNeedsPremium, setRoleplayNeedsPremium] = useState(true);
+const [trialEnabled, setTrialEnabled] = useState(true);
+const [trialAmount, setTrialAmount] = useState(150);
+const [allowWebRazorpay, setAllowWebRazorpay] = useState(true);
+const [allowAppRazorpay, setAllowAppRazorpay] = useState(false);
 
-// Show welcome only once per TAB/session
+useEffect(() => {
+  const url = `${BACKEND_BASE}/config${IS_ANDROID_APP ? '?src=twa' : ''}`;
+  fetch(url, { credentials: 'include' })
+    .then(r => r.json())
+    .then(d => {
+      setRoleplayNeedsPremium(!!d?.roleplayNeedsPremium);
+
+      // trial controls
+      if (typeof d?.trialEnabled === 'boolean') setTrialEnabled(d.trialEnabled);
+      if (d?.trialAmount != null) setTrialAmount(Number(d.trialAmount));
+
+      // payment switches
+      if (typeof d?.allowWebRazorpay === 'boolean') setAllowWebRazorpay(d.allowWebRazorpay);
+      if (typeof d?.allowAppRazorpay === 'boolean') setAllowAppRazorpay(d.allowAppRazorpay);
+    })
+    .catch(() => {}); // safe defaults above
+}, []);
+
+// Show welcome only once per TAB/session (and only if trialEnabled)
 useEffect(() => {
   if (!user || !walletReady || welcomeDecidedRef.current) return;
+
+  if (!trialEnabled) {
+    welcomeDecidedRef.current = true;
+    return;
+  }
 
   // if seen once for this user on this browser, never show again
   if (sessionStorage.getItem(WELCOME_SEEN_KEY(user))) {
@@ -603,7 +680,7 @@ useEffect(() => {
     return;
   }
 
-  const uid = user?.sub || user?.email || '';
+  const uid = userIdFor(user);
   const localClaimed = !!localStorage.getItem(welcomeKeyFor(uid));
   const claimed = !!wallet?.welcome_claimed || localClaimed;
   const lowCoins = (Number(wallet?.coins || 0) < 50);
@@ -611,7 +688,7 @@ useEffect(() => {
   setWelcomeDefaultStep(!claimed && lowCoins ? 0 : 1);
   setShowWelcome(true);
   welcomeDecidedRef.current = true;
-}, [user, walletReady, wallet?.welcome_claimed, wallet?.coins]);
+}, [user, walletReady, wallet?.welcome_claimed, wallet?.coins, trialEnabled]);
 
   function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
 
@@ -729,16 +806,6 @@ useEffect(() => {
   return () => window.removeEventListener('beforeunload', onBeforeUnload);
 }, [user, roleMode, roleType, messages, inputValue]);
 
-  // Does roleplay require premium? (server-controlled)
-const [roleplayNeedsPremium, setRoleplayNeedsPremium] = useState(true);
-
-useEffect(() => {
-  const url = `${BACKEND_BASE}/config${IS_ANDROID_APP ? '?src=twa' : ''}`;
-  fetch(url, { credentials: 'include' })
-    .then(r => r.json())
-    .then(d => setRoleplayNeedsPremium(!!d.roleplayNeedsPremium))
-    .catch(() => {}); // safe default = true
-}, []);
   const [isOwner, setIsOwner] = useState(false);
   // Chrome bar state (session-scoped)
 const [showChromeBar, setShowChromeBar] = useState(false);
@@ -881,6 +948,32 @@ async function refreshWallet(){
 }
 
 useEffect(() => { refreshWallet(); }, [user]);
+ useEffect(() => {
+  let alive = true;
+
+  (async () => {
+    try {
+      const r = await fetch(`${BACKEND_BASE}/prices`, {
+        headers: authHeaders(user),
+        credentials: 'include'
+      });
+
+      const d = await r.json().catch(() => ({}));
+      if (!alive) return;
+
+      // support both shapes: {text, voice} OR {prices:{text,voice}}
+      const t = d?.text ?? d?.prices?.text;
+      const v = d?.voice ?? d?.prices?.voice;
+
+      if (t != null && v != null) {
+        setPrices({ text: Number(t), voice: Number(v) });
+      }
+    } catch {}
+  })();
+
+  return () => { alive = false; };
+}, [user]);
+
   useEffect(() => {
   if (wallet?.paid_ever && user) {
     try {
@@ -962,10 +1055,46 @@ useEffect(() => {
   setIsOwner(OWNER_EMAILS.includes((user.email || '').toLowerCase()));
 }, [user]);
 
-const openCoins = () => setShowCoins(true);
+const openCoins = () => {
+  // Block Razorpay if disabled by server config (web or app)
+  if (IS_ANDROID_APP && !allowAppRazorpay) {
+    openNotice(
+      'Recharge unavailable in app',
+      'Coins purchase is disabled in the Play Store app. Please use the website version to recharge.'
+    );
+    return;
+  }
+
+  if (!IS_ANDROID_APP && !allowWebRazorpay) {
+    openNotice(
+      'Recharge unavailable',
+      'Coin purchase is temporarily disabled. Please try again later.'
+    );
+    return;
+  }
+
+  setShowCoins(true);
+};
 const closeCoins = () => setShowCoins(false);
   async function buyPack(pack){
   if (!user) return;
+
+  // Block payments inside the Android app (TWA) when disabled by config
+  if (IS_ANDROID_APP && !allowAppRazorpay) {
+    openNotice(
+      'Recharge unavailable in app',
+      'Coins purchase is disabled in the Play Store app. Please use the website version to recharge.'
+    );
+    return;
+  }
+      // Block payments on web when disabled by config
+  if (!IS_ANDROID_APP && !allowWebRazorpay) {
+    openNotice(
+      'Recharge unavailable',
+      'Coin purchase is temporarily disabled. Please try again later.'
+    );
+    return;
+  }
 
   // show "Connecting…" immediately
   setIsPaying(true);
@@ -1121,6 +1250,8 @@ function shouldOfferPWA(n) {
   // Pre-create Razorpay orders as soon as the Coins modal opens (so click opens instantly)
 useEffect(() => {
   if (!showCoins || !user) return;
+  const allowed = IS_ANDROID_APP ? allowAppRazorpay : allowWebRazorpay;
+  if (!allowed) return;
   prewarmRazorpay().catch(() => {});
   const packs = ['daily', 'weekly'];
 
@@ -1143,7 +1274,7 @@ useEffect(() => {
       console.warn('precreate order failed:', id, e?.message);
     }
   });
-}, [showCoins, user]);
+}, [showCoins, user, allowWebRazorpay, allowAppRazorpay]);
   // DP lightbox
 const [showAvatarFull, setShowAvatarFull] = useState(false);
 
@@ -1468,7 +1599,7 @@ const startRecording = async () => {
 }
   // Coins gate: allow brand-new users (welcome not yet visible on client) to pass once
 const allowFirstSend = (!walletReady || wallet?.welcome_claimed !== true);
-if (!isOwner && !allowFirstSend && coins < VOICE_COST) { openCoins(); return; }
+if (!isOwner && !allowFirstSend && coins < prices.voice) { openCoins(); return; }
   
   try {
     lastActionRef.current = 'opened_mic';
@@ -1551,7 +1682,7 @@ if (!isOwner) {
 }
     // Coins gate for VOICE (respect first-send bypass like startRecording/handleSend)
   const allowFirstSend = (!walletReady || wallet?.welcome_claimed !== true);
-  if (!isOwner && !allowFirstSend && coins < VOICE_COST) {
+  if (!isOwner && !allowFirstSend && coins < prices.voice) {
     openCoins();
     return;
   }
@@ -1688,20 +1819,20 @@ if (used >= cap) {
 }
   if (!isOwner) {
     if (wantVoiceNow) {
-      if (!allowFirstSend && coins < VOICE_COST) {
-        if (coins >= TEXT_COST) {
-          openConfirm(
-            `Not enough coins for voice`,
-            `Voice needs ${VOICE_COST} coins, you have ${coins}. Send as text for ${TEXT_COST} coins instead?`,
-            async () => { await actuallySend(false); }
-          );
-        } else {
-          openCoins();
-        }
-        return;
-      }
+      if (!allowFirstSend && coins < prices.voice) {
+  if (coins >= prices.text) {
+    openConfirm(
+      `Not enough coins for voice`,
+      `Voice needs ${prices.voice} coins, you have ${coins}. Send as text for ${prices.text} coins instead?`,
+      async () => { await actuallySend(false); }
+    );
+  } else {
+    openCoins();
+  }
+  return;
+}
     } else {
-      if (!allowFirstSend && coins < TEXT_COST) { openCoins(); return; }
+      if (!allowFirstSend && coins < prices.text) { openCoins(); return; }
     }
   }
 
@@ -2149,9 +2280,9 @@ if (!user) {
         // 2) PRIME COOKIES on the server:
         try {
           await fetch(`${BACKEND_BASE}/wallet`, {
-            method: 'GET',
-            headers: { Authorization: `Bearer ${u.idToken}` },
-            credentials: 'include'
+           method: 'GET',
+           headers: authHeaders(u),
+           credentials: 'include'
           });
         } catch (e) {
           console.warn('Cookie priming failed (non-blocking):', e?.message || e);
@@ -2226,7 +2357,11 @@ if (!user) {
           
   <button
   className="coin-pill"
-  onClick={isOwner ? () => {} : () => { openCoins(); prewarmRazorpay(); }}
+  onClick={isOwner ? () => {} : () => {
+    const allowed = IS_ANDROID_APP ? allowAppRazorpay : allowWebRazorpay;
+    if (allowed) prewarmRazorpay().catch(() => {});
+    openCoins();
+  }}
   title={isOwner ? "Owner: unlimited" : "Your balance (tap to buy coins)"}
   aria-label="Coins"
 >
@@ -2495,11 +2630,11 @@ if (!user) {
 <WelcomeFlow
   open={showWelcome}
   onClose={() => {
-  setShowWelcome(false);
-  if (user) { try { sessionStorage.setItem(WELCOME_SEEN_KEY(user), '1'); } catch {} }
-  setShowCharPopup(true);
-}}
-  amount={100}
+    setShowWelcome(false);
+    if (user) { try { sessionStorage.setItem(WELCOME_SEEN_KEY(user), '1'); } catch {} }
+    setShowCharPopup(true);
+  }}
+  amount={trialAmount}
   defaultStep={welcomeDefaultStep}
 />
       
