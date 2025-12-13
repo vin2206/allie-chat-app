@@ -2265,15 +2265,24 @@ if (!user) {
         saveUser(u);
         setUser(u);
         // 2) PRIME COOKIES on the server:
-        try {
-          await fetch(`${BACKEND_BASE}/wallet`, {
-           method: 'GET',
-           headers: authHeaders(u),
-           credentials: 'include'
-          });
-        } catch (e) {
-          console.warn('Cookie priming failed (non-blocking):', e?.message || e);
-        }
+try {
+  if (u?.guest) {
+    await fetch(`${BACKEND_BASE}/auth/guest/init`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...authHeaders(u) },
+      credentials: 'include',
+      body: JSON.stringify({})
+    });
+  } else {
+    await fetch(`${BACKEND_BASE}/wallet`, {
+      method: 'GET',
+      headers: authHeaders(u),
+      credentials: 'include'
+    });
+  }
+} catch (e) {
+  console.warn('Cookie priming failed (non-blocking):', e?.message || e);
+}
       }}
     />
   );
