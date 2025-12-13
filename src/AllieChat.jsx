@@ -426,12 +426,6 @@ onSignedIn({
     <span className="btn-ico apple" aria-hidden="true"></span>
     Continue with Apple
   </button>
-
-  {/* Disabled Email */}
-  <button className="btn btn--disabled" disabled>
-    <span className="btn-ico">@</span>
-    Continue with Email
-  </button>
 </div>
       </div>
     </div>
