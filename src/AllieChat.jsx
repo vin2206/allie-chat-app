@@ -2357,7 +2357,8 @@ if (!user) {
           
   <button
   className="coin-pill"
-  onClick={isOwner ? () => {} : () => {
+  onClick={() => {
+    if (isOwner) return;
     const allowed = IS_ANDROID_APP ? allowAppRazorpay : allowWebRazorpay;
     if (allowed) prewarmRazorpay().catch(() => {});
     openCoins();
