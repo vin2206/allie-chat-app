@@ -96,6 +96,13 @@ function enableSilentReauth(clientId, setUser) {
 }
 // --- backend base ---
 const BACKEND_BASE = 'https://api.buddyby.com';
+
+// Always add src=twa for app calls (extra hardening; server also checks header)
+const apiUrl = (path) => {
+  const p = path.startsWith('/') ? path : `/${path}`;
+  if (!IS_ANDROID_APP) return `${BACKEND_BASE}${p}`;
+  return `${BACKEND_BASE}${p}${p.includes('?') ? '&' : '?'}src=twa`;
+};
 const authHeaders = (u) => {
   const base = {};
   if (u?.idToken) base.Authorization = `Bearer ${u.idToken}`;
@@ -471,7 +478,7 @@ const close = (e) => {
   onClick={async (e) => {
     e?.stopPropagation?.();
     try {
-      const r = await fetch(`${BACKEND_BASE}/claim-welcome`, {
+      const r = await fetch(apiUrl('/claim-welcome'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -635,7 +642,7 @@ const [allowWebRazorpay, setAllowWebRazorpay] = useState(true);
 const [allowAppRazorpay, setAllowAppRazorpay] = useState(false);
 
 useEffect(() => {
-  const url = `${BACKEND_BASE}/config${IS_ANDROID_APP ? '?src=twa' : ''}`;
+  const url = apiUrl('/config');
   fetch(url, { credentials: 'include' })
     .then(r => r.json())
     .then(d => {
@@ -904,7 +911,7 @@ async function refreshWallet(){
   const reqId = ++walletReqIdRef.current; // mark this as the latest request
 
   try {
-    const r = await fetch(`${BACKEND_BASE}/wallet`, { headers: authHeaders(user), credentials: 'include' });
+    const r = await fetch(apiUrl('/wallet'), { headers: authHeaders(user), credentials: 'include' });
 
     // If our 14-day cookie is missing/invalid, show the quiet banner and stop here.
     if (r.status === 401 || r.status === 403) {
@@ -940,7 +947,7 @@ useEffect(() => { refreshWallet(); }, [user]);
 
   (async () => {
     try {
-      const r = await fetch(`${BACKEND_BASE}/prices`, {
+      const r = await fetch(apiUrl('/prices'), {
         headers: authHeaders(user),
         credentials: 'include'
       });
@@ -1001,7 +1008,7 @@ useEffect(() => {
   if (!link_id || !payment_id || !reference_id || !status) return;
 
   try {
-    const r = await fetch(`${BACKEND_BASE}/verify-payment-link`, {
+    const r = await fetch(apiUrl('/verify-payment-link'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...authHeaders(user), 'X-CSRF-Token': getCsrf() },
       body: JSON.stringify({
@@ -1043,16 +1050,19 @@ useEffect(() => {
 }, [user]);
 
 const openCoins = () => {
-  // Block Razorpay if disabled by server config (web or app)
-  if (IS_ANDROID_APP && !allowAppRazorpay) {
+  // ANDROID APP (Phase A): never show Razorpay UI
+  if (IS_ANDROID_APP) {
     openNotice(
-      'Recharge unavailable in app',
-      'Coins purchase is disabled in the Play Store app. Please use the website version to recharge.'
+      'Recharge via Google Play',
+      'Coming soon. For now, you can chat using your free trial coins.',
+      null,
+      'Recharge via Google Play (Coming soon)'
     );
     return;
   }
 
-  if (!IS_ANDROID_APP && !allowWebRazorpay) {
+  // WEB: allow Razorpay if enabled
+  if (!allowWebRazorpay) {
     openNotice(
       'Recharge unavailable',
       'Coin purchase is temporarily disabled. Please try again later.'
@@ -1066,16 +1076,19 @@ const closeCoins = () => setShowCoins(false);
   async function buyPack(pack){
   if (!user) return;
 
-  // Block payments inside the Android app (TWA) when disabled by config
-  if (IS_ANDROID_APP && !allowAppRazorpay) {
+  // App: never allow Razorpay packs (Phase A)
+  if (IS_ANDROID_APP) {
     openNotice(
-      'Recharge unavailable in app',
-      'Coins purchase is disabled in the Play Store app. Please use the website version to recharge.'
+      'Recharge via Google Play',
+      'Coming soon.',
+      null,
+      'Recharge via Google Play (Coming soon)'
     );
     return;
   }
-      // Block payments on web when disabled by config
-  if (!IS_ANDROID_APP && !allowWebRazorpay) {
+
+  // Web: block if disabled by server config
+  if (!allowWebRazorpay) {
     openNotice(
       'Recharge unavailable',
       'Coin purchase is temporarily disabled. Please try again later.'
@@ -1090,7 +1103,7 @@ const closeCoins = () => setShowCoins(false);
     // Use pre-created order if available; otherwise create now
     let ord = orderCache[pack.id];
     if (!ord) {
-      const resp = await fetch(`${BACKEND_BASE}/order/${pack.id}`, {
+      const resp = await fetch(apiUrl(`/order/${pack.id}`), {
   method: 'POST',
   headers: { 'Content-Type': 'application/json', ...authHeaders(user), 'X-CSRF-Token': getCsrf() },
   body: JSON.stringify({}),
@@ -1103,7 +1116,7 @@ const closeCoins = () => setShowCoins(false);
     }
     // 🔄 Freshness check: if cached order is too old, create a fresh one (keeps 1-tap feel)
 if (ord?.at && (Date.now() - ord.at > ORDER_TTL_MS)) {
-  const resp2 = await fetch(`${BACKEND_BASE}/order/${pack.id}`, {
+  const resp2 = await fetch(apiUrl(`/order/${pack.id}`), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...authHeaders(user), 'X-CSRF-Token': getCsrf() },
     body: JSON.stringify({}),
@@ -1138,7 +1151,7 @@ await handleCoinPurchase({
   options,
   closePricingModal: closeCoins,
   verifyPayment: async (resp) => {
-    const v = await fetch(`${BACKEND_BASE}/verify-order`, {
+    const v = await fetch(apiUrl('/verify-order'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...authHeaders(user), 'X-CSRF-Token': getCsrf() },
       body: JSON.stringify(resp), // { razorpay_order_id, razorpay_payment_id, razorpay_signature }
@@ -1170,7 +1183,7 @@ setIsPaying(false);
 
   // Fallback to old Payment Link flow (unchanged)
   try {
-    const resp = await fetch(`${BACKEND_BASE}/buy/${pack.id}`, {
+    const resp = await fetch(apiUrl(`/buy/${pack.id}`), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...authHeaders(user), 'X-CSRF-Token': getCsrf() },
       body: JSON.stringify({ returnUrl: `${window.location.origin}/payment/thanks` }),
@@ -1246,7 +1259,7 @@ useEffect(() => {
     if (orderCache[id] && (Date.now() - (orderCache[id].at || 0) < ORDER_TTL_MS)) return; // cached & fresh
 
     try {
-      const resp = await fetch(`${BACKEND_BASE}/order/${id}`, {
+      const resp = await fetch(apiUrl(`/order/${id}`), {
   method: 'POST',
   headers: { 'Content-Type': 'application/json', ...authHeaders(user), 'X-CSRF-Token': getCsrf() },
   body: JSON.stringify({}),
@@ -1281,10 +1294,24 @@ useEffect(() => {
 const [showRoleMenu, setShowRoleMenu] = useState(false);
   // custom confirm modal state
 const [confirmState, setConfirmState] = useState({
-  open: false, title: '', message: '', onConfirm: null, okOnly: false
+  open: false,
+  title: '',
+  message: '',
+  onConfirm: null,
+  okOnly: false,
+  okText: 'OK',
+  cancelText: 'Cancel'
 });
 const openConfirm = (title, message, onConfirm) =>
-  setConfirmState({ open: true, title, message, onConfirm, okOnly: false });
+  setConfirmState({
+    open: true,
+    title,
+    message,
+    onConfirm,
+    okOnly: false,
+    okText: 'OK',
+    cancelText: 'Cancel'
+  });
   // —— Feedback state (tiny modal opened from Modes) ——
 const [showFeedback, setShowFeedback] = useState(false);
 const [fbMessage, setFbMessage] = useState('');
@@ -1342,16 +1369,17 @@ function maybeShowPwaNudge() {
 }
 
 // Simple notice modal
-const openNotice = (title, message, after) => {
+const openNotice = (title, message, after, okText = 'OK') => {
   setConfirmState({
     open: true,
     title,
     message,
     okOnly: true,
+    okText,
+    cancelText: 'Cancel',
     onConfirm: () => { closeConfirm(); if (typeof after === 'function') after(); }
   });
 };
-
 const closeConfirm = () =>
   setConfirmState(s => ({ ...s, open: false, onConfirm: null, okOnly: false }));
   // Submit feedback to backend (server will forward to email privately)
@@ -1366,7 +1394,7 @@ async function submitFeedback() {
     if (user?.email) fd.append('userEmail', (user.email || '').toLowerCase());
     if (user?.sub) fd.append('userSub', user.sub);
 
-    const r = await fetch(`${BACKEND_BASE}/feedback`, {
+    const r = await fetch(apiUrl('/feedback'), {
       method: 'POST',
       headers: { ...authHeaders(user), 'X-CSRF-Token': getCsrf() }, // email is handled server-side
       body: fd,
@@ -1704,7 +1732,7 @@ if (!isOwner) {
     fd.append('roleType', roleType || 'stranger');
     if (shouldResetRef.current) { fd.append('reset', 'true'); shouldResetRef.current = false; }
 
-    const resp = await fetch(`${BACKEND_BASE}/chat`, { method: 'POST', headers: { ...authHeaders(user), 'X-CSRF-Token': getCsrf() }, body: fd, credentials: 'include' });
+    const resp = await fetch(apiUrl('/chat'), { method: 'POST', headers: { ...authHeaders(user), 'X-CSRF-Token': getCsrf() }, body: fd, credentials: 'include' });
     if (resp.status === 401) {
   setIsTyping(false);
   setShowSigninBanner(true);
@@ -1866,7 +1894,7 @@ if (used >= cap) {
       setCooldown(true);
       setTimeout(() => setCooldown(false), 3000);
 
-      const response = await fetch(`${BACKEND_BASE}/chat`, {
+      const response = await fetch(apiUrl('/chat'), {
   method: 'POST',
   headers: { 'Content-Type': 'application/json', ...authHeaders(user), 'X-CSRF-Token': getCsrf() },
   body: JSON.stringify(fetchBody),
@@ -1941,7 +1969,7 @@ bumpVoiceUsed(true, user); // (optional UI counter)
     if (shouldResetRef.current) { fetchRetryBody.reset = true; shouldResetRef.current = false; }
 
     await new Promise(r => setTimeout(r, 1200));
-    const retryResp = await fetch(`${BACKEND_BASE}/chat`, {
+    const retryResp = await fetch(apiUrl('/chat'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...authHeaders(user), 'X-CSRF-Token': getCsrf() },
       body: JSON.stringify(fetchRetryBody),
@@ -2267,14 +2295,14 @@ if (!user) {
         // 2) PRIME COOKIES on the server:
 try {
   if (u?.guest) {
-    await fetch(`${BACKEND_BASE}/auth/guest/init`, {
+    await fetch(apiUrl('/auth/guest/init'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...authHeaders(u) },
       credentials: 'include',
       body: JSON.stringify({})
     });
   } else {
-    await fetch(`${BACKEND_BASE}/wallet`, {
+    await fetch(apiUrl('/wallet'), {
       method: 'GET',
       headers: authHeaders(u),
       credentials: 'include'
@@ -2354,11 +2382,10 @@ try {
   <button
   className="coin-pill"
   onClick={() => {
-    if (isOwner) return;
-    const allowed = IS_ANDROID_APP ? allowAppRazorpay : allowWebRazorpay;
-    if (allowed) prewarmRazorpay().catch(() => {});
-    openCoins();
-  }}
+  if (isOwner) return;
+  if (!IS_ANDROID_APP && allowWebRazorpay) prewarmRazorpay().catch(() => {});
+  openCoins();
+}}
   title={isOwner ? "Owner: unlimited" : "Your balance (tap to buy coins)"}
   aria-label="Coins"
 >
@@ -2567,16 +2594,18 @@ try {
   <div ref={bottomRef} className="bottom-sentinel" />
 </div>
 
-      <CoinsModal
-  open={showCoins}
-  onClose={closeCoins}
-  prefill={{ name: user?.name, email: user?.email, contact: user?.phone }}
-  onChoose={(packId) => {
-    if (packId === 'daily')  return buyPack(DAILY_PACK);
-    if (packId === 'weekly') return buyPack(WEEKLY_PACK);
-  }}
-  busy={isPaying}
-/>
+{!IS_ANDROID_APP && (
+  <CoinsModal
+    open={showCoins}
+    onClose={closeCoins}
+    prefill={{ name: user?.name, email: user?.email, contact: user?.phone }}
+    onChoose={(packId) => {
+      if (packId === 'daily')  return buyPack(DAILY_PACK);
+      if (packId === 'weekly') return buyPack(WEEKLY_PACK);
+    }}
+    busy={isPaying}
+  />
+)}
 
       <ConfirmDialog
   open={confirmState.open}
@@ -2585,6 +2614,8 @@ try {
   onCancel={closeConfirm}
   onConfirm={confirmState.onConfirm || closeConfirm}
   okOnly={confirmState.okOnly}
+  okText={confirmState.okText}
+  cancelText={confirmState.cancelText}
 />
       {/* —— Minimal feedback modal —— */}
 {showFeedback && (
