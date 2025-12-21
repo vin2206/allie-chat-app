@@ -1878,18 +1878,23 @@ if (used >= cap) {
       const trimmed = formattedHistory.slice(-MAX_MSG);
 
       const now = new Date();
-      const fetchBody = {
-  messages: trimmed,
+
+// IMPORTANT: use the same trimmed history you already build
+const fetchBody = {
+  message: inputValue,          // <-- the current user text
+  history: trimmed,             // <-- same trimmed history array
   clientTime: now.toLocaleTimeString('en-US', { hour12: false }),
   clientDate: now.toLocaleDateString('en-GB'),
   userEmail: (user?.email || '').toLowerCase(),
-  userSub: user?.sub,                          // <— add this line
+  userSub: user?.sub,
   wantVoice: !!wantVoice,
   session_id: sessionIdWithRole,
   roleMode,
   roleType: roleType || 'stranger',
+  src: IS_ANDROID_APP ? 'twa' : 'web'
 };
-      if (shouldResetRef.current) { fetchBody.reset = true; shouldResetRef.current = false; }
+
+if (shouldResetRef.current) { fetchBody.reset = true; shouldResetRef.current = false; }
 
       setCooldown(true);
       setTimeout(() => setCooldown(false), 3000);
