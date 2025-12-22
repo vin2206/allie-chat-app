@@ -698,7 +698,7 @@ function getOpener(mode, type) {
       return pick([
         "Jaan, aaj itni der laga di reply mein?",
         "Thak gaye ho? Aaj jaldi aao na.",
-        "Dinner ke liye kya chahiye, jaan?"
+        "khane ke liye kya banau, jaan?"
       ]);
     case 'girlfriend':
       return pick([
