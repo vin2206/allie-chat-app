@@ -53,6 +53,14 @@ const parseJwt = (t) => {
   const b64 = base.replace(/-/g, '+').replace(/_/g, '/').padEnd(Math.ceil(base.length / 4) * 4, '=');
   return JSON.parse(atob(b64));
 };
+function isIdTokenExpired(tok) {
+  try {
+    const { exp } = parseJwt(tok); // seconds
+    return (exp * 1000) <= Date.now();
+  } catch {
+    return true;
+  }
+}
 // --- Silent re-auth helpers ---
 let __idRefreshTimer = null;
 
@@ -105,13 +113,18 @@ const apiUrl = (path) => {
 };
 const authHeaders = (u) => {
   const base = {};
-  if (u?.idToken) base.Authorization = `Bearer ${u.idToken}`;
+
+  // ✅ Never send expired Google token (cookie session must win)
+  if (u?.idToken && !isIdTokenExpired(u.idToken)) {
+    base.Authorization = `Bearer ${u.idToken}`;
+  }
 
   // Always send guest id if we have it (lets backend merge Guest -> Google for shared trial)
   if (u?.guestId) base['X-Guest-Id'] = u.guestId;
 
   // Tell backend this is the Android app (TWA) when loaded with ?src=twa
   if (IS_ANDROID_APP) base['X-App-Mode'] = 'twa';
+
   return base;
 };
 // --- CSRF header helper ---
