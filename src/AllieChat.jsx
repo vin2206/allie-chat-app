@@ -1260,6 +1260,31 @@ function shouldOfferPWA(n) {
   // Offer at message #8 exactly (first time), otherwise do nothing
   return n === 8;
 }
+  // Prompt the PWA install when allowed, with cooldown handling
+function maybeShowPwaNudge() {
+  try {
+    // only Chromium supports this flow
+    if (!deferredPromptRef.current) return;
+    if (localStorage.getItem(PWA_INSTALLED_KEY) === '1') return;
+    if (cooldownActive()) return;
+
+    // Show the native prompt
+    const ev = deferredPromptRef.current;
+    ev.prompt();
+
+    // Record user's choice and clear the saved event
+    ev.userChoice?.then((choice) => {
+      if (choice?.outcome === 'dismissed') {
+        try { localStorage.setItem(PWA_DISMISSED_AT, String(Date.now())); } catch {}
+      }
+      deferredPromptRef.current = null;
+    }).catch(() => {
+      deferredPromptRef.current = null;
+    });
+  } catch {
+    // swallow — this is a nudge only
+  }
+}
 
   // Pre-create Razorpay orders as soon as the Coins modal opens (so click opens instantly)
 useEffect(() => {
