@@ -771,6 +771,7 @@ const [inputValue, setInputValue] = useState(() => {
   const bottomRef = useRef(null);
   // NEW: track if we should auto-stick to bottom (strict, WhatsApp-like)
 const scrollerRef = useRef(null);
+const lastActionRef = useRef('');
  // ADD BELOW your other refs/state in AllieChat()
 const walletReqIdRef = useRef(0); // last-write-wins guard for /wallet fetches 
 const stickToBottomRef = useRef(true); // true only when truly at bottom
@@ -1349,6 +1350,11 @@ const openNotice = React.useCallback((title, message, after, okText = 'OK') => {
     }
   });
 }, [closeConfirm]);
+// --- Feedback modal state (needed by submitFeedback + UI) ---
+ const [showFeedback, setShowFeedback] = useState(false);
+ const [fbMessage, setFbMessage] = useState('');
+ const [fbFile, setFbFile] = useState(null);
+ const [fbSending, setFbSending] = useState(false);
   // Submit feedback to backend (server will forward to email privately)
 async function submitFeedback() {
   if (!fbMessage.trim() || fbSending) return;
