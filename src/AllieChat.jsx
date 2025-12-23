@@ -1315,7 +1315,14 @@ const [confirmState, setConfirmState] = useState({
   okText: 'OK',
   cancelText: 'Cancel'
 });
-const openConfirm = (title, message, onConfirm) =>
+
+// ✅ define FIRST (so callbacks can safely reference it)
+const closeConfirm = React.useCallback(() => {
+  setConfirmState(s => ({ ...s, open: false, onConfirm: null, okOnly: false }));
+}, []);
+
+// Confirm with OK/Cancel
+const openConfirm = React.useCallback((title, message, onConfirm) => {
   setConfirmState({
     open: true,
     title,
@@ -1325,64 +1332,10 @@ const openConfirm = (title, message, onConfirm) =>
     okText: 'OK',
     cancelText: 'Cancel'
   });
-  // —— Feedback state (tiny modal opened from Modes) ——
-const [showFeedback, setShowFeedback] = useState(false);
-const [fbMessage, setFbMessage] = useState('');
-const [fbFile, setFbFile] = useState(null);
-const [fbSending, setFbSending] = useState(false);
-const lastActionRef = useRef(''); // 'focused_input' | 'sent_text' | 'opened_mic'
+}, []);
 
-  // --- PWA nudge dialog helper (uses ConfirmDialog) ---
-function maybeShowPwaNudge() {
-  // If Chromium event available → show ConfirmDialog with Install
-  const canPrompt = !!deferredPromptRef.current;
-  const isiOS = /iphone|ipad|ipod/i.test(navigator.userAgent || '') && !window.MSStream;
-
-  if (canPrompt) {
-    setConfirmState({
-      open: true,
-      title: 'Install Shraddha?',
-      message: 'Use it like a real app — faster access from your home screen.',
-      okOnly: false,
-      onConfirm: async () => {
-        try {
-          const ev = deferredPromptRef.current;
-          if (!ev) return closeConfirm();
-          ev.prompt();
-          const choice = await ev.userChoice;
-          deferredPromptRef.current = null; // one shot
-          closeConfirm();
-          if (choice?.outcome === 'accepted') {
-            localStorage.setItem(PWA_INSTALLED_KEY, '1');
-          } else {
-            localStorage.setItem(PWA_DISMISSED_AT, String(Date.now()));
-          }
-        } catch {
-          localStorage.setItem(PWA_DISMISSED_AT, String(Date.now()));
-          closeConfirm();
-        }
-      }
-    });
-  } else if (isiOS) {
-    // iOS: show a tiny guide once
-    setConfirmState({
-      open: true,
-      title: 'Add to Home Screen',
-      message: 'Tap the Share button ↑ then “Add to Home Screen” to install.',
-      okOnly: true,
-      onConfirm: () => {
-        localStorage.setItem(PWA_DISMISSED_AT, String(Date.now()));
-        closeConfirm();
-      }
-    });
-  } else {
-    // Non-Chromium with no prompt support → quietly start cooldown
-    localStorage.setItem(PWA_DISMISSED_AT, String(Date.now()));
-  }
-}
-
-// Simple notice modal
-const openNotice = (title, message, after, okText = 'OK') => {
+// Simple notice modal (OK only)
+const openNotice = React.useCallback((title, message, after, okText = 'OK') => {
   setConfirmState({
     open: true,
     title,
@@ -1390,11 +1343,12 @@ const openNotice = (title, message, after, okText = 'OK') => {
     okOnly: true,
     okText,
     cancelText: 'Cancel',
-    onConfirm: () => { closeConfirm(); if (typeof after === 'function') after(); }
+    onConfirm: () => {
+      closeConfirm();
+      if (typeof after === 'function') after();
+    }
   });
-};
-const closeConfirm = () =>
-  setConfirmState(s => ({ ...s, open: false, onConfirm: null, okOnly: false }));
+}, [closeConfirm]);
   // Submit feedback to backend (server will forward to email privately)
 async function submitFeedback() {
   if (!fbMessage.trim() || fbSending) return;
@@ -1974,16 +1928,18 @@ bumpVoiceUsed(true, user); // (optional UI counter)
 
     const now = new Date();
     const fetchRetryBody = {
-      messages: trimmed,
-      clientTime: now.toLocaleTimeString('en-US', { hour12: false }),
-      clientDate: now.toLocaleDateString('en-GB'),
-      userEmail: (user?.email || '').toLowerCase(),
-      userSub: user?.sub,
-      wantVoice: !!wantVoice,
-      session_id: sessionIdWithRole,
-      roleMode,
-      roleType: roleType || 'stranger',
-    };
+  message: newMessage.text,     // ✅ same schema as main call
+  history: trimmed,             // ✅ not "messages"
+  clientTime: now.toLocaleTimeString('en-US', { hour12: false }),
+  clientDate: now.toLocaleDateString('en-GB'),
+  userEmail: (user?.email || '').toLowerCase(),
+  userSub: user?.sub,
+  wantVoice: !!wantVoice,
+  session_id: sessionIdWithRole,
+  roleMode,
+  roleType: roleType || 'stranger',
+  src: IS_ANDROID_APP ? 'twa' : 'web' // ✅ optional but good (matches main call)
+};
     if (shouldResetRef.current) { fetchRetryBody.reset = true; shouldResetRef.current = false; }
 
     await new Promise(r => setTimeout(r, 1200));
