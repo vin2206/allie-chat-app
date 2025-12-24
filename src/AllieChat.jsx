@@ -1710,13 +1710,25 @@ if (!isOwner) {
 
   try {
     // --- include full history so backend has context ---
-    const formattedHistory = messages.map(m => ({
-      role: m.sender === 'user' ? 'user' : 'assistant',
-      content: m.text ?? (m.audioUrl ? '[voice note]' : '')
-    }));
+// NOTE: messages can be stale here, so we add a voice marker,
+// but only if the last message isn't already a voice note.
+const last = messages[messages.length - 1];
+const lastLooksLikeVoice =
+  last &&
+  last.sender === 'user' &&
+  (last.audioUrl || last.text === '[voice note]' || last.text === '🔊 (voice note)');
 
-    const MAX_MSG = roleMode === 'roleplay' ? 18 : 24;
-    const trimmed = formattedHistory.slice(-MAX_MSG);
+const historySource = lastLooksLikeVoice
+  ? messages
+  : [...messages, { sender: 'user', text: '[voice note]' }];
+
+const formattedHistory = historySource.map(m => ({
+  role: m.sender === 'user' ? 'user' : 'assistant',
+  content: m.text ?? (m.audioUrl ? '[voice note]' : '')
+}));
+
+const MAX_MSG = 12;
+const trimmed = formattedHistory.slice(-MAX_MSG);
 
     const fd = new FormData();
     fd.append('audio', blob, 'note.webm');
@@ -1872,7 +1884,7 @@ if (used >= cap) {
         content: msg.text ?? (msg.audioUrl ? '🔊 (voice reply sent)' : '')
       }));
 
-      const MAX_MSG = roleMode === 'roleplay' ? 18 : 24;
+      const MAX_MSG = 12;
       const trimmed = formattedHistory.slice(-MAX_MSG);
 
       const now = new Date();
@@ -1954,7 +1966,7 @@ bumpVoiceUsed(true, user); // (optional UI counter)
       content: msg.text ?? (msg.audioUrl ? '🔊 (voice reply sent)' : '')
     }));
 
-    const MAX_MSG = roleMode === 'roleplay' ? 18 : 24;
+    const MAX_MSG = 12;
     const trimmed = formattedHistory.slice(-MAX_MSG);
 
     const now = new Date();
