@@ -292,7 +292,9 @@ const loadUser = () => {
   try { return JSON.parse(localStorage.getItem(USER_KEY)); }
   catch { return null; }
 };
-const saveUser = (u) => localStorage.setItem(USER_KEY, JSON.stringify(u));
+const saveUser = (u) => {
+  try { localStorage.setItem(USER_KEY, JSON.stringify(u)); } catch {}
+};
 const loadAuto = () => {
   try { return JSON.parse(localStorage.getItem(AUTORENEW_KEY)) || { daily:false, weekly:false }; }
   catch { return { daily:false, weekly:false }; }
@@ -346,30 +348,35 @@ if (!document.querySelector('script[src*="gsi/client"]')) {
       .then(() => {
         if (cancelled) return;
         window.google.accounts.id.initialize({
-          client_id: GOOGLE_CLIENT_ID,
-           auto_select: true, 
-          callback: (res) => {
-            try {
-              const p = parseJwt(res.credential);
-              // attach existing guest id (if any) so backend can merge the trial
-const GKEY = 'guest_id_v1';
-let gid = '';
-try { gid = localStorage.getItem(GKEY) || ''; } catch {}
+  client_id: GOOGLE_CLIENT_ID,
 
-onSignedIn({
-  name: p.name || '',
-  email: (p.email || '').toLowerCase(),
-  sub: p.sub,
-  picture: p.picture || '',
-  idToken: res.credential,
-  guestId: gid,     // may be '' if never used guest
-  guest: false
+  // ✅ Professional behavior: don’t auto-pick accounts.
+  // This does NOT remove sign-in. It just avoids “auto login” surprises.
+  auto_select: false,
+
+  callback: (res) => {
+    try {
+      const p = parseJwt(res.credential);
+
+      // attach existing guest id (if any) so backend can merge the trial
+      const GKEY = 'guest_id_v1';
+      let gid = '';
+      try { gid = localStorage.getItem(GKEY) || ''; } catch {}
+
+      onSignedIn({
+        name: p.name || '',
+        email: (p.email || '').toLowerCase(),
+        sub: p.sub,
+        picture: p.picture || '',
+        idToken: res.credential,
+        guestId: gid,     // may be '' if never used guest
+        guest: false
+      });
+    } catch (e) {
+      console.error('GIS parse failed', e);
+    }
+  },
 });
-            } catch (e) {
-              console.error('GIS parse failed', e);
-            }
-          },
-        });
 
         const host = document.querySelector('.gbtn-wrap');
         const el = document.getElementById('googleSignIn');
@@ -1363,7 +1370,6 @@ const openConfirm = React.useCallback((title, message, onConfirm) => {
     cancelText: 'Cancel'
   });
 }, []);
-
 // Simple notice modal (OK only)
 const openNotice = React.useCallback((title, message, after, okText = 'OK') => {
   setConfirmState({
@@ -1379,6 +1385,46 @@ const openNotice = React.useCallback((title, message, after, okText = 'OK') => {
     }
   });
 }, [closeConfirm]);
+// ✅ Professional sign-out (safe):
+// - clears backend cookie session
+// - clears local login user_v1
+// - clears sessionStorage chat UI data (so next person doesn’t see chats)
+// - does NOT delete guest_id_v1 or welcome keys (prevents “new user free coins” abuse)
+async function signOutEverywhere() {
+  // 1) clear backend cookie session
+  try {
+    await fetch(apiUrl('/auth/logout'), {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...authHeaders(user),
+        'X-CSRF-Token': getCsrf()
+      },
+      credentials: 'include',
+      body: JSON.stringify({})
+    });
+  } catch {}
+
+  // 2) prevent Google from auto-selecting last account silently
+  try {
+    window.google?.accounts?.id?.disableAutoSelect?.();
+    window.google?.accounts?.id?.cancel?.();
+  } catch {}
+
+  // 3) clear ONLY login + per-tab UI state (keep guest_id_v1 and welcome markers)
+  try { localStorage.removeItem('user_v1'); } catch {}
+
+  try {
+    const killPrefixes = ['thread_v3_', 'draft_v1_', 'role_sel_v1_', 'welcome_seen_v2_'];
+    Object.keys(sessionStorage).forEach((k) => {
+      if (killPrefixes.some(p => k.startsWith(p))) sessionStorage.removeItem(k);
+    });
+  } catch {}
+
+  // 4) reset UI
+  setShowSigninBanner(false);
+  setUser(null);
+}
 // --- Feedback modal state (needed by submitFeedback + UI) ---
  const [showFeedback, setShowFeedback] = useState(false);
  const [fbMessage, setFbMessage] = useState('');
@@ -2447,14 +2493,13 @@ try {
       </span>
       <div className="signin-actions">
         <button
-          className="btn-primary"
-          onClick={() => {
-            localStorage.removeItem('user_v1');
-            setUser(null);
-          }}
-        >
-          Sign in
-        </button>
+  className="btn-primary"
+  onClick={async () => {
+    await signOutEverywhere();
+  }}
+>
+  Sign in
+</button>
         <button
           className="signin-close"
           aria-label="Dismiss"
@@ -2589,6 +2634,26 @@ try {
     title="Ask anything (feedback)"
   >
     Ask anything (feedback)
+  </button>
+
+  <button
+    className="role-row"
+    style={{ color: '#c62828', fontWeight: 700 }}
+    onClick={() => {
+      openConfirm(
+        'Sign out?',
+        'You can sign in again anytime. Your coins and purchases stay safe on your account.',
+        async () => {
+          closeConfirm();
+          setShowRoleMenu(false);
+          await signOutEverywhere();
+        }
+      );
+    }}
+    aria-label="Sign out"
+    title="Sign out"
+  >
+    Sign out
   </button>
 </div>
     </div>
