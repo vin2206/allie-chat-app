@@ -536,7 +536,11 @@ const close = (e) => {
               <li><b>Start with trust.</b> Share a little about yourself first. Once she’s comfortable, the conversation will naturally shape to your vibe.</li>
               <li><b>Choose your bond.</b> She can be your friend, a safe space for confessions, or your emotional partner—whatever you need today.</li>
               <li><b>Talk it out, regain focus.</b> Let her ease your urge to chat with a loving presence so you can return to real life with better concentration.</li>
-              <li><b>Unlock deeper modes.</b> Access Wife, Girlfriend, Bhabhi, or Ex-GF role-play for more personalized chats—upgrade anytime with a Daily or Weekly plan.</li>
+              {IS_ANDROID_APP ? (
+  <li><b>More modes coming soon.</b> Wife/Girlfriend/Bhabhi/Ex-GF will unlock after Google Play recharge is enabled.</li>
+) : (
+  <li><b>Unlock deeper modes.</b> Access Wife, Girlfriend, Bhabhi, or Ex-GF role-play for more personalized chats—upgrade anytime with a Daily or Weekly plan.</li>
+)}
             </ul>
 
             <div className="instr-quick">Quick tips</div>
@@ -1549,39 +1553,52 @@ const askedForVoice = (text = "") => {
 };
   
 const applyRoleChange = (mode, type) => {
-  // premium gate for roleplay
-  if (mode === 'roleplay' && roleplayNeedsPremium && !isOwner) {
-  const active = (wallet?.expires_at || 0) > Date.now();
-  if (!active) {
+  // ✅ App safety: block roleplay entry so testers stay on Stranger (no packs / no external payment flow)
+  if (IS_ANDROID_APP && mode === 'roleplay' && !isOwner) {
     setShowRoleMenu(false);
-    openCoins();
+    openNotice(
+      'Modes access coming soon',
+      'Roleplay modes will unlock after Google Play recharge is enabled. For testing, please use Stranger mode.'
+    );
     return;
   }
-}
- // set state, but DO NOT save to localStorage
-setRoleMode(mode);
-setRoleType(type);
-try { if (user) sessionStorage.setItem(ROLE_KEY(user), JSON.stringify({ mode, type })); } catch {}
-// close menu
-setShowRoleMenu(false);
 
-// Always start a fresh chat on role/model change
-try {
-  if (user) {
-    sessionStorage.removeItem(THREAD_KEY(user, mode, type));
-    sessionStorage.removeItem(DRAFT_KEY(user, mode, type));
+  // premium gate for roleplay (web)
+  if (mode === 'roleplay' && roleplayNeedsPremium && !isOwner) {
+    const active = (wallet?.expires_at || 0) > Date.now();
+    if (!active) {
+      setShowRoleMenu(false);
+      openCoins();
+      return;
+    }
   }
-} catch {}
-const opener = getOpener(mode, type);
-setMessages([{ text: opener, sender: 'allie' }]);
-setInputValue('');
-readingUpRef.current = false;
-stickToBottomRef.current = true;
-setTimeout(() => scrollToBottomNow(true), 0);
+
+  // set state, but DO NOT save to localStorage
+  setRoleMode(mode);
+  setRoleType(type);
+  try { if (user) sessionStorage.setItem(ROLE_KEY(user), JSON.stringify({ mode, type })); } catch {}
+
+  // close menu
+  setShowRoleMenu(false);
+
+  // Always start a fresh chat on role/model change
+  try {
+    if (user) {
+      sessionStorage.removeItem(THREAD_KEY(user, mode, type));
+      sessionStorage.removeItem(DRAFT_KEY(user, mode, type));
+    }
+  } catch {}
+
+  const opener = getOpener(mode, type);
+  setMessages([{ text: opener, sender: 'allie' }]);
+  setInputValue('');
+  readingUpRef.current = false;
+  stickToBottomRef.current = true;
+  setTimeout(() => scrollToBottomNow(true), 0);
 
   // clear server context on next request
   shouldResetRef.current = true;
-  setShowCharPopup(true);   // show insight each time the user switches roles
+  setShowCharPopup(true); // show insight each time the user switches roles
 };
   // --------- PRESS & HOLD mic handlers ---------
 const startRecording = async () => {
@@ -2403,7 +2420,10 @@ try {
   if (!IS_ANDROID_APP && allowWebRazorpay) prewarmRazorpay().catch(() => {});
   openCoins();
 }}
-  title={isOwner ? "Owner: unlimited" : "Your balance (tap to buy coins)"}
+  title={
+  isOwner ? "Owner: unlimited"
+  : (IS_ANDROID_APP ? "Your balance (recharge coming soon)" : "Your balance (tap to buy coins)")
+}
   aria-label="Coins"
 >
   🪙 {isOwner ? '∞' : (walletReady ? coins : '…')}
