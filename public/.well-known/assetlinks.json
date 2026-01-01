@@ -3,8 +3,10 @@
     "relation": ["delegate_permission/common.handle_all_urls"],
     "target": {
       "namespace": "android_app",
-      "package_name": "YOUR.PACKAGE.NAME",
-      "sha256_cert_fingerprints": ["AA:BB:CC:...:ZZ"] 
+      "package_name": "com.buddyby.chat.twa",
+      "sha256_cert_fingerprints": [
+        "CA:31:36:F8:FA:C4:7E:1E:15:33:AF:7C:D0:AF:29:23:98:21:06:8E:6F:60:C7:8F:38:CF:EF:86:B8:CB:42:AC"
+      ]
     }
   }
 ]
