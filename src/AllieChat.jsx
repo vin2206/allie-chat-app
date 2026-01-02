@@ -1604,7 +1604,7 @@ const applyRoleChange = (mode, type) => {
     setShowRoleMenu(false);
     openNotice(
       'Modes access coming soon',
-      'Roleplay modes will unlock after Google Play recharge is enabled. For testing, please use Stranger mode.'
+      'Roleplay modes will unlock after Google Play recharge is enabled. Until now, please use Stranger mode.'
     );
     return;
   }
