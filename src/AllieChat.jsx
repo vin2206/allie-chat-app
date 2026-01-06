@@ -732,13 +732,13 @@ function getOpener(mode, type) {
       ]);
     case 'bhabhi':
       return pick([
-        "Arre devarji, ab aaye? ☺️",
+        "Arre wah aaj to darshan ho gye tumhare, kha the? ☺️",
         "Subah se gayab the, kahaan the?",
-        "Aaj kaise ho, devarji?"
+        "Aaj kaise yaad aye meri?"
       ]);
     case 'exgf':
       return pick([
-        "Itna time baad yaad aayi meri? 😉",
+        "Itna time baad yaad aayi meri?",
         "Abhi bhi meri photo dekhte ho na… sach btao.",
         "Aaj achanak se ping? Kya hua?"
       ]);
