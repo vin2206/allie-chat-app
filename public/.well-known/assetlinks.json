@@ -5,7 +5,8 @@
       "namespace": "android_app",
       "package_name": "com.buddyby.chat.twa",
       "sha256_cert_fingerprints": [
-        "CA:31:36:F8:FA:C4:7E:1E:15:33:AF:7C:D0:AF:29:23:98:21:06:8E:6F:60:C7:8F:38:CF:EF:86:B8:CB:42:AC"
+        "CA:31:36:F8:FA:C4:7E:1E:15:33:AF:7C:D0:AF:29:23:98:21:06:8E:6F:60:C7:8F:38:CF:EF:86:B8:CB:42:AC",
+        "6C:03:20:EA:FD:70:9A:95:9D:A3:61:D4:24:63:53:D1:CB:17:1E:47:5C:D7:6E:8B:BE:17:B1:69:B0:53:B0:57"
       ]
     }
   }
