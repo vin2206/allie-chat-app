@@ -11,7 +11,10 @@ import React, { useState } from "react";
  */
 export default function IntroSlides({ onDone }) {
   const [i, setI] = useState(0);
-
+  const isAppMode =
+    typeof window !== "undefined" &&
+    sessionStorage.getItem("is_app_mode_v1") === "1";
+  
     const slides = [
     {
       key: "hero",
@@ -26,7 +29,13 @@ export default function IntroSlides({ onDone }) {
       cards: [
         { icon: "🏆", h: "Most realistic ever", sub: "Human-like chat & voice." },
         { icon: "🛡️", h: "Private, end-to-end", sub: "Your chats stay on your device." },
-        { icon: "💳", h: "Secure Razorpay", sub: "UPI, cards — bank-grade checkout." },
+        {
+  icon: "💳",
+  h: isAppMode ? "Secure payment" : "Secure Razorpay",
+  sub: isAppMode
+    ? "UPI, cards — safe checkout."
+    : "UPI, cards — bank-grade checkout.",
+},
         { icon: "📮", h: "Support assured", sub: "Reach us anytime via feedback." },
         { icon: "🎁", h: "Free starter coins", sub: "Bonus on first sign-in." },
         { icon: "🗣️", h: "Keep chat or talk — enjoy voice with chat", sub: "Text 10 · Voice 18" },
