@@ -1425,6 +1425,15 @@ async function signOutEverywhere() {
   setShowSigninBanner(false);
   setUser(null);
 }
+// ✅ Always open Data & Privacy cleanly (no leftover ConfirmDialog on top)
+const openPrivacyModal = () => {
+  // close any open confirm/notice first
+  closeConfirm();
+  // close modes if open
+  setShowRoleMenu(false);
+  // open privacy
+  setShowPrivacy(true);
+};
 // --- Feedback modal state (needed by submitFeedback + UI) ---
  const [showFeedback, setShowFeedback] = useState(false);
  const [fbMessage, setFbMessage] = useState('');
@@ -1432,6 +1441,10 @@ async function signOutEverywhere() {
  const [fbSending, setFbSending] = useState(false);
  // --- Data & Privacy modal state ---
 const [showPrivacy, setShowPrivacy] = useState(false);
+// ✅ If Data & Privacy opens, ensure no ConfirmDialog is sitting above it
+useEffect(() => {
+  if (showPrivacy) closeConfirm();
+}, [showPrivacy, closeConfirm]);
 const [deleteBusy, setDeleteBusy] = useState(false);
 
 // Custom confirm (lets us control button text)
@@ -2693,9 +2706,12 @@ try {
 ) : null}
       {/* ——— Tiny feedback entry at the bottom of Modes ——— */}
 <div className="role-section" style={{ marginTop: 10 }}>
-  <button
+<button
   className="role-row"
-  onClick={() => { setShowRoleMenu(false); setShowPrivacy(true); }}
+  onClick={(e) => {
+    e.stopPropagation();
+    openPrivacyModal();
+  }}
   aria-label="Data & Privacy"
   title="Data & Privacy"
 >
