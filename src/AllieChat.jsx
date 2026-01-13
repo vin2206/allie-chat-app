@@ -1430,6 +1430,72 @@ async function signOutEverywhere() {
  const [fbMessage, setFbMessage] = useState('');
  const [fbFile, setFbFile] = useState(null);
  const [fbSending, setFbSending] = useState(false);
+ // --- Data & Privacy modal state ---
+const [showPrivacy, setShowPrivacy] = useState(false);
+const [deleteBusy, setDeleteBusy] = useState(false);
+
+// Custom confirm (lets us control button text)
+const openConfirmWithLabels = React.useCallback(
+  (title, message, okText, cancelText, onConfirm) => {
+    setConfirmState({
+      open: true,
+      title,
+      message,
+      okOnly: false,
+      okText: okText || 'OK',
+      cancelText: cancelText || 'Cancel',
+      onConfirm
+    });
+  },
+  []
+);
+
+async function sendDeleteRequest() {
+  if (!user || deleteBusy) return;
+  setDeleteBusy(true);
+
+  try {
+    const r = await fetch(apiUrl('/privacy/delete-request'), {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...authHeaders(user),
+        'X-CSRF-Token': getCsrf()
+      },
+      credentials: 'include',
+      body: JSON.stringify({})
+    });
+
+    // If session missing/expired -> show your existing sign-in banner
+    if (r.status === 401 || r.status === 403) {
+      setShowSigninBanner(true);
+      return;
+    }
+
+    if (r.ok) {
+      setShowPrivacy(false);
+      openNotice(
+        'Request received',
+        'Your request has been sent. We will delete your account within 72 hours.\n\nThank you for being with Shraddha. You can come back anytime.'
+      );
+    } else {
+      setShowPrivacy(false);
+      openNotice(
+        'Could not submit request',
+        'Please try again in a moment. If it keeps failing, contact support.'
+      );
+    }
+  } catch (e) {
+    console.error('delete-request failed', e);
+    setShowPrivacy(false);
+    openNotice(
+      'Could not submit request',
+      'Please try again in a moment. If it keeps failing, contact support.'
+    );
+  } finally {
+    setDeleteBusy(false);
+  }
+}
   // Submit feedback to backend (server will forward to email privately)
 async function submitFeedback() {
   if (!fbMessage.trim() || fbSending) return;
@@ -2628,13 +2694,13 @@ try {
       {/* ——— Tiny feedback entry at the bottom of Modes ——— */}
 <div className="role-section" style={{ marginTop: 10 }}>
   <button
-    className="role-row"
-    onClick={() => { setShowRoleMenu(false); setShowFeedback(true); }}
-    aria-label="Ask anything (feedback)"
-    title="Ask anything (feedback)"
-  >
-    Ask anything (feedback)
-  </button>
+  className="role-row"
+  onClick={() => { setShowRoleMenu(false); setShowPrivacy(true); }}
+  aria-label="Data & Privacy"
+  title="Data & Privacy"
+>
+  Data &amp; Privacy
+</button>
 
   <button
     className="role-row"
@@ -2755,7 +2821,57 @@ try {
     </div>
   </div>
 )}
+{/* —— Data & Privacy modal —— */}
+{showPrivacy && (
+  <div
+    className="confirm-backdrop"
+    role="dialog"
+    aria-modal="true"
+    onClick={() => setShowPrivacy(false)}
+  >
+    <div className="confirm-modal" onClick={(e) => e.stopPropagation()}>
+      <h3>Data &amp; Privacy</h3>
+      <p style={{ marginBottom: 10, color: '#444' }}>
+        Manage feedback and account deletion requests.
+      </p>
 
+      <div className="confirm-buttons" style={{ marginTop: 10 }}>
+        <button
+          className="btn-secondary"
+          onClick={() => { setShowPrivacy(false); setShowFeedback(true); }}
+        >
+          Feedback
+        </button>
+
+        <button
+          className="btn-primary"
+          style={{ background: '#c62828' }}
+          disabled={deleteBusy}
+          onClick={() => {
+            openConfirmWithLabels(
+              'Delete account permanently',
+              'Are you sure you want to delete your account along with all data?',
+              deleteBusy ? 'Sending…' : 'Yes, delete',
+              'Cancel',
+              async () => {
+                closeConfirm();
+                await sendDeleteRequest();
+              }
+            );
+          }}
+        >
+          {deleteBusy ? 'Sending…' : 'Delete account permanently'}
+        </button>
+      </div>
+
+      <div className="confirm-buttons" style={{ marginTop: 12 }}>
+        <button className="btn-secondary" onClick={() => setShowPrivacy(false)}>
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+)}
  {/* show Character popup after instructions */}
 <WelcomeFlow
   open={showWelcome}
