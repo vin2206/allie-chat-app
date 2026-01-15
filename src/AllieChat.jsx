@@ -2848,7 +2848,7 @@ try {
     <div className="confirm-modal" onClick={(e) => e.stopPropagation()}>
       <h3>Data &amp; Privacy</h3>
       <p style={{ marginBottom: 10, color: '#444' }}>
-        Manage feedback and account deletion requests.
+        Manage feedback, report safety issues, and account deletion requests.
       </p>
 
             <div style={{ marginTop: 10, display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -2859,7 +2859,7 @@ try {
             setShowFeedback(true);
           }}
         >
-          Feedback
+          Feedback / Report Safety
         </button>
 
         <button
