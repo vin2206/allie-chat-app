@@ -145,7 +145,7 @@ const OWNER_EMAILS = ['vinayvedic23@gmail.com'];
 const ROLE_LABELS = {
   wife: 'Wife',
   girlfriend: 'Girlfriend',
-  bhabhi: 'Bhabhi',
+  bhabhi: 'Mrs Next Door',
   exgf: 'Ex-GF',
   stranger: 'Stranger'
 };
@@ -544,9 +544,9 @@ const close = (e) => {
               <li><b>Choose your bond.</b> She can be your friend, a safe space for confessions, or your emotional partner—whatever you need today.</li>
               <li><b>Talk it out, regain focus.</b> Let her ease your urge to chat with a loving presence so you can return to real life with better concentration.</li>
               {IS_ANDROID_APP ? (
-  <li><b>More modes coming soon.</b> Wife/Girlfriend/Bhabhi/Ex-GF will unlock after Google Play recharge is enabled.</li>
+  <li><b>More modes coming soon.</b> Wife/Girlfriend/Mrs Next Door/Ex-GF will unlock after Google Play recharge is enabled.</li>
 ) : (
-  <li><b>Unlock deeper modes.</b> Access Wife, Girlfriend, Bhabhi, or Ex-GF role-play for more personalized chats—upgrade anytime with a Daily or Weekly plan.</li>
+  <li><b>Unlock deeper modes.</b> Access Wife, Girlfriend, Mrs Next Door, or Ex-GF role-play for more personalized chats—upgrade anytime with a Daily or Weekly plan.</li>
 )}
             </ul>
 
@@ -891,8 +891,11 @@ const emojiPanelRef = useRef(null);
 const inputRef = useRef(null);
 
 const EMOJIS = [
-  "😀","😁","😂","😊","😍","😘","💦","🤔","😏","😎","😈","😭","😡","😴","🤩","😜","🤤",
-  "👍","👎","👨‍👩‍👦","🐍","🙏","💪","💖","💔","🔥","💯","🎉","✨","🌹","🥰"
+  "🙂","😊","😄","😁","😅","😂","🤣",
+  "😉","😌","😏","🤔","😶","🙃","😬","😳",
+  "😍","😘","😇","🤗","🤭","🤫","🤤","😈",
+  "😴","😪","😔","😢","😭","😡","😠",
+  "😎","🤩"
 ];
 
 function insertEmoji(emo) {
@@ -2671,12 +2674,12 @@ try {
           className="role-chip"
           onClick={() => {
             openConfirm(
-              'Start as Shraddha (Bhabhi)?',
+              'Start as Shraddha (Mrs Next Door)?',
               'A fresh chat will begin and current messages will be cleared.',
               () => { closeConfirm(); applyRoleChange('roleplay','bhabhi'); }
             );
           }}
-        >Bhabhi</button>
+        >Mrs Next Door</button>
 
         <button
           className="role-chip"
