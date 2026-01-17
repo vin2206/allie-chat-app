@@ -1,5 +1,4 @@
 /* eslint-env browser */
-/* global atob, FormData, Image, URLSearchParams */
 /* eslint-disable no-console, no-alert, react-hooks/exhaustive-deps, no-unused-vars */
 import React, { useState, useEffect, useRef } from 'react';
 import './ChatUI.css';
