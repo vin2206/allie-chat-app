@@ -1342,3 +1342,48 @@ html.legacy-zoom .username-container {
           mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 384 512'><path d='M318.7 268.7c-.6-62.5 50.9-92.5 53.2-93.9-29-42.3-74.2-48.1-90.2-48.7-38.4-3.9-74.9 22.6-94.3 22.6-19.1 0-49.6-22-81.6-21.4-41.9 .6-80.5 24.4-102.1 61.9-43.5 75.5-11.1 187.2 31.3 248.4 20.7 29.8 45.3 63.3 77.8 62 31.1-1.2 42.8-20.1 80.3-20.1s48.2 20.1 81.6 19.5c33.7-.6 55-30.4 75.9-60.3 23.9-35 33.7-68.9 34.3-70.6-.7-.3-66.1-25.4-67.1-99.4ZM259.1 83.4c17.2-20.8 28.8-49.8 25.6-78.4-24.7 1-54.9 16.5-72.9 37.3-16 18.5-29.9 48.2-26.2 76.4 27.8 2.1 56.3-14.1 73.5-35.3Z'/></svg>") center/contain no-repeat;
 }
 
+/* === Intro images (public/intro/*) — subtle, non-odd entry effect === */
+img[src*="/intro/"],
+img[src*="intro/"]{
+  display: block;
+  width: 100%;
+  height: auto;
+
+  /* keeps it looking premium inside a phone frame */
+  border-radius: 16px;
+  box-shadow: 0 14px 34px rgba(0,0,0,.18);
+
+  /* performance / no layout shift */
+  transform: translateZ(0);
+  will-change: transform, opacity;
+}
+
+/* Respect reduced-motion users */
+@media (prefers-reduced-motion: no-preference){
+  img[src*="/intro/"],
+  img[src*="intro/"]{
+    animation: introSoftIn 520ms ease-out both,
+               introSoftZoom 7.5s ease-out both;
+  }
+}
+
+/* Smooth “intro card appears” */
+@keyframes introSoftIn{
+  from { opacity: 0; transform: translateY(8px) scale(1.005); }
+  to   { opacity: 1; transform: translateY(0)  scale(1.005); }
+}
+
+/* Tiny zoom that feels natural (NOT noticeable / not odd) */
+@keyframes introSoftZoom{
+  from { transform: scale(1.005); }
+  to   { transform: scale(1.02); }
+}
+
+/* Optional: on desktop only, a tiny hover lift (doesn't affect mobile) */
+@media (hover: hover){
+  img[src*="/intro/"]:hover,
+  img[src*="intro/"]:hover{
+    transform: scale(1.025);
+    transition: transform 160ms ease;
+  }
+}
