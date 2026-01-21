@@ -134,8 +134,8 @@ const getCsrf = () => {
   } catch { return ''; }
 };
 // === Coins config (server-driven prices; fallback) ===
-const DEFAULT_TEXT_COST = 10;
-const DEFAULT_VOICE_COST = 18;
+const DEFAULT_TEXT_COST = 1;
+const DEFAULT_VOICE_COST = 2;
 
 const DAILY_PACK = { id: 'daily',  label: 'Daily Pack',  price: 49,  coins: 420 };
 const WEEKLY_PACK= { id: 'weekly', label: 'Weekly Pack', price: 199, coins: 2000 };
@@ -660,7 +660,7 @@ useEffect(() => { if (user) setShowSigninBanner(false); }, [user]);
   // --- Server config (single source of truth) ---
 const [roleplayNeedsPremium, setRoleplayNeedsPremium] = useState(true);
 const [trialEnabled, setTrialEnabled] = useState(true);
-const [trialAmount, setTrialAmount] = useState(150);
+const [trialAmount, setTrialAmount] = useState(250);
 const [allowWebRazorpay, setAllowWebRazorpay] = useState(true);
 const [allowAppRazorpay, setAllowAppRazorpay] = useState(false);
 
