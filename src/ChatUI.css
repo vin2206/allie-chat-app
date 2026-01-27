@@ -409,7 +409,7 @@ body { background: linear-gradient(180deg, #fce7f3 0%, #ede9fe 100%); }
   display: flex;
   align-items: center;
   margin: 10px 0 10px 10px;
-  min-height: 32px;          /* was: height: 28px; → use min-height so it can grow */
+  min-height: 28px;          /* was: height: 28px; → use min-height so it can grow */
 }
 
 .typing-bounce span {
