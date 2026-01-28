@@ -6,8 +6,8 @@ html, body, #root {
   width: 100%;
   height: 100%;
   min-height: 100%;
-  overflow-x: hidden;         /* keep only horizontal lock */
-  /* no overflow-y here */
+  overflow-x: hidden;  /* keep only horizontal lock */
+  background-color: #9966cc;
 }
 /* stop browser pull-to-refresh; our chat scroller will handle it */
 html, body { overscroll-behavior-y: none; }
@@ -67,9 +67,15 @@ html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 
 /* Android: when IME opens, clamp the chat area between header and whichever is taller at the bottom */
 html.ime-open .chat-container {
-  bottom: calc(max(var(--ftr-h, 90px), var(--kb-h, 0px)));
+  /* footer is lifted by kb-h, so chat must stop above (footer + kb) */
+  bottom: calc(var(--ftr-h, 90px) + var(--kb-h, 0px));
   scroll-padding-bottom: 16px;
   padding-bottom: 2px;
+}
+/* Lift footer above keyboard — removes white strip/gap flicker */
+html.ime-open .App.stable .footer,
+html.ime-open .App.fixed .footer {
+  bottom: var(--kb-h, 0px);
 }
 
 /* While keyboard is up, give extra cushion so the last bubble never hides */
