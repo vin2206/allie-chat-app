@@ -7,7 +7,8 @@ html, body, #root {
   height: 100%;
   min-height: 100%;
   overflow-x: hidden;  /* keep only horizontal lock */
-  background-color: #9966cc;
+  /* fallback background while React loads (NO solid flash) */
+  background: linear-gradient(to bottom, #ff99cc, #cc66cc, #9966cc);
 }
 /* stop browser pull-to-refresh; our chat scroller will handle it */
 html, body { overscroll-behavior-y: none; }
@@ -53,7 +54,7 @@ html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
   flex: 0 0 auto;
 }
 /* Real spacer element that grows when chat is short */
-.chat-pad { flex: 1 1 0; min-height: 0; }
+.chat-pad { flex: 1 1 0; min-height: 0; order: -1; }
 
 /* small cushion so scrollTo/anchors stop above the footer */
 .message,
