@@ -98,8 +98,6 @@ html.ime-open .bottom-sentinel {
   background: linear-gradient(180deg, #fce7f3 0%, #ede9fe 100%);
 }
 
-body { background: linear-gradient(180deg, #fce7f3 0%, #ede9fe 100%); }
-
 /* Chat screen background — gradient + waves directly on the app */
 .App.signed-in{
   background:
