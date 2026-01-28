@@ -67,7 +67,7 @@ html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 }
 
 /* Android: when IME opens, clamp the chat area between header and whichever is taller at the bottom */
-html.ime-open .App.fixed .chat-container {
+html.ime-open .chat-container {
   /* footer is lifted by kb-h, so chat must stop above (footer + kb) */
   bottom: calc(var(--ftr-h, 90px) + var(--kb-h, 0px));
   scroll-padding-bottom: 16px;
