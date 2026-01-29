@@ -8,8 +8,6 @@ html, body, #root {
   min-height: 100%;
   overflow-x: hidden;  /* keep only horizontal lock */
   /* fallback background while React loads (NO solid flash) */
-  background: linear-gradient(to bottom, #ff99cc, #cc66cc, #9966cc);
-}
 /* stop browser pull-to-refresh; our chat scroller will handle it */
 html, body { overscroll-behavior-y: none; }
 :root { --hdr-h: 80px; --ftr-h: 90px; --kb-h: 0px; }  /* measured at runtime; kb set at runtime */
@@ -89,10 +87,6 @@ html.ime-open .bottom-sentinel {
 /* Also make the sentinel itself thicker during IME */
 html.ime-open .bottom-sentinel {
   height: 28px; /* was 1px */
-}
-
-html.ime-open, html.ime-open body {
-  background: linear-gradient(to bottom, #ff99cc, #cc66cc, #9966cc) !important;
 }
 
 /* 2) State-specific backgrounds (fixes the flicker) */
