@@ -474,28 +474,8 @@ if (!document.querySelector('script[src*="gsi/client"]')) {
     </div>
   );
 }
-/* ---------- Welcome flow (Instructions first; bonus claim inside) ---------- */
-function WelcomeFlow({ open, onClose, amount = 100, defaultStep = 1 }) {
-  // defaultStep: 1 = instructions first (instant); bonus claim is shown inline
-  const [step, setStep] = React.useState(defaultStep);
-
-  // Detect if already claimed (local-only; server is still source of truth)
-  const [claimed, setClaimed] = React.useState(() => {
-    try {
-      const u = loadUser();
-      if (!u) return false;
-      const uid = userIdFor(u);
-      return localStorage.getItem(welcomeKeyFor(uid)) === '1';
-    } catch {
-      return false;
-    }
-  });
-
-  // Reset step each time modal opens
-  React.useEffect(() => {
-    if (open) setStep(defaultStep);
-  }, [open, defaultStep]);
-
+/* ---------- Welcome flow (Instructions only; claim moved to separate popup) ---------- */
+function WelcomeFlow({ open, onClose }) {
   if (!open) return null;
 
   const close = (e) => {
@@ -503,9 +483,56 @@ function WelcomeFlow({ open, onClose, amount = 100, defaultStep = 1 }) {
     onClose && onClose();
   };
 
-  // Shared claim handler (works from step 0 or step 1)
-  const claimWelcome = async (e) => {
-    e?.stopPropagation?.();
+  return (
+    <div className="welcome-backdrop" onClick={close}>
+      <div
+        className="welcome-card"
+        role="dialog"
+        aria-modal="true"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <h3 className="instr-title">How to talk to Shraddha</h3>
+        <div className="instr-sub">Make it real. Be gentle. Enjoy the flow.</div>
+
+        <ul className="instr-list">
+          <li><b>Talk to her like a real girl.</b> Shraddha has emotions, intelligence, and simplicity—speak naturally.</li>
+          <li><b>Start with trust.</b> Share a little about yourself first. Once she’s comfortable, the conversation will naturally shape to your vibe.</li>
+          <li><b>Choose your bond.</b> She can be your friend, a safe space for confessions, or your emotional partner—whatever you need today.</li>
+          <li><b>Talk it out, regain focus.</b> Let her ease your urge to chat with a loving presence so you can return to real life with better concentration.</li>
+
+          {IS_ANDROID_APP ? (
+            <li><b>More modes coming soon.</b> Wife/Girlfriend/Mrs Next Door/Ex-GF will unlock after Google Play recharge is enabled.</li>
+          ) : (
+            <li><b>Unlock deeper modes.</b> Access Wife, Girlfriend, Mrs Next Door, or Ex-GF role-play for more personalized chats—upgrade anytime with a Daily or Weekly plan.</li>
+          )}
+        </ul>
+
+        <div className="instr-quick">Quick tips</div>
+        <ul className="tips-list">
+          <li>Keep messages short and honest.</li>
+          <li>Be patient; she warms up as trust builds.</li>
+          <li><b>Type one message at a time and wait for her reply.</b></li>
+        </ul>
+
+        <button className="welcome-btn" onClick={close}>Start chatting</button>
+      </div>
+    </div>
+  );
+}
+/* ---------- Welcome Claim popup (ONLY for new user; after instructions) ---------- */
+function WelcomeClaimModal({ open, onClose, amount = 250 }) {
+  const close = (e) => {
+    if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
+    onClose && onClose();
+  };
+
+  const [claimed, setClaimed] = React.useState(false);
+  const [sparkle, setSparkle] = React.useState(false);
+
+    // ✅ background auto-claim (prevents free-chat loophole)
+  const doClaim = async () => {
+    if (claimed) return;
+
     try {
       const r = await fetch(apiUrl('/claim-welcome'), {
         method: 'POST',
@@ -517,107 +544,120 @@ function WelcomeFlow({ open, onClose, amount = 100, defaultStep = 1 }) {
         credentials: 'include',
         body: JSON.stringify({})
       });
+
       const data = await r.json().catch(() => ({}));
 
       if (data?.ok && data?.wallet) {
-        // mark claimed in this browser
-        const u = loadUser();
-        const uid = userIdFor(u);
-        localStorage.setItem(welcomeKeyFor(uid), '1');
+        // Mark claimed locally (so we never show again on this device)
+        try {
+          const u = loadUser();
+          const uid = userIdFor(u);
+          localStorage.setItem(welcomeKeyFor(uid), '1');
+        } catch {}
 
-        if (typeof window.refreshWalletGlobal === 'function') {
-          window.refreshWalletGlobal();
-        }
-
+        // sparkle + refresh coins instantly
         setClaimed(true);
+        setSparkle(true);
+        if (typeof window.refreshWalletGlobal === 'function') window.refreshWalletGlobal();
+        setTimeout(() => setSparkle(false), 1200);
       } else {
-        // already claimed or not eligible -> just hide claim UI
+        // already claimed / not eligible -> stop showing claim UI
         setClaimed(true);
       }
     } catch {
-      // network hiccup: don’t trap the user, but also don’t keep showing claim forever
+      // network issue: don’t trap user forever
       setClaimed(true);
     }
   };
 
+  // Keep the button working (but it's basically instant now)
+  const claimWelcome = (e) => {
+    e?.stopPropagation?.();
+    doClaim();
+  };
+
+  // ✅ AUTO-RUN claim immediately when popup opens
+  React.useEffect(() => {
+    if (!open) return;
+    setClaimed(false);
+    setSparkle(false);
+    doClaim();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
+
   return (
     <div className="welcome-backdrop" onClick={close}>
+      {/* scoped sparkle CSS */}
+      <style>{`
+        .sparkle-wrap { position: relative; }
+        .sparkle {
+          position: absolute;
+          inset: -10px;
+          pointer-events: none;
+          overflow: hidden;
+        }
+        .spark {
+          position: absolute;
+          font-size: 16px;
+          animation: pop 900ms ease-out forwards;
+          opacity: 0;
+        }
+        @keyframes pop {
+          0% { transform: translate(0,0) scale(0.4); opacity: 0; }
+          15% { opacity: 1; }
+          100% { transform: translate(var(--dx), var(--dy)) scale(1.2); opacity: 0; }
+        }
+      `}</style>
+
       <div
-        className="welcome-card"
+        className="welcome-card sparkle-wrap"
         role="dialog"
         aria-modal="true"
         onClick={(e) => e.stopPropagation()}
       >
-        {step === 0 ? (
-          <>
-            <div className="welcome-burst">🎉</div>
-            <h3>Welcome!</h3>
-            <p>You’ve unlocked a <b>first-time bonus</b>.</p>
-            <div className="welcome-amount">+{amount} coins</div>
-
-            <button
-              className="welcome-btn"
-              disabled={claimed}
-              onClick={claimWelcome}
-            >
-              {claimed ? `✅ +${amount} added` : `Claim ${amount} coins`}
-            </button>
-
-            <div className="welcome-note">Roleplay models are part of the upgrade.</div>
-            <button className="welcome-btn" style={{ marginTop: 10 }} onClick={() => setStep(1)}>
-              Next
-            </button>
-          </>
-        ) : (
-          <>
-            <h3 className="instr-title">How to talk to Shraddha</h3>
-            <div className="instr-sub">Make it real. Be gentle. Enjoy the flow.</div>
-
-            {/* Inline claim (instructions are always first now) */}
-            {!claimed && (
-              <div style={{
-                marginTop: 10,
-                padding: 12,
-                borderRadius: 14,
-                background: '#fff7fb',
-                border: '1px solid #ffd6ea'
-              }}>
-                <div style={{ fontWeight: 700, marginBottom: 6 }}>
-                  Free bonus available: +{amount} coins
-                </div>
-                <button
-                  className="welcome-btn"
-                  onClick={claimWelcome}
-                  style={{ width: '100%' }}
+        {/* sparkle particles */}
+        {sparkle && (
+          <div className="sparkle" aria-hidden="true">
+            {Array.from({ length: 18 }).map((_, i) => {
+              const dx = `${Math.floor(Math.random() * 240 - 120)}px`;
+              const dy = `${Math.floor(Math.random() * 220 - 110)}px`;
+              const left = `${Math.floor(Math.random() * 80 + 10)}%`;
+              const top = `${Math.floor(Math.random() * 60 + 10)}%`;
+              const icons = ['✨','💖','🌸','⭐️','🎉'];
+              const icon = icons[i % icons.length];
+              return (
+                <span
+                  key={i}
+                  className="spark"
+                  style={{ left, top, ['--dx']: dx, ['--dy']: dy }}
                 >
-                  Claim {amount} coins
-                </button>
-              </div>
-            )}
-
-            <ul className="instr-list">
-              <li><b>Talk to her like a real girl.</b> Shraddha has emotions, intelligence, and simplicity—speak naturally.</li>
-              <li><b>Start with trust.</b> Share a little about yourself first. Once she’s comfortable, the conversation will naturally shape to your vibe.</li>
-              <li><b>Choose your bond.</b> She can be your friend, a safe space for confessions, or your emotional partner—whatever you need today.</li>
-              <li><b>Talk it out, regain focus.</b> Let her ease your urge to chat with a loving presence so you can return to real life with better concentration.</li>
-
-              {IS_ANDROID_APP ? (
-                <li><b>More modes coming soon.</b> Wife/Girlfriend/Mrs Next Door/Ex-GF will unlock after Google Play recharge is enabled.</li>
-              ) : (
-                <li><b>Unlock deeper modes.</b> Access Wife, Girlfriend, Mrs Next Door, or Ex-GF role-play for more personalized chats—upgrade anytime with a Daily or Weekly plan.</li>
-              )}
-            </ul>
-
-            <div className="instr-quick">Quick tips</div>
-            <ul className="tips-list">
-              <li>Keep messages short and honest.</li>
-              <li>Be patient; she warms up as trust builds.</li>
-              <li><b>Type one message at a time and wait for her reply.</b></li>
-            </ul>
-
-            <button className="welcome-btn" onClick={close}>Start chatting</button>
-          </>
+                  {icon}
+                </span>
+              );
+            })}
+          </div>
         )}
+
+        <div className="welcome-burst">🎁</div>
+        <h3>Free coins for you</h3>
+        <p style={{ marginTop: 6 }}>
+          Claim your <b>first-time bonus</b> to start chatting freely.
+        </p>
+
+        <div className="welcome-amount" style={{ marginTop: 10 }}>+{amount} coins</div>
+
+        <button
+          className="welcome-btn"
+          onClick={claimWelcome}
+          disabled={claimed}
+          style={{ marginTop: 12 }}
+        >
+          {claimed ? `✅ +${amount} added` : `Claim ${amount} coins`}
+        </button>
+
+        <button className="welcome-btn" style={{ marginTop: 10 }} onClick={close}>
+          Continue
+        </button>
       </div>
     </div>
   );
@@ -701,10 +741,15 @@ useEffect(() => {
   const stop = startVersionWatcher(60000);
   return stop;
 }, []);
+// --- Welcome / Claim flow states ---
+const [showWelcomeClaim, setShowWelcomeClaim] = useState(false);
+const WELCOME_CLAIM_SEEN_KEY = (u) => `welcome_claim_seen_v1_${userIdFor(u)}`;
+
 const [showWelcome, setShowWelcome] = useState(() => {
   try {
     const u = loadUser();
     if (!u) return false;
+    // show "How to talk" once per TAB per user
     return sessionStorage.getItem(WELCOME_SEEN_KEY(u)) !== '1';
   } catch { return false; }
 });
@@ -1068,6 +1113,30 @@ useEffect(() => {
   window.refreshWalletGlobal = () => refreshWallet();
   return () => { delete window.refreshWalletGlobal; };
 }, [user]);
+  function openClaimIfEligible() {
+  try {
+    if (!user) return;
+
+    // only show once per tab
+    if (sessionStorage.getItem(WELCOME_CLAIM_SEEN_KEY(user)) === '1') return;
+
+    // already claimed (server OR local)
+    const uid = userIdFor(user);
+    const localClaimed = localStorage.getItem(welcomeKeyFor(uid)) === '1';
+    const serverClaimed = wallet?.welcome_claimed === true;
+
+    if (serverClaimed || localClaimed) {
+      sessionStorage.setItem(WELCOME_CLAIM_SEEN_KEY(user), '1');
+      return;
+    }
+
+    // Only if trial is enabled
+    if (!trialEnabled) return;
+
+    setShowWelcomeClaim(true);
+    sessionStorage.setItem(WELCOME_CLAIM_SEEN_KEY(user), '1');
+  } catch {}
+}
   // ADD BELOW the window.refreshWalletGlobal effect
 useEffect(() => {
   const onVisible = () => {
@@ -1790,6 +1859,7 @@ const applyRoleChange = (mode, type) => {
   // --------- PRESS & HOLD mic handlers ---------
 const startRecording = async () => {
   if (isTyping || cooldown) return;
+  if (showWelcome || showWelcomeClaim) return;
 
   // NEW: don’t let users record until wallet/cookies are ready
   if (!walletReady) {
@@ -1876,6 +1946,7 @@ const stopRecording = () => {
 // Upload the voice to backend as multipart/form-data
 const sendVoiceBlob = async (blob) => {
   if (isTyping || cooldown) return;
+  if (showWelcome || showWelcomeClaim) return;
     if (!walletReady) {
     openNotice('Connecting…', 'Give me a second to reconnect.');
     return;
@@ -2005,6 +2076,7 @@ const trimmed = formattedHistory.slice(-MAX_MSG);
   setShowEmoji(false); // close emoji panel when sending
   setShowCharPopup(false);
   if (inputValue.trim() === '' || isTyping || cooldown || isRecording) return;
+  if (showWelcome || showWelcomeClaim) return;
 
   // Quick commands
   if (inputValue.trim().toLowerCase() === '#stranger') {
@@ -2660,6 +2732,23 @@ try {
   roleMode={roleMode}
   roleType={roleType}
   onClose={() => setShowCharPopup(false)}
+/>
+  {/* How-to-talk popup (always first) */}
+<WelcomeFlow
+  open={showWelcome}
+  onClose={() => {
+    setShowWelcome(false);
+    try { sessionStorage.setItem(WELCOME_SEEN_KEY(user), '1'); } catch {}
+    // after instructions closes → show claim (only if new)
+    openClaimIfEligible();
+  }}
+/>
+
+{/* Claim popup (only for new users, after WelcomeFlow closes) */}
+<WelcomeClaimModal
+  open={showWelcomeClaim}
+  amount={trialAmount}
+  onClose={() => setShowWelcomeClaim(false)}
 />
 {/* DP full-image lightbox */}
 {showAvatarFull && (
