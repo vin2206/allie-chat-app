@@ -5,6 +5,14 @@
   <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
   <meta name="viewport"
       content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+    <style>
+  /* Prevent white flash before React/CSS loads */
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: linear-gradient(to bottom, #ff99cc, #cc66cc, #9966cc);
+  }
+</style>
 
   <!-- Speed up GIS -->
   <link rel="dns-prefetch" href="https://accounts.google.com">
