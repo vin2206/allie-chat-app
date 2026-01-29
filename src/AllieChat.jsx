@@ -627,10 +627,10 @@ function WelcomeClaimModal({ open, onClose, amount = 250 }) {
               const icon = icons[i % icons.length];
               return (
                 <span
-                  key={i}
+                 key={i}
                   className="spark"
-                  style={{ left, top, ['--dx']: dx, ['--dy']: dy }}
-                >
+                   style={{ left, top, '--dx': dx, '--dy': dy }}
+                 >
                   {icon}
                 </span>
               );
