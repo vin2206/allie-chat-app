@@ -493,7 +493,7 @@ function WelcomeFlow({ open, onClose }) {
   };
 
   return (
-  <div className="welcome-backdrop welcome-claim-backdrop" onClick={close}>
+  <div className="welcome-backdrop" onClick={close}>
       <div
         className="welcome-card"
         role="dialog"
@@ -818,7 +818,12 @@ useEffect(() => {
   setShowWelcome(true);
   welcomeDecidedRef.current = true;
 }, [user]);
-
+useEffect(() => {
+  if (showWelcome) {
+    setShowWelcomeClaim(false);
+    setPendingClaimCheck(false);
+  }
+}, [showWelcome]);
   function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
 
 function getOpener(mode, type) {
@@ -2786,7 +2791,7 @@ if (!user) {
 
 {/* Claim popup (only for new users, after WelcomeFlow closes) */}
 <WelcomeClaimModal
-  open={showWelcomeClaim}
+  open={showWelcomeClaim && !showWelcome}
   amount={trialAmount}
   onClose={() => setShowWelcomeClaim(false)}
 />
