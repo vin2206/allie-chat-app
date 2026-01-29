@@ -1087,6 +1087,10 @@ html:not(.ime-open) .App.stable .footer .mic-btn {
   display: flex; align-items: center; justify-content: center;
   z-index: 10001; backdrop-filter: blur(2px);
 }
+.welcome-claim-backdrop {
+  z-index: 20000;
+  pointer-events: auto;
+}
 .welcome-card{
   width: min(92vw, 520px);
   max-height: 86vh; overflow: auto;
