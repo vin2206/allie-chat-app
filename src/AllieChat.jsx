@@ -271,6 +271,15 @@ const AUTORENEW_KEY = 'autorenew_v1'; // {daily:bool, weekly:bool}
 // --- NEW: lightweight auth (local only) ---
 const USER_KEY = 'user_v1';
 const welcomeKeyFor = (id) => `welcome_${id}_v1`; // id = sub (preferred) or email
+// ✅ Local fallback: if this device already claimed once, never allow "first send bypass"
+function hasLocalWelcomeClaimed(u) {
+  try {
+    const uid = userIdFor(u);
+    return localStorage.getItem(welcomeKeyFor(uid)) === '1';
+  } catch {
+    return false;
+  }
+}
 // ---------- Chat persistence helpers (per user + role) ----------
 const THREAD_KEY = (u, roleMode, roleType) =>
   `thread_v3_${userIdFor(u)}_${roleMode || 'stranger'}_${roleType || 'stranger'}`;
@@ -529,46 +538,48 @@ function WelcomeClaimModal({ open, onClose, amount = 250 }) {
   const [claimed, setClaimed] = React.useState(false);
   const [sparkle, setSparkle] = React.useState(false);
 
-    // ✅ background auto-claim (prevents free-chat loophole)
-  const doClaim = async () => {
-    if (claimed) return;
+    // ✅ background auto-claim (auto, non-blocking, dismiss-anywhere safe)
+const doClaim = async () => {
+  if (claimed) return;
 
+  setClaimed(true);     // ✅ lock immediately (no double / no stuck UI)
+  setSparkle(true);
+
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), 3000); // ✅ don't hang forever
+
+  try {
+    const r = await fetch(apiUrl('/claim-welcome'), {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...authHeaders(loadUser()),
+        'X-CSRF-Token': getCsrf()
+      },
+      credentials: 'include',
+      body: JSON.stringify({}),
+      signal: ctrl.signal
+    });
+
+    await r.json().catch(() => ({}));
+
+    // mark local claimed no matter what (prevents repeat popup on this device)
     try {
-      const r = await fetch(apiUrl('/claim-welcome'), {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...authHeaders(loadUser()),
-          'X-CSRF-Token': getCsrf()
-        },
-        credentials: 'include',
-        body: JSON.stringify({})
-      });
+      const u = loadUser();
+      const uid = userIdFor(u);
+      localStorage.setItem(welcomeKeyFor(uid), '1');
+    } catch {}
 
-      const data = await r.json().catch(() => ({}));
-
-      if (data?.ok && data?.wallet) {
-        // Mark claimed locally (so we never show again on this device)
-        try {
-          const u = loadUser();
-          const uid = userIdFor(u);
-          localStorage.setItem(welcomeKeyFor(uid), '1');
-        } catch {}
-
-        // sparkle + refresh coins instantly
-        setClaimed(true);
-        setSparkle(true);
-        if (typeof window.refreshWalletGlobal === 'function') window.refreshWalletGlobal();
-        setTimeout(() => setSparkle(false), 1200);
-      } else {
-        // already claimed / not eligible -> stop showing claim UI
-        setClaimed(true);
-      }
-    } catch {
-      // network issue: don’t trap user forever
-      setClaimed(true);
+    if (typeof window.refreshWalletGlobal === 'function') {
+      window.refreshWalletGlobal(); // ✅ update header coins ASAP
     }
-  };
+  } catch (e) {
+    // ignore timeout/offline — never trap user
+  } finally {
+    clearTimeout(t);
+    setTimeout(() => setSparkle(false), 900);
+  }
+};
 
   // Keep the button working (but it's basically instant now)
   const claimWelcome = (e) => {
@@ -646,14 +657,9 @@ function WelcomeClaimModal({ open, onClose, amount = 250 }) {
 
         <div className="welcome-amount" style={{ marginTop: 10 }}>+{amount} coins</div>
 
-        <button
-          className="welcome-btn"
-          onClick={claimWelcome}
-          disabled={claimed}
-          style={{ marginTop: 12 }}
-        >
-          {claimed ? `✅ +${amount} added` : `Claim ${amount} coins`}
-        </button>
+        <div style={{ marginTop: 12, fontSize: 14, opacity: 0.85 }}>
+         Tap anywhere to continue…
+        </div>
 
         <button className="welcome-btn" style={{ marginTop: 10 }} onClick={close}>
           Continue
@@ -744,6 +750,7 @@ useEffect(() => {
 // --- Welcome / Claim flow states ---
 const [showWelcomeClaim, setShowWelcomeClaim] = useState(false);
 const WELCOME_CLAIM_SEEN_KEY = (u) => `welcome_claim_seen_v1_${userIdFor(u)}`;
+const [pendingClaimCheck, setPendingClaimCheck] = useState(false); // ✅ wait for wallet before deciding claim popup
 
 const [showWelcome, setShowWelcome] = useState(() => {
   try {
@@ -1113,6 +1120,32 @@ useEffect(() => {
   window.refreshWalletGlobal = () => refreshWallet();
   return () => { delete window.refreshWalletGlobal; };
 }, [user]);
+  useEffect(() => {
+  if (!pendingClaimCheck) return;
+  if (!user) return;
+  if (!walletReady) return;       // ✅ wait for real wallet
+  if (!trialEnabled) return;
+
+  // only once per tab
+  if (sessionStorage.getItem(WELCOME_CLAIM_SEEN_KEY(user)) === '1') {
+    setPendingClaimCheck(false);
+    return;
+  }
+
+  const uid = userIdFor(user);
+  const localClaimed = localStorage.getItem(welcomeKeyFor(uid)) === '1';
+  const serverClaimed = wallet?.welcome_claimed === true;
+
+  if (localClaimed || serverClaimed) {
+    sessionStorage.setItem(WELCOME_CLAIM_SEEN_KEY(user), '1');
+    setPendingClaimCheck(false);
+    return;
+  }
+
+  setShowWelcomeClaim(true);
+  sessionStorage.setItem(WELCOME_CLAIM_SEEN_KEY(user), '1');
+  setPendingClaimCheck(false);
+}, [pendingClaimCheck, walletReady, wallet?.welcome_claimed, user, trialEnabled]);
   function openClaimIfEligible() {
   try {
     if (!user) return;
@@ -1884,8 +1917,9 @@ const startRecording = async () => {
     return; // stop here
   }
 }
-  // Coins gate: allow brand-new users (welcome not yet visible on client) to pass once
-const allowFirstSend = (!walletReady || wallet?.welcome_claimed !== true);
+  // Coins gate: allow truly-new users only (server OR local claim blocks bypass)
+const localClaimed = hasLocalWelcomeClaimed(user);
+const allowFirstSend = (wallet?.welcome_claimed !== true && !localClaimed);
 if (!isOwner && !allowFirstSend && coins < prices.voice) { openCoins(); return; }
   
   try {
@@ -1968,12 +2002,13 @@ if (!isOwner) {
     return; // no preview, no POST
   }
 }
-    // Coins gate for VOICE (respect first-send bypass like startRecording/handleSend)
-  const allowFirstSend = (!walletReady || wallet?.welcome_claimed !== true);
-  if (!isOwner && !allowFirstSend && coins < prices.voice) {
-    openCoins();
-    return;
-  }
+    // Coins gate for VOICE (server OR local claim blocks bypass)
+const localClaimed = hasLocalWelcomeClaimed(user);
+const allowFirstSend = (wallet?.welcome_claimed !== true && !localClaimed);
+if (!isOwner && !allowFirstSend && coins < prices.voice) {
+  openCoins();
+  return;
+}
 
   // local preview of what the user sent
   setMessages(prev => ([
@@ -2099,9 +2134,10 @@ const trimmed = formattedHistory.slice(-MAX_MSG);
     return;
   }
 
-  // Decide cost before sending
-  const wantVoiceNow = askedForVoice(inputValue);
-  const allowFirstSend = (!walletReady || wallet?.welcome_claimed !== true);
+// Decide cost before sending
+const wantVoiceNow = askedForVoice(inputValue);
+const localClaimed = hasLocalWelcomeClaimed(user);
+const allowFirstSend = (wallet?.welcome_claimed !== true && !localClaimed);
     if (wantVoiceNow && !isOwner) {
   const cap  = getTodayCapServerAware(user, wallet);
 const used = getVoiceUsed(true, user); // arg ignored
@@ -2739,8 +2775,7 @@ try {
   onClose={() => {
     setShowWelcome(false);
     try { sessionStorage.setItem(WELCOME_SEEN_KEY(user), '1'); } catch {}
-    // after instructions closes → show claim (only if new)
-    openClaimIfEligible();
+    setPendingClaimCheck(true); // ✅ decide later ONLY after walletReady
   }}
 />
 
@@ -3047,17 +3082,6 @@ try {
     </div>
   </div>
 )}
- {/* show Character popup after instructions */}
-<WelcomeFlow
-  open={showWelcome}
-  onClose={() => {
-    setShowWelcome(false);
-    if (user) { try { sessionStorage.setItem(WELCOME_SEEN_KEY(user), '1'); } catch {} }
-    setShowCharPopup(true);
-  }}
-  amount={trialAmount}
-  defaultStep={welcomeDefaultStep}
-/>
       
       <div className="footer">
         {/* Input + tiny emoji inside (like WhatsApp) */}
