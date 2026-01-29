@@ -91,6 +91,10 @@ html.ime-open .bottom-sentinel {
   height: 28px; /* was 1px */
 }
 
+html.ime-open, html.ime-open body {
+  background: linear-gradient(to bottom, #ff99cc, #cc66cc, #9966cc) !important;
+}
+
 /* 2) State-specific backgrounds (fixes the flicker) */
 
 /* Sign-in screen background (soft) */
