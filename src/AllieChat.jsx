@@ -493,7 +493,7 @@ function WelcomeFlow({ open, onClose }) {
   };
 
   return (
-    <div className="welcome-backdrop" onClick={close}>
+  <div className="welcome-backdrop welcome-claim-backdrop" onClick={close}>
       <div
         className="welcome-card"
         role="dialog"
@@ -597,7 +597,7 @@ const doClaim = async () => {
   }, [open]);
 
   return (
-    <div className="welcome-backdrop" onClick={close}>
+    <div className="welcome-backdrop welcome-claim-backdrop" onClick={close}>
       {/* scoped sparkle CSS */}
       <style>{`
         .sparkle-wrap { position: relative; }
@@ -652,13 +652,13 @@ const doClaim = async () => {
         <div className="welcome-burst">🎁</div>
         <h3>Free coins for you</h3>
         <p style={{ marginTop: 6 }}>
-          Claim your <b>first-time bonus</b> to start chatting freely.
+          Claim your <b>first-time bonus</b> to start chatting shraddha.
         </p>
 
         <div className="welcome-amount" style={{ marginTop: 10 }}>+{amount} coins</div>
 
         <div style={{ marginTop: 12, fontSize: 14, opacity: 0.85 }}>
-         Tap anywhere to continue…
+         Tap to continue
         </div>
 
         <button className="welcome-btn" style={{ marginTop: 10 }} onClick={close}>
@@ -1125,6 +1125,7 @@ useEffect(() => {
   if (!user) return;
   if (!walletReady) return;       // ✅ wait for real wallet
   if (!trialEnabled) return;
+  if (showWelcome) return;        // ✅ never open claim while WelcomeFlow is still open
 
   // only once per tab
   if (sessionStorage.getItem(WELCOME_CLAIM_SEEN_KEY(user)) === '1') {
@@ -1145,7 +1146,7 @@ useEffect(() => {
   setShowWelcomeClaim(true);
   sessionStorage.setItem(WELCOME_CLAIM_SEEN_KEY(user), '1');
   setPendingClaimCheck(false);
-}, [pendingClaimCheck, walletReady, wallet?.welcome_claimed, user, trialEnabled]);
+}, [pendingClaimCheck, walletReady, wallet?.welcome_claimed, user, trialEnabled, showWelcome]);
   function openClaimIfEligible() {
   try {
     if (!user) return;
@@ -2601,45 +2602,47 @@ useEffect(() => {
 }, [layoutClass]);
   
   const displayedMessages = messages;
-  // Block UI until user signs in
-if (!user) {
-  // Show intro first (once per tab); then show normal sign-in
-  if (showIntro) {
-    return (
-      <IntroSlides
-        onDone={() => {
-          try { localStorage.setItem('intro_seen_v1', '1'); } catch {}
-         setShowIntro(false);
-        }}
-      />
-    );
-  }
 
+// ✅ Intro ALWAYS first (once per device), even if already signed-in
+if (showIntro) {
+  return (
+    <IntroSlides
+      onDone={() => {
+        try { localStorage.setItem('intro_seen_v1', '1'); } catch {}
+        setShowIntro(false);
+      }}
+    />
+  );
+}
+
+// Block UI until user signs in
+if (!user) {
   return (
     <AuthGate
       onSignedIn={async (u) => {
         // 1) Save locally + update state
         saveUser(u);
         setUser(u);
+
         // 2) PRIME COOKIES on the server:
-try {
-  if (u?.guest) {
-    await fetch(apiUrl('/auth/guest/init'), {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', ...authHeaders(u) },
-      credentials: 'include',
-      body: JSON.stringify({})
-    });
-  } else {
-    await fetch(apiUrl('/wallet'), {
-      method: 'GET',
-      headers: authHeaders(u),
-      credentials: 'include'
-    });
-  }
-} catch (e) {
-  console.warn('Cookie priming failed (non-blocking):', e?.message || e);
-}
+        try {
+          if (u?.guest) {
+            await fetch(apiUrl('/auth/guest/init'), {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', ...authHeaders(u) },
+              credentials: 'include',
+              body: JSON.stringify({})
+            });
+          } else {
+            await fetch(apiUrl('/wallet'), {
+              method: 'GET',
+              headers: authHeaders(u),
+              credentials: 'include'
+            });
+          }
+        } catch (e) {
+          console.warn('Cookie priming failed (non-blocking):', e?.message || e);
+        }
       }}
     />
   );
@@ -2775,7 +2778,9 @@ try {
   onClose={() => {
     setShowWelcome(false);
     try { sessionStorage.setItem(WELCOME_SEEN_KEY(user), '1'); } catch {}
-    setPendingClaimCheck(true); // ✅ decide later ONLY after walletReady
+
+    // ✅ IMPORTANT: wait 1 tick so WelcomeFlow unmounts first (prevents overlay freeze)
+    setTimeout(() => setPendingClaimCheck(true), 0);
   }}
 />
 
