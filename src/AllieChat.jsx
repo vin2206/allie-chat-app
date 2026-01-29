@@ -824,6 +824,12 @@ useEffect(() => {
     setPendingClaimCheck(false);
   }
 }, [showWelcome]);
+
+// ✅ hard guard: if claim opens, welcome must be OFF
+useEffect(() => {
+  if (showWelcomeClaim) setShowWelcome(false);
+}, [showWelcomeClaim]);
+  
   function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
 
 function getOpener(mode, type) {
@@ -2778,23 +2784,28 @@ if (!user) {
   onClose={() => setShowCharPopup(false)}
 />
   {/* How-to-talk popup (always first) */}
-<WelcomeFlow
-  open={showWelcome}
-  onClose={() => {
-    setShowWelcome(false);
-    try { sessionStorage.setItem(WELCOME_SEEN_KEY(user), '1'); } catch {}
+{showWelcome && !showWelcomeClaim && (
+  <WelcomeFlow
+    open={true}
+    onClose={() => {
+      // 1) close instructions
+      setShowWelcome(false);
+      try { sessionStorage.setItem(WELCOME_SEEN_KEY(user), '1'); } catch {}
 
-    // ✅ IMPORTANT: wait 1 tick so WelcomeFlow unmounts first (prevents overlay freeze)
-    setTimeout(() => setPendingClaimCheck(true), 0);
-  }}
-/>
+      // 2) decide claim after welcome is gone
+      setTimeout(() => setPendingClaimCheck(true), 0);
+    }}
+  />
+)}
 
 {/* Claim popup (only for new users, after WelcomeFlow closes) */}
-<WelcomeClaimModal
-  open={showWelcomeClaim && !showWelcome}
-  amount={trialAmount}
-  onClose={() => setShowWelcomeClaim(false)}
-/>
+{showWelcomeClaim && (
+  <WelcomeClaimModal
+    open={true}
+    amount={trialAmount}
+    onClose={() => setShowWelcomeClaim(false)}
+  />
+)}
 {/* DP full-image lightbox */}
 {showAvatarFull && (
   <div
