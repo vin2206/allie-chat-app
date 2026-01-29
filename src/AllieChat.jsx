@@ -248,6 +248,23 @@ const isoDay = () => {
   return `${y}-${m}-${day}`; // YYYY-MM-DD (local)
 };
 const userIdFor = (u) => (u?.sub || u?.email || u?.guestId || 'anon').toLowerCase();
+// --- Coins cache (instant UI; server still source of truth) ---
+const COINS_CACHE_KEY = (u) => `coins_cache_v1_${userIdFor(u)}`;
+const loadCachedCoins = (u) => {
+  try {
+    if (!u) return null;
+    const v = localStorage.getItem(COINS_CACHE_KEY(u));
+    if (v == null) return null;
+    const n = Number(v);
+    return Number.isFinite(n) ? n : null;
+  } catch { return null; }
+};
+const saveCachedCoins = (u, n) => {
+  try {
+    if (!u) return;
+    localStorage.setItem(COINS_CACHE_KEY(u), String(Number(n || 0)));
+  } catch {}
+};
 
 // localStorage helpers
 const AUTORENEW_KEY = 'autorenew_v1'; // {daily:bool, weekly:bool}
@@ -457,25 +474,71 @@ if (!document.querySelector('script[src*="gsi/client"]')) {
     </div>
   );
 }
-/* ---------- Welcome flow (Bonus -> Instructions) ---------- */
-function WelcomeFlow({ open, onClose, amount = 100, defaultStep = 0 }) {
-  // defaultStep: 0 = show bonus screen first, 1 = jump directly to instructions
+/* ---------- Welcome flow (Instructions first; bonus claim inside) ---------- */
+function WelcomeFlow({ open, onClose, amount = 100, defaultStep = 1 }) {
+  // defaultStep: 1 = instructions first (instant); bonus claim is shown inline
   const [step, setStep] = React.useState(defaultStep);
-  const [claimed, setClaimed] = React.useState(false);
 
-  // Reset to the right step every time the modal is opened
+  // Detect if already claimed (local-only; server is still source of truth)
+  const [claimed, setClaimed] = React.useState(() => {
+    try {
+      const u = loadUser();
+      if (!u) return false;
+      const uid = userIdFor(u);
+      return localStorage.getItem(welcomeKeyFor(uid)) === '1';
+    } catch {
+      return false;
+    }
+  });
+
+  // Reset step each time modal opens
   React.useEffect(() => {
     if (open) setStep(defaultStep);
   }, [open, defaultStep]);
 
   if (!open) return null;
 
-const goNext = (e) => { if (e && typeof e.stopPropagation === 'function') e.stopPropagation(); setStep(1); };
-const close = (e) => {
-  if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
-  setStep(0);
-  onClose && onClose();
-};
+  const close = (e) => {
+    if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
+    onClose && onClose();
+  };
+
+  // Shared claim handler (works from step 0 or step 1)
+  const claimWelcome = async (e) => {
+    e?.stopPropagation?.();
+    try {
+      const r = await fetch(apiUrl('/claim-welcome'), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...authHeaders(loadUser()),
+          'X-CSRF-Token': getCsrf()
+        },
+        credentials: 'include',
+        body: JSON.stringify({})
+      });
+      const data = await r.json().catch(() => ({}));
+
+      if (data?.ok && data?.wallet) {
+        // mark claimed in this browser
+        const u = loadUser();
+        const uid = userIdFor(u);
+        localStorage.setItem(welcomeKeyFor(uid), '1');
+
+        if (typeof window.refreshWalletGlobal === 'function') {
+          window.refreshWalletGlobal();
+        }
+
+        setClaimed(true);
+      } else {
+        // already claimed or not eligible -> just hide claim UI
+        setClaimed(true);
+      }
+    } catch {
+      // network hiccup: don’t trap the user, but also don’t keep showing claim forever
+      setClaimed(true);
+    }
+  };
 
   return (
     <div className="welcome-backdrop" onClick={close}>
@@ -491,62 +554,58 @@ const close = (e) => {
             <h3>Welcome!</h3>
             <p>You’ve unlocked a <b>first-time bonus</b>.</p>
             <div className="welcome-amount">+{amount} coins</div>
-            <button
-  className="welcome-btn"
-  disabled={claimed}
-  onClick={async (e) => {
-    e?.stopPropagation?.();
-    try {
-      const r = await fetch(apiUrl('/claim-welcome'), {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...authHeaders(loadUser()),
-          'X-CSRF-Token': getCsrf()
-        },
-        credentials: 'include',
-        body: JSON.stringify({})
-      });
-      const data = await r.json();
-      if (data?.ok && data?.wallet) {
-        // mark claimed in this browser too
-        const uid = userIdFor(loadUser());
-        localStorage.setItem(welcomeKeyFor(uid), '1');
-        if (typeof window.refreshWalletGlobal === 'function') window.refreshWalletGlobal();
 
-        // inline success (no native alert)
-        setClaimed(true);
-        // auto-advance to instructions after a short beat
-        setTimeout(() => setStep(1), 700);
-      } else {
-        // even if backend says “already claimed”, move on quietly
-        setStep(1);
-      }
-    } catch {
-      // on network hiccup, still move to instructions to avoid trapping user
-      setStep(1);
-    }
-  }}
->
-  {claimed ? `✅ +${amount} added` : `Claim ${amount} coins`}
-</button>
+            <button
+              className="welcome-btn"
+              disabled={claimed}
+              onClick={claimWelcome}
+            >
+              {claimed ? `✅ +${amount} added` : `Claim ${amount} coins`}
+            </button>
+
             <div className="welcome-note">Roleplay models are part of the upgrade.</div>
+            <button className="welcome-btn" style={{ marginTop: 10 }} onClick={() => setStep(1)}>
+              Next
+            </button>
           </>
         ) : (
           <>
             <h3 className="instr-title">How to talk to Shraddha</h3>
             <div className="instr-sub">Make it real. Be gentle. Enjoy the flow.</div>
 
+            {/* Inline claim (instructions are always first now) */}
+            {!claimed && (
+              <div style={{
+                marginTop: 10,
+                padding: 12,
+                borderRadius: 14,
+                background: '#fff7fb',
+                border: '1px solid #ffd6ea'
+              }}>
+                <div style={{ fontWeight: 700, marginBottom: 6 }}>
+                  Free bonus available: +{amount} coins
+                </div>
+                <button
+                  className="welcome-btn"
+                  onClick={claimWelcome}
+                  style={{ width: '100%' }}
+                >
+                  Claim {amount} coins
+                </button>
+              </div>
+            )}
+
             <ul className="instr-list">
               <li><b>Talk to her like a real girl.</b> Shraddha has emotions, intelligence, and simplicity—speak naturally.</li>
               <li><b>Start with trust.</b> Share a little about yourself first. Once she’s comfortable, the conversation will naturally shape to your vibe.</li>
               <li><b>Choose your bond.</b> She can be your friend, a safe space for confessions, or your emotional partner—whatever you need today.</li>
               <li><b>Talk it out, regain focus.</b> Let her ease your urge to chat with a loving presence so you can return to real life with better concentration.</li>
+
               {IS_ANDROID_APP ? (
-  <li><b>More modes coming soon.</b> Wife/Girlfriend/Mrs Next Door/Ex-GF will unlock after Google Play recharge is enabled.</li>
-) : (
-  <li><b>Unlock deeper modes.</b> Access Wife, Girlfriend, Mrs Next Door, or Ex-GF role-play for more personalized chats—upgrade anytime with a Daily or Weekly plan.</li>
-)}
+                <li><b>More modes coming soon.</b> Wife/Girlfriend/Mrs Next Door/Ex-GF will unlock after Google Play recharge is enabled.</li>
+              ) : (
+                <li><b>Unlock deeper modes.</b> Access Wife, Girlfriend, Mrs Next Door, or Ex-GF role-play for more personalized chats—upgrade anytime with a Daily or Weekly plan.</li>
+              )}
             </ul>
 
             <div className="instr-quick">Quick tips</div>
@@ -642,10 +701,20 @@ useEffect(() => {
   const stop = startVersionWatcher(60000);
   return stop;
 }, []);
-const [showWelcome, setShowWelcome] = useState(false);
+const [showWelcome, setShowWelcome] = useState(() => {
+  try {
+    const u = loadUser();
+    if (!u) return false;
+    return sessionStorage.getItem(WELCOME_SEEN_KEY(u)) !== '1';
+  } catch { return false; }
+});
 const [showCharPopup, setShowCharPopup] = useState(false);
-const [welcomeDefaultStep, setWelcomeDefaultStep] = useState(0);
-const [coins, setCoins] = useState(0);
+const [welcomeDefaultStep, setWelcomeDefaultStep] = useState(1);
+const [coins, setCoins] = useState(() => {
+  const u = loadUser();
+  const cached = loadCachedCoins(u);
+  return cached != null ? cached : 0;
+});
 const [prices, setPrices] = useState({ text: DEFAULT_TEXT_COST, voice: DEFAULT_VOICE_COST });
   // server-driven wallet
 const [wallet, setWallet] = useState({ coins: 0, expires_at: 0, welcome_claimed: false });
@@ -682,30 +751,21 @@ useEffect(() => {
     .catch(() => {}); // safe defaults above
 }, []);
 
-// Show welcome only once per TAB/session (and only if trialEnabled)
+// Open "How to talk" instantly (no wallet wait). Once per tab per user.
 useEffect(() => {
-  if (!user || !walletReady || welcomeDecidedRef.current) return;
+  if (!user || welcomeDecidedRef.current) return;
 
-  if (!trialEnabled) {
-    welcomeDecidedRef.current = true;
-    return;
-  }
+  try {
+    if (sessionStorage.getItem(WELCOME_SEEN_KEY(user)) === '1') {
+      welcomeDecidedRef.current = true;
+      return;
+    }
+  } catch {}
 
-  // if seen once for this user on this browser, never show again
-  if (sessionStorage.getItem(WELCOME_SEEN_KEY(user))) {
-    welcomeDecidedRef.current = true;
-    return;
-  }
-
-  const uid = userIdFor(user);
-  const localClaimed = !!localStorage.getItem(welcomeKeyFor(uid));
-  const claimed = !!wallet?.welcome_claimed || localClaimed;
-  const lowCoins = (Number(wallet?.coins || 0) < 50);
-
-  setWelcomeDefaultStep(!claimed && lowCoins ? 0 : 1);
+  setWelcomeDefaultStep(1); // always instructions first
   setShowWelcome(true);
   welcomeDecidedRef.current = true;
-}, [user, walletReady, wallet?.welcome_claimed, wallet?.coins, trialEnabled]);
+}, [user]);
 
   function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
 
@@ -933,8 +993,6 @@ useEffect(() => {
 async function refreshWallet(){
   if (!user) return;
 
-  setWalletReady(false);
-
   const reqId = ++walletReqIdRef.current; // mark this as the latest request
 
   try {
@@ -955,8 +1013,10 @@ async function refreshWallet(){
 
     if (data?.ok) {
       setWallet(data.wallet);
-      setCoins(Number(data.wallet.coins || 0));  // source of truth = server
-      setWalletReady(true);
+    const serverCoins = Number(data.wallet.coins || 0);
+    setCoins(serverCoins);              // source of truth = server
+    saveCachedCoins(user, serverCoins); // cache for instant next load
+    setWalletReady(true);
     } else {
       setWalletReady(true); // allow UI to settle even if not ok
     }
@@ -2553,7 +2613,7 @@ try {
 }
   aria-label="Coins"
 >
-  🪙 {isOwner ? '∞' : (walletReady ? coins : '…')}
+  🪙 {isOwner ? '∞' : coins}
 </button>
 
   <button
