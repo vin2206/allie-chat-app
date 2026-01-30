@@ -24,6 +24,7 @@ function detectAppModeOnce() {
 }
 // Single source of truth for this runtime
 const IS_ANDROID_APP = detectAppModeOnce();
+const IS_LOVE_WEB = !IS_ANDROID_APP && (window.location.hostname === 'love.buddyby.com');
 // --- small utility ---
 function debounce(fn, wait = 120) {
   let t;
@@ -112,6 +113,9 @@ const apiUrl = (path) => {
 };
 const authHeaders = (u) => {
   const base = {};
+
+  // ✅ LOVE web header (ONLY on love.buddyby.com)
+  if (IS_LOVE_WEB) base['X-Web-Mode'] = 'love';
 
   // ✅ Never send expired Google token (cookie session must win)
   if (u?.idToken && !isIdTokenExpired(u.idToken)) {
@@ -317,9 +321,9 @@ const loadUser = () => {
   try { return JSON.parse(localStorage.getItem(USER_KEY)); }
   catch { return null; }
 };
-const saveUser = (u) => {
+function saveUser(u) {
   try { localStorage.setItem(USER_KEY, JSON.stringify(u)); } catch {}
-};
+}
 const loadAuto = () => {
   try { return JSON.parse(localStorage.getItem(AUTORENEW_KEY)) || { daily:false, weekly:false }; }
   catch { return { daily:false, weekly:false }; }
