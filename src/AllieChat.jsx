@@ -148,7 +148,7 @@ const OWNER_EMAILS = ['vinayvedic23@gmail.com'];
 const ROLE_LABELS = {
   wife: 'Wife',
   girlfriend: 'Girlfriend',
-  bhabhi: 'Mrs Next Door',
+  bhabhi: IS_LOVE_WEB ? 'Bhabhi' : 'Mrs Next Door',
   exgf: 'Ex-GF',
   stranger: 'Stranger'
 };
@@ -2066,6 +2066,7 @@ const trimmed = formattedHistory.slice(-MAX_MSG);
     fd.append('session_id', sessionIdWithRole);
     fd.append('roleMode', roleMode);
     fd.append('roleType', roleType || 'stranger');
+    fd.append('src', IS_ANDROID_APP ? 'twa' : (IS_LOVE_WEB ? 'love' : 'web'));
     if (shouldResetRef.current) { fd.append('reset', 'true'); shouldResetRef.current = false; }
 
     const resp = await fetch(apiUrl('/chat'), { method: 'POST', headers: { ...authHeaders(user), 'X-CSRF-Token': getCsrf() }, body: fd, credentials: 'include' });
@@ -2229,7 +2230,7 @@ const fetchBody = {
   session_id: sessionIdWithRole,
   roleMode,
   roleType: roleType || 'stranger',
-  src: IS_ANDROID_APP ? 'twa' : 'web'
+  src: IS_ANDROID_APP ? 'twa' : (IS_LOVE_WEB ? 'love' : 'web')
 };
 
 if (shouldResetRef.current) { fetchBody.reset = true; shouldResetRef.current = false; }
@@ -2309,7 +2310,7 @@ bumpVoiceUsed(true, user); // (optional UI counter)
   session_id: sessionIdWithRole,
   roleMode,
   roleType: roleType || 'stranger',
-  src: IS_ANDROID_APP ? 'twa' : 'web' // ✅ optional but good (matches main call)
+  src: IS_ANDROID_APP ? 'twa' : (IS_LOVE_WEB ? 'love' : 'web') // ✅ optional but good (matches main call)
 };
     if (shouldResetRef.current) { fetchRetryBody.reset = true; shouldResetRef.current = false; }
 
@@ -2882,12 +2883,12 @@ if (!user) {
           className="role-chip"
           onClick={() => {
             openConfirm(
-              'Start as Shraddha (Mrs Next Door)?',
+              `Start as Shraddha (${IS_LOVE_WEB ? 'Bhabhi' : 'Mrs Next Door'})?`,
               'A fresh chat will begin and current messages will be cleared.',
               () => { closeConfirm(); applyRoleChange('roleplay','bhabhi'); }
             );
           }}
-        >Mrs Next Door</button>
+        >{IS_LOVE_WEB ? 'Bhabhi' : 'Mrs Next Door'}</button>
 
         <button
           className="role-chip"
