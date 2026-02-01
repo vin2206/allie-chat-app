@@ -3115,17 +3115,25 @@ if (!user) {
           <input
   ref={inputRef}
   type="text"
+  name="chat_message"
+  id="chat_message"
+  autoComplete="off"
+  autoCorrect="off"
+  autoCapitalize="none"
+  spellCheck={false}
+  inputMode="text"
+  enterKeyHint="send"
   placeholder="Type a message..."
   value={inputValue}
   onChange={(e) => setInputValue(e.target.value)}
   onKeyDown={(e) => e.key === 'Enter' && handleSend()}
   onFocus={() => {
-  lastActionRef.current = 'focused_input';
-  setShowEmoji(false);
-  setShowCharPopup(false);           // hide insight as soon as they try to type
-  const bumps = [0, 120, 260, 520];
-  bumps.forEach(ms => setTimeout(() => scrollToBottomNow(true), ms));
-}}
+    lastActionRef.current = 'focused_input';
+    setShowEmoji(false);
+    setShowCharPopup(false);
+    const bumps = [0, 120, 260, 520];
+    bumps.forEach(ms => setTimeout(() => scrollToBottomNow(true), ms));
+  }}
 />
 
           <button
