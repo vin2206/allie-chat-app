@@ -1096,6 +1096,73 @@ async function refreshWallet(){
 }
 
 useEffect(() => { refreshWallet(); }, [user]);
+// Next request should clear server context after a role switch
+const shouldResetRef = useRef(false);
+// =========================
+// HARD RESET on account switch / sign-out
+// =========================
+const resetChatUI = React.useCallback((nextUser) => {
+  // Always start fresh as Stranger
+  setRoleMode('stranger');
+  setRoleType(null);
+
+  // Fresh opener (Stranger)
+  setMessages([{ text: getOpener('stranger', null), sender: 'allie' }]);
+  setInputValue('');
+
+  // reset UX refs
+  readingUpRef.current = false;
+  stickToBottomRef.current = true;
+
+  // force server to reset context on next send
+  shouldResetRef.current = true;
+
+  // close modals/menus that can leak across accounts
+  setShowRoleMenu(false);
+  setShowEmoji(false);
+  setShowCoins(false);
+  setShowCharPopup(false);
+
+  // welcome flow should be re-decided for the new user
+  welcomeDecidedRef.current = false;
+  setShowWelcome(false);
+  setShowWelcomeClaim(false);
+  setPendingClaimCheck(false);
+
+  // coins UI should not flash old user’s coins
+  const cached = nextUser ? loadCachedCoins(nextUser) : null;
+  setCoins(cached != null ? cached : 0);
+  setWalletReady(false);
+  setWallet({ coins: 0, expires_at: 0, welcome_claimed: false });
+
+  // IMPORTANT: reset session id ref so per-user key can re-init cleanly
+  try { sessionIdRef.current = null; } catch {}
+
+  // scroll bottom now
+  setTimeout(() => scrollToBottomNow(true), 0);
+}, []);
+// If account changes while app stays open, hard-reset to Stranger
+const userKey = user ? userIdFor(user) : '';
+const prevUserKeyRef = useRef(userKey);
+
+useEffect(() => {
+  // when user becomes null (signed out), just record it
+  if (!user) {
+    prevUserKeyRef.current = '';
+    return;
+  }
+
+  const prev = prevUserKeyRef.current;
+  if (prev && prev !== userKey) {
+    // account switched while UI stayed open → reset everything visible
+    resetChatUI(user);
+
+    // also: clear saved role selection for this user so Stranger always opens
+    try { sessionStorage.removeItem(ROLE_KEY(user)); } catch {}
+  }
+
+  prevUserKeyRef.current = userKey;
+}, [userKey, user, resetChatUI]);
  useEffect(() => {
   let alive = true;
 
@@ -1601,9 +1668,14 @@ async function signOutEverywhere() {
     });
   } catch {}
 
-  // 4) reset UI
-  setShowSigninBanner(false);
-  setUser(null);
+  // 4) reset UI immediately (so no old chat flashes)
+setShowSigninBanner(false);
+resetChatUI(null);
+
+// kill legacy shared session id too (old versions)
+try { localStorage.removeItem('chat_session_id'); } catch {}
+
+setUser(null);
 }
 // ✅ Always open Data & Privacy cleanly (no leftover ConfirmDialog on top)
 const openPrivacyModal = () => {
@@ -1769,29 +1841,36 @@ useEffect(() => {
     clearInterval(limitTimerRef.current);
     limitTimerRef.current = null;
   }
-}, [confirmState.open]);
-  // Next request should clear server context after a role switch
-const shouldResetRef = useRef(false);
-  const roleMenuRef = useRef(null);
+}, [confirmState.open]); 
+const roleMenuRef = useRef(null);
 
 // Display name for header
 const displayName = 'Shraddha';
 const capRole = roleType ? (ROLE_LABELS[roleType] || roleType) : '';
   // --- HOLD-TO-RECORD state/refs ---
 const [isRecording, setIsRecording] = useState(false);
-  // Persistent session id per device/browser (used for voice quota)
+  // Persistent session id per USER (prevents context bleed across accounts)
 const sessionIdRef = useRef(null);
+const sessionKeyRef = useRef('');
+
+// key changes when user changes
+const SESSION_KEY = user ? `chat_session_id_${userIdFor(user)}` : 'chat_session_id_anon';
+if (sessionKeyRef.current !== SESSION_KEY) {
+  sessionKeyRef.current = SESSION_KEY;
+  sessionIdRef.current = null; // force re-init for the new user
+}
+
 if (!sessionIdRef.current) {
-  const saved = localStorage.getItem('chat_session_id');
+  const saved = localStorage.getItem(SESSION_KEY);
   if (saved) {
     sessionIdRef.current = saved;
   } else {
-  const newId = (window.crypto && typeof window.crypto.randomUUID === 'function')
-    ? window.crypto.randomUUID()
-    : String(Date.now());
-  localStorage.setItem('chat_session_id', newId);
-  sessionIdRef.current = newId;
-}
+    const newId = (window.crypto && typeof window.crypto.randomUUID === 'function')
+      ? window.crypto.randomUUID()
+      : String(Date.now());
+    localStorage.setItem(SESSION_KEY, newId);
+    sessionIdRef.current = newId;
+  }
 }
   // Tie the session to the chosen role to avoid context bleed
 const roleSuffix = roleMode === 'roleplay' && roleType ? `:${roleType}` : ':stranger';
@@ -2636,30 +2715,34 @@ if (!user) {
   return (
     <AuthGate
       onSignedIn={async (u) => {
-        // 1) Save locally + update state
-        saveUser(u);
-        setUser(u);
+  // 1) Save locally + update state
+  saveUser(u);
+  setUser(u);
 
-        // 2) PRIME COOKIES on the server:
-        try {
-          if (u?.guest) {
-            await fetch(apiUrl('/auth/guest/init'), {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json', ...authHeaders(u) },
-              credentials: 'include',
-              body: JSON.stringify({})
-            });
-          } else {
-            await fetch(apiUrl('/wallet'), {
-              method: 'GET',
-              headers: authHeaders(u),
-              credentials: 'include'
-            });
-          }
-        } catch (e) {
-          console.warn('Cookie priming failed (non-blocking):', e?.message || e);
-        }
-      }}
+  // 1.5) HARD RESET UI so every sign-in starts fresh as Stranger
+  resetChatUI(u);
+  try { sessionStorage.removeItem(ROLE_KEY(u)); } catch {}
+
+  // 2) PRIME COOKIES on the server:
+  try {
+    if (u?.guest) {
+      await fetch(apiUrl('/auth/guest/init'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...authHeaders(u) },
+        credentials: 'include',
+        body: JSON.stringify({})
+      });
+    } else {
+      await fetch(apiUrl('/wallet'), {
+        method: 'GET',
+        headers: authHeaders(u),
+        credentials: 'include'
+      });
+    }
+  } catch (e) {
+    console.warn('Cookie priming failed (non-blocking):', e?.message || e);
+  }
+}}
     />
   );
 }
