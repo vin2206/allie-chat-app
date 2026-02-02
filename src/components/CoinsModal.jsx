@@ -102,8 +102,8 @@ export default function CoinsModal({
 
         {/* Rates */}
         <div className="rate-chips" style={{ marginTop: 8 }}>
-          <div className="rate-chip">Text = 10 coins</div>
-          <div className="rate-chip">Voice = 18 coins</div>
+          <div className="rate-chip">Text = 5 coins</div>
+          <div className="rate-chip">Voice = 8 coins</div>
         </div>
 
         {/* Packs */}
