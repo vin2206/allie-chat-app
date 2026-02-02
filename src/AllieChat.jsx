@@ -546,11 +546,20 @@ function WelcomeClaimModal({ open, onClose, amount = 250 }) {
 const doClaim = async () => {
   if (claimed) return;
 
-  setClaimed(true);     // ✅ lock immediately (no double / no stuck UI)
+  setClaimed(true);     // lock UI (no double call)
   setSparkle(true);
 
   const ctrl = new AbortController();
-  const t = setTimeout(() => ctrl.abort(), 3000); // ✅ don't hang forever
+  const t = setTimeout(() => ctrl.abort(), 3000);
+
+  // helper: only set local flag when we are sure claim actually happened
+  const markLocalClaimed = () => {
+    try {
+      const u = loadUser();
+      const uid = userIdFor(u);
+      localStorage.setItem(welcomeKeyFor(uid), '1');
+    } catch {}
+  };
 
   try {
     const r = await fetch(apiUrl('/claim-welcome'), {
@@ -565,20 +574,50 @@ const doClaim = async () => {
       signal: ctrl.signal
     });
 
-    await r.json().catch(() => ({}));
+    const data = await r.json().catch(() => ({}));
 
-    // mark local claimed no matter what (prevents repeat popup on this device)
+    // ✅ 1) If server confirms claim in response → mark local
+    const confirmed =
+      r.ok && (
+        data?.ok === true ||
+        data?.wallet?.welcome_claimed === true ||
+        (typeof data?.wallet?.coins === 'number' && data.wallet.coins > 0)
+      );
+
+    if (confirmed) {
+      markLocalClaimed();
+      if (typeof window.refreshWalletGlobal === 'function') {
+        window.refreshWalletGlobal(); // update header coins
+      }
+      return;
+    }
+
+    // ✅ 2) If response didn't confirm, do ONE quick wallet check before marking local
     try {
-      const u = loadUser();
-      const uid = userIdFor(u);
-      localStorage.setItem(welcomeKeyFor(uid), '1');
-    } catch {}
+      const w = await fetch(apiUrl('/wallet'), {
+        method: 'GET',
+        headers: authHeaders(loadUser()),
+        credentials: 'include'
+      });
+      const wd = await w.json().catch(() => ({}));
+      const wConfirmed =
+        w.ok && wd?.ok && (
+          wd?.wallet?.welcome_claimed === true ||
+          (typeof wd?.wallet?.coins === 'number' && wd.wallet.coins > 0)
+        );
+
+      if (wConfirmed) {
+        markLocalClaimed();
+      }
+    } catch {
+      // wallet check failed → DO NOT set local claimed
+    }
 
     if (typeof window.refreshWalletGlobal === 'function') {
-      window.refreshWalletGlobal(); // ✅ update header coins ASAP
+      window.refreshWalletGlobal();
     }
   } catch (e) {
-    // ignore timeout/offline — never trap user
+    // timeout/offline → DO NOT set local claimed (this is the whole point)
   } finally {
     clearTimeout(t);
     setTimeout(() => setSparkle(false), 900);
