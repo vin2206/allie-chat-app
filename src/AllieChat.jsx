@@ -275,6 +275,14 @@ const AUTORENEW_KEY = 'autorenew_v1'; // {daily:bool, weekly:bool}
 // --- NEW: lightweight auth (local only) ---
 const USER_KEY = 'user_v1';
 const welcomeKeyFor = (id) => `welcome_${id}_v1`; // id = sub (preferred) or email
+// ✅ NEW: one-time welcome per device (prevents guest + google double claim)
+const WELCOME_DEVICE_KEY = 'welcome_device_claimed_v1';
+function hasDeviceWelcomeClaimed() {
+  try { return localStorage.getItem(WELCOME_DEVICE_KEY) === '1'; } catch { return false; }
+}
+function markDeviceWelcomeClaimed() {
+  try { localStorage.setItem(WELCOME_DEVICE_KEY, '1'); } catch {}
+}
 // ✅ Local fallback: if this device already claimed once, never allow "first send bypass"
 function hasLocalWelcomeClaimed(u) {
   try {
@@ -585,12 +593,13 @@ const doClaim = async () => {
       );
 
     if (confirmed) {
-      markLocalClaimed();
-      if (typeof window.refreshWalletGlobal === 'function') {
-        window.refreshWalletGlobal(); // update header coins
-      }
-      return;
-    }
+  markLocalClaimed();
+  markDeviceWelcomeClaimed(); // ✅ NEW
+  if (typeof window.refreshWalletGlobal === 'function') {
+    window.refreshWalletGlobal();
+  }
+  return;
+}
 
     // ✅ 2) If response didn't confirm, do ONE quick wallet check before marking local
     try {
@@ -607,8 +616,9 @@ const doClaim = async () => {
         );
 
       if (wConfirmed) {
-        markLocalClaimed();
-      }
+  markLocalClaimed();
+  markDeviceWelcomeClaimed(); // ✅ NEW
+}
     } catch {
       // wallet check failed → DO NOT set local claimed
     }
@@ -816,6 +826,8 @@ const [wallet, setWallet] = useState({ coins: 0, expires_at: 0, welcome_claimed:
 const welcomeDecidedRef = useRef(false);
   // --- NEW: wallet load gate + welcome "seen once" helpers ---
 const [walletReady, setWalletReady] = useState(false);
+// ✅ NEW: blocks /wallet refresh until auth cookies are primed (fixes guest race)
+const [authBooting, setAuthBooting] = useState(false);
 // Layout chooser: Android → 'stable' (scrollable, no black band); others → 'fixed'
 const IS_ANDROID = /Android/i.test(navigator.userAgent);
 const [layoutClass] = useState(IS_ANDROID ? 'stable' : 'fixed');
@@ -1096,45 +1108,100 @@ useEffect(() => {
   };
 }, [showEmoji]);
 
-async function refreshWallet(){
+async function refreshWallet() {
   if (!user) return;
 
-  const reqId = ++walletReqIdRef.current; // mark this as the latest request
+  // ✅ FIX: do not hit /wallet while we are still priming cookies (guest/init)
+  if (authBooting) return;
+
+  const reqId = ++walletReqIdRef.current; // last-write-wins
 
   try {
-    const r = await fetch(apiUrl('/wallet'), { headers: authHeaders(user), credentials: 'include' });
+    const r = await fetch(apiUrl('/wallet'), {
+      headers: authHeaders(user),
+      credentials: 'include'
+    });
 
-    // If our 14-day cookie is missing/invalid, show the quiet banner and stop here.
-    if (r.status === 401 || r.status === 403) {
-      if (reqId !== walletReqIdRef.current) return; // stale response
-      setShowSigninBanner(true);
-      setWalletReady(false);
-      return;
+    // ✅ If session is missing:
+// - Guest: silently re-init cookies and retry once (NO "signed out" banner)
+// - Google user: show sign-in banner
+if (r.status === 401 || r.status === 403) {
+  if (reqId !== walletReqIdRef.current) return;
+
+  // ✅ Guest recovery path
+  if (user?.guest) {
+    try {
+      // Prime/restore guest cookie session
+      await fetch(apiUrl('/auth/guest/init'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...authHeaders(user) },
+        credentials: 'include',
+        body: JSON.stringify({})
+      });
+
+      // Retry wallet once
+      const r2 = await fetch(apiUrl('/wallet'), {
+        headers: authHeaders(user),
+        credentials: 'include'
+      });
+
+      if (r2.ok) {
+        const data2 = await r2.json().catch(() => ({}));
+        if (reqId !== walletReqIdRef.current) return;
+
+        if (data2?.ok) {
+          setWallet(data2.wallet);
+          const serverCoins = Number(data2.wallet.coins || 0);
+          setCoins(serverCoins);
+          saveCachedCoins(user, serverCoins);
+        }
+
+        setWalletReady(true);
+        setShowSigninBanner(false);
+        return;
+      }
+    } catch (e) {
+      // swallow: we'll just mark walletReady so UI works, but don't show signed-out for Guest
     }
 
-    const data = await r.json();
+    setWalletReady(true);
+    setShowSigninBanner(false);
+    return;
+  }
 
-    // Ignore stale responses (older than the most recent call)
+  // ✅ Non-guest: real sign-in session expired
+  if (!user?.guest) setShowSigninBanner(true);
+  setWalletReady(false);
+  return;
+}
+
+    const data = await r.json().catch(() => ({}));
+
     if (reqId !== walletReqIdRef.current) return;
 
     if (data?.ok) {
       setWallet(data.wallet);
-    const serverCoins = Number(data.wallet.coins || 0);
-    setCoins(serverCoins);              // source of truth = server
-    saveCachedCoins(user, serverCoins); // cache for instant next load
-    setWalletReady(true);
+
+      const serverCoins = Number(data.wallet.coins || 0);
+      setCoins(serverCoins);
+      saveCachedCoins(user, serverCoins);
+
+      setWalletReady(true);
     } else {
-      setWalletReady(true); // allow UI to settle even if not ok
+      setWalletReady(true);
     }
   } catch (e) {
     console.error('refreshWallet failed:', e);
-    // Only touch readiness if this is still the latest request
     if (reqId !== walletReqIdRef.current) return;
     setWalletReady(true);
   }
 }
 
-useEffect(() => { refreshWallet(); }, [user]);
+useEffect(() => {
+  if (!user) return;
+  if (authBooting) return; // ✅ don’t fetch wallet until boot done
+  refreshWallet();
+}, [user, authBooting]);
 // Next request should clear server context after a role switch
 const shouldResetRef = useRef(false);
 // =========================
@@ -1256,13 +1323,14 @@ useEffect(() => {
 
   const uid = userIdFor(user);
   const localClaimed = localStorage.getItem(welcomeKeyFor(uid)) === '1';
-  const serverClaimed = wallet?.welcome_claimed === true;
+const deviceClaimed = hasDeviceWelcomeClaimed();      // ✅ NEW
+const serverClaimed = wallet?.welcome_claimed === true;
 
-  if (localClaimed || serverClaimed) {
-    sessionStorage.setItem(WELCOME_CLAIM_SEEN_KEY(user), '1');
-    setPendingClaimCheck(false);
-    return;
-  }
+if (localClaimed || deviceClaimed || serverClaimed) {
+  sessionStorage.setItem(WELCOME_CLAIM_SEEN_KEY(user), '1');
+  setPendingClaimCheck(false);
+  return;
+}
 
   setShowWelcomeClaim(true);
   sessionStorage.setItem(WELCOME_CLAIM_SEEN_KEY(user), '1');
@@ -1384,6 +1452,28 @@ const openCoins = () => {
   setShowCoins(true);
 };
 const closeCoins = () => setShowCoins(false);
+// ✅ When guest runs out, show Google vs Recharge choice (instead of straight to plans)
+const openGuestLockedGate = () => {
+  openConfirmWithLabels(
+    'Continue chatting',
+    'Your free coins are over. Choose how you want to continue:',
+    'Continue with Google',
+    'Recharge as Guest',
+    async () => {
+      closeConfirm();
+      await signOutEverywhere(); // goes to AuthGate for Google
+    }
+  );
+
+  // ✅ Custom cancel: Recharge as Guest
+  setConfirmState(s => ({
+    ...s,
+    onCancel: () => {
+      closeConfirm();
+      openCoins();
+    }
+  }));
+};
   async function buyPack(pack){
   if (!user) return;
 
@@ -1634,6 +1724,7 @@ const [confirmState, setConfirmState] = useState({
   title: '',
   message: '',
   onConfirm: null,
+  onCancel: null, // ✅ NEW
   okOnly: false,
   okText: 'OK',
   cancelText: 'Cancel'
@@ -1641,7 +1732,7 @@ const [confirmState, setConfirmState] = useState({
 
 // ✅ define FIRST (so callbacks can safely reference it)
 const closeConfirm = React.useCallback(() => {
-  setConfirmState(s => ({ ...s, open: false, onConfirm: null, okOnly: false }));
+  setConfirmState(s => ({ ...s, open: false, onConfirm: null, onCancel: null, okOnly: false }));
 }, []);
 
 // Confirm with OK/Cancel
@@ -1772,7 +1863,7 @@ async function sendDeleteRequest() {
 
     // If session missing/expired -> show your existing sign-in banner
     if (r.status === 401 || r.status === 403) {
-      setShowSigninBanner(true);
+      if (!user?.guest) setShowSigninBanner(true);
       return;
     }
 
@@ -2190,7 +2281,7 @@ const trimmed = formattedHistory.slice(-MAX_MSG);
     const resp = await fetch(apiUrl('/chat'), { method: 'POST', headers: { ...authHeaders(user), 'X-CSRF-Token': getCsrf() }, body: fd, credentials: 'include' });
     if (resp.status === 401) {
   setIsTyping(false);
-  setShowSigninBanner(true);
+  if (!user?.guest) setShowSigninBanner(true);
   setMessages(prev => [...prev, {
     text: 'Please sign in again to continue.',
     sender: 'allie',
@@ -2209,7 +2300,8 @@ const trimmed = formattedHistory.slice(-MAX_MSG);
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       }]);
       setIsTyping(false);
-      openCoins();
+      if (user?.guest) openGuestLockedGate();
+      else openCoins();
       return;
     }
 
@@ -2364,7 +2456,7 @@ if (shouldResetRef.current) { fetchBody.reset = true; shouldResetRef.current = f
 });
 if (response.status === 401) {
   setIsTyping(false);
-  setShowSigninBanner(true);
+  if (!user?.guest) setShowSigninBanner(true);
   setMessages(prev => [...prev, {
     text: 'Please sign in again to continue.',
     sender: 'allie',
@@ -2392,10 +2484,19 @@ bumpVoiceUsed(true, user); // (optional UI counter)
 }
 
         if (data.locked) {
-          setMessages(prev => [...prev, { text: data.reply, sender: 'allie', time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }]);
-          setTimeout(() => openCoins(), 400);
-          return;
-        }
+  setMessages(prev => [...prev, {
+    text: data.reply,
+    sender: 'allie',
+    time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+  }]);
+
+  setTimeout(() => {
+    if (user?.guest) openGuestLockedGate();
+    else openCoins();
+  }, 400);
+
+  return;
+}
 
         const reply = data.reply || "Hmm… Shraddha didn’t respond.";
         setMessages(prev => [...prev, { text: reply, sender: 'allie', time: currentTime }]);
@@ -2442,7 +2543,7 @@ bumpVoiceUsed(true, user); // (optional UI counter)
 
     if (retryResp.status === 401) {
   setIsTyping(false);
-  setShowSigninBanner(true);
+  if (!user?.guest) setShowSigninBanner(true);
   setMessages(prev => [...prev, {
     text: 'Please sign in again to continue.',
     sender: 'allie',
@@ -2455,7 +2556,10 @@ bumpVoiceUsed(true, user); // (optional UI counter)
     const t = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     if (data.locked) {
       setMessages(prev => [...prev, { text: data.reply, sender: 'allie', time: t }]);
-      setTimeout(() => openCoins(), 400);
+      setTimeout(() => {
+  if (user?.guest) openGuestLockedGate();
+  else openCoins();
+}, 400);
     } else if (data.audioUrl) {
       const fullUrl = data.audioUrl.startsWith('http') ? data.audioUrl : `${BACKEND_BASE}${data.audioUrl}`;
       setMessages(prev => [...prev, { audioUrl: fullUrl, sender: 'allie', time: t }]);
@@ -2753,36 +2857,45 @@ if (showIntro) {
 if (!user) {
   return (
     <AuthGate
-      onSignedIn={async (u) => {
-  // 1) Save locally + update state
-  saveUser(u);
-  setUser(u);
+  onSignedIn={async (u) => {
+    setAuthBooting(true);
+    setShowSigninBanner(false);
+    setWalletReady(false);
 
-  // 1.5) HARD RESET UI so every sign-in starts fresh as Stranger
-  resetChatUI(u);
-  try { sessionStorage.removeItem(ROLE_KEY(u)); } catch {}
-
-  // 2) PRIME COOKIES on the server:
-  try {
-    if (u?.guest) {
-      await fetch(apiUrl('/auth/guest/init'), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...authHeaders(u) },
-        credentials: 'include',
-        body: JSON.stringify({})
-      });
-    } else {
-      await fetch(apiUrl('/wallet'), {
-        method: 'GET',
-        headers: authHeaders(u),
-        credentials: 'include'
-      });
+    // ✅ 1) PRIME COOKIES FIRST (critical for Guest)
+    try {
+      if (u?.guest) {
+        await fetch(apiUrl('/auth/guest/init'), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', ...authHeaders(u) },
+          credentials: 'include',
+          body: JSON.stringify({})
+        });
+      } else {
+        // for Google: warm session + wallet fast
+        await fetch(apiUrl('/wallet'), {
+          method: 'GET',
+          headers: authHeaders(u),
+          credentials: 'include'
+        });
+      }
+    } catch (e) {
+      console.warn('Cookie priming failed (non-blocking):', e?.message || e);
     }
-  } catch (e) {
-    console.warn('Cookie priming failed (non-blocking):', e?.message || e);
-  }
-}}
-    />
+
+    // ✅ 2) NOW save + set user (wallet refresh won’t run until authBooting=false)
+    saveUser(u);
+    setUser(u);
+
+    // ✅ 3) Reset visible UI safely
+    resetChatUI(u);
+    try { sessionStorage.removeItem(ROLE_KEY(u)); } catch {}
+
+    // ✅ 4) Boot done → wallet fetch is now safe
+    setAuthBooting(false);
+    refreshWallet();
+  }}
+/>
   );
 }
 
@@ -2885,10 +2998,11 @@ if (!user) {
         <button
   className="btn-primary"
   onClick={async () => {
-    await signOutEverywhere();
+    setShowSigninBanner(false);
+    await signOutEverywhere(); // sends them to AuthGate (Google)
   }}
 >
-  Sign in
+  Sign out &amp; Sign in
 </button>
         <button
           className="signin-close"
@@ -3129,7 +3243,7 @@ if (!user) {
   open={confirmState.open}
   title={confirmState.title}
   message={confirmState.message}
-  onCancel={closeConfirm}
+  onCancel={confirmState.onCancel || closeConfirm}
   onConfirm={confirmState.onConfirm || closeConfirm}
   okOnly={confirmState.okOnly}
   okText={confirmState.okText}
