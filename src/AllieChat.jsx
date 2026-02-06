@@ -354,6 +354,10 @@ function ConfirmDialog({ open, title, message, onCancel, onConfirm, okOnly=false
 }
 /* ---------- Sign-in: Google only (centered) ---------- */
 function AuthGate({ onSignedIn }) {
+  const DISABLE_GUEST_KEY = 'disable_guest_v1';
+  const disableGuest = () => { try { localStorage.setItem(DISABLE_GUEST_KEY, '1'); } catch {} };
+  const isGuestDisabledUI = () => { try { return localStorage.getItem(DISABLE_GUEST_KEY) === '1'; } catch { return false; } };
+
   useEffect(() => {
     let cancelled = false;
     // Ensure the GIS script exists (if not already added in index.html)
@@ -399,6 +403,9 @@ if (!document.querySelector('script[src*="gsi/client"]')) {
       const GKEY = 'guest_id_v1';
       let gid = '';
       try { gid = localStorage.getItem(GKEY) || ''; } catch {}
+
+            // ✅ once Google is used on this device, never show Guest again
+      disableGuest();
 
       onSignedIn({
         name: p.name || '',
@@ -456,34 +463,67 @@ if (!document.querySelector('script[src*="gsi/client"]')) {
 {/* Actions */}
 <div className="auth-actions">
   {/* Guest (working) */}
+  {!isGuestDisabledUI() && (
   <button
-  className="btn"
-  onClick={() => {
-    const GKEY = 'guest_id_v1';
-    let gid = '';
-    try { gid = localStorage.getItem(GKEY) || ''; } catch {}
+    className="btn"
+    onClick={async () => {
+      const GKEY = 'guest_id_v1';
+      let gid = '';
+      try { gid = localStorage.getItem(GKEY) || ''; } catch {}
 
-    if (!gid) {
-      gid =
-        (window.crypto && typeof window.crypto.randomUUID === 'function')
-          ? window.crypto.randomUUID()
-          : String(Date.now());
-      try { localStorage.setItem(GKEY, gid); } catch {}
-    }
+      if (!gid) {
+        gid =
+          (window.crypto && typeof window.crypto.randomUUID === 'function')
+            ? window.crypto.randomUUID()
+            : String(Date.now());
+        try { localStorage.setItem(GKEY, gid); } catch {}
+      }
 
-    onSignedIn({
-      guestId: gid,
-      guest: true,
-      name: 'Guest',
-      email: '',
-      sub: '',
-      picture: '',
-      idToken: ''
-    });
-  }}
->
-  Continue as Guest
-</button>
+      // ✅ Ask backend if guest is allowed on this device
+      try {
+        const tempUser = { guest: true, guestId: gid, idToken: '' };
+        const r = await fetch(apiUrl('/auth/guest/init'), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', ...authHeaders(tempUser) },
+          credentials: 'include',
+          body: JSON.stringify({})
+        });
+
+        // Backend says: guest trial already used => force Google-only UI
+        if (r.status === 403) {
+          const d = await r.json().catch(() => ({}));
+          if (d?.error === 'guest_disabled') {
+            disableGuest();
+            alert('Guest trial already used on this device. Please continue with Google.');
+            return;
+          }
+        }
+
+        if (!r.ok) {
+          // soft fail: don’t break sign-in screen
+          alert('Could not start guest session. Please continue with Google.');
+          return;
+        }
+      } catch {
+        alert('Could not start guest session. Please continue with Google.');
+        return;
+      }
+
+      // Allowed => proceed as guest
+      onSignedIn({
+        guestId: gid,
+        guest: true,
+        name: 'Guest',
+        email: '',
+        sub: '',
+        picture: '',
+        idToken: ''
+      });
+    }}
+  >
+    Continue as Guest
+  </button>
+)}
 
   {/* Disabled Apple */}
   <button className="btn btn--disabled" disabled>
@@ -842,7 +882,7 @@ const [allowAppRazorpay, setAllowAppRazorpay] = useState(false);
 
 useEffect(() => {
   const url = apiUrl('/config');
-  fetch(url, { credentials: 'include' })
+    fetch(url, { headers: authHeaders(loadUser()), credentials: 'include' })
     .then(r => r.json())
     .then(d => {
       setRoleplayNeedsPremium(!!d?.roleplayNeedsPremium);
@@ -1132,12 +1172,23 @@ if (r.status === 401 || r.status === 403) {
   if (user?.guest) {
     try {
       // Prime/restore guest cookie session
-      await fetch(apiUrl('/auth/guest/init'), {
+            const gi = await fetch(apiUrl('/auth/guest/init'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...authHeaders(user) },
         credentials: 'include',
         body: JSON.stringify({})
       });
+
+      // ✅ If backend says guest is disabled now, force Google-only sign-in screen
+      if (gi.status === 403) {
+        const gd = await gi.json().catch(() => ({}));
+        if (gd?.error === 'guest_disabled') {
+          try { localStorage.setItem('disable_guest_v1', '1'); } catch {}
+          alert('Guest trial already used on this device. Please continue with Google.');
+          setUser(null);
+          return;
+        }
+      }
 
       // Retry wallet once
       const r2 = await fetch(apiUrl('/wallet'), {
