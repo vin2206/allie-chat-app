@@ -3351,41 +3351,48 @@ if (!user) {
       </p>
 
             <div style={{ marginTop: 10, display: 'flex', flexDirection: 'column', gap: 10 }}>
-        <button
-          className="btn-secondary"
-          onClick={() => {
-            setShowPrivacy(false);
-            setShowFeedback(true);
-          }}
-        >
-          Feedback / Report Safety
-        </button>
+  <button
+    className="btn-secondary"
+    onClick={() => {
+      setShowPrivacy(false);
+      setShowFeedback(true);
+    }}
+  >
+    Feedback / Report Safety
+  </button>
 
-        <button
-          className="btn-secondary"
-          disabled={deleteBusy}
-          onClick={() => {
-            // ✅ Close Privacy modal first so confirm is not hidden behind it
-            setShowPrivacy(false);
+  <button
+    className="btn-secondary"
+    onClick={() => {
+      setShowPrivacy(false);
+      window.location.assign('https://buddyby.com');
+    }}
+  >
+    Policies &amp; Legal
+  </button>
 
-            // ✅ Open confirm on next tick (ensures overlay stacking is clean)
-            setTimeout(() => {
-              openConfirmWithLabels(
-                'Delete account permanently',
-                'Are you sure you want to delete your account along with all data?',
-                deleteBusy ? 'Sending…' : 'Yes, delete',
-                'Cancel',
-                async () => {
-                  closeConfirm();
-                  await sendDeleteRequest();
-                }
-              );
-            }, 0);
-          }}
-        >
-          {deleteBusy ? 'Sending…' : 'Delete account permanently'}
-        </button>
-      </div>
+  <button
+    className="btn-secondary"
+    disabled={deleteBusy}
+    onClick={() => {
+      setShowPrivacy(false);
+      setTimeout(() => {
+        openConfirmWithLabels(
+          'Delete account permanently',
+          'Are you sure you want to delete your account along with all data?',
+          deleteBusy ? 'Sending…' : 'Yes, delete',
+          'Cancel',
+          async () => {
+            closeConfirm();
+            await sendDeleteRequest();
+          }
+        );
+      }, 0);
+    }}
+  >
+    {deleteBusy ? 'Sending…' : 'Delete account permanently'}
+  </button>
+</div>
 
       <div className="confirm-buttons" style={{ marginTop: 12 }}>
         <button className="btn-secondary" onClick={() => setShowPrivacy(false)}>
