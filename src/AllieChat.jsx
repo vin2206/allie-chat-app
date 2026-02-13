@@ -1495,8 +1495,28 @@ credentials: 'include'
 useEffect(() => { maybeFinalizePayment(); }, [user]);
 
 const [showCoins, setShowCoins] = useState(false);
+// ✅ CoinsModal remount key (kills stuck spinner state)
+const [coinsModalKey, setCoinsModalKey] = useState(0);
   // Razorpay UI/flow helpers
 const [isPaying, setIsPaying] = useState(false);  // drives "Connecting…" and disables buttons
+// ✅ Fix: Back button / BFCache restore can keep isPaying=true, locking packs.
+// Reset it whenever page becomes visible again.
+useEffect(() => {
+  const resetPaying = () => setIsPaying(false);
+
+  const onPageShow = () => resetPaying();
+  const onVisible = () => {
+    if (document.visibilityState === 'visible') resetPaying();
+  };
+
+  window.addEventListener('pageshow', onPageShow);
+  document.addEventListener('visibilitychange', onVisible);
+
+  return () => {
+    window.removeEventListener('pageshow', onPageShow);
+    document.removeEventListener('visibilitychange', onVisible);
+  };
+}, []);
 const [autoRenew] = useState(loadAuto()); // setter not needed
 useEffect(() => saveAuto(autoRenew), [autoRenew]);
   // Auto-unlock Owner mode if signed-in email matches
@@ -1525,6 +1545,12 @@ const openCoins = () => {
     );
     return;
   }
+
+    // ✅ Always unlock any stuck "paying" state before opening packs
+  setIsPaying(false);
+
+  // ✅ Force CoinsModal fresh mount so internal spinner never survives BFCache/back
+  setCoinsModalKey(k => k + 1);
 
   setShowCoins(true);
 };
@@ -1597,12 +1623,51 @@ const openGuestLockedGate = () => {
       return;
     }
 
-    if (data?.ok && data?.short_url) {
-      window.location.href = data.short_url; // Razorpay OR Cashfree
+        // ✅ Cashfree redirect flow
+    if (data?.ok && data.gateway === 'cashfree' && data.short_url) {
+      window.location.href = data.short_url;
       return;
     }
 
-    openNotice('Could not start payment', data?.error || 'unknown_error');
+    // ✅ Razorpay checkout modal flow (Orders API)
+    if (data?.ok && data.gateway === 'razorpay' && data.mode === 'checkout' && data.order_id) {
+      await prewarmRazorpay().catch(() => {});
+
+      if (!window.Razorpay) {
+        setIsPaying(false);
+        openNotice('Razorpay not loaded', 'Please try again in a moment.');
+        return;
+      }
+
+      const options = {
+        key: data.key_id,
+        amount: data.amount,
+        currency: data.currency,
+        name: 'BuddyBy',
+        description: `${pack.label}`,
+        order_id: data.order_id,
+
+        handler: function () {
+          // webhook will credit; we just refresh wallet
+          setIsPaying(false);
+          setTimeout(() => refreshWallet(), 800);
+        },
+
+        modal: {
+          ondismiss: function () {
+            // user closed Razorpay modal
+            setIsPaying(false);
+          }
+        }
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.open();
+      return;
+    }
+
+    // Unknown shape
+    openNotice('Could not start payment', data?.error || 'unknown_gateway_response');
     setIsPaying(false);
   } catch (e) {
     setIsPaying(false);
@@ -3220,6 +3285,7 @@ if (!user) {
 
 {!IS_ANDROID_APP && (
   <CoinsModal
+    key={coinsModalKey}
     open={showCoins}
     onClose={closeCoins}
     prefill={{ name: user?.name, email: user?.email, contact: user?.phone }}
