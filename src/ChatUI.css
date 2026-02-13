@@ -1443,12 +1443,21 @@ img[src*="intro/"]{
   background: #0b0b10;
 }
 
-/* main chat canvas */
+/* main chat canvas (Dark) — same base + subtle Telegram-like pattern */
 [data-theme="dark"] .App.signed-in{
   background:
+    /* subtle pattern dots (very low contrast) */
+    radial-gradient(circle at 1px 1px, rgba(255,255,255,0.05) 1px, transparent 1.8px),
+    radial-gradient(circle at 12px 12px, rgba(255,255,255,0.03) 1px, transparent 2px),
+
+    /* your existing premium dark glow */
     radial-gradient(900px 500px at 10% 0%, rgba(167,139,250,.18), rgba(0,0,0,0) 60%),
     radial-gradient(900px 500px at 90% 100%, rgba(34,211,238,.10), rgba(0,0,0,0) 55%),
     linear-gradient(180deg, #0b0b10 0%, #0a0a12 100%);
+
+  background-size: 26px 26px, 34px 34px, auto, auto, auto;
+  background-position: 0 0, 10px 16px, center, center, center;
+  background-repeat: repeat, repeat, no-repeat, no-repeat, no-repeat;
 }
 
 /* glass bars */
