@@ -6,7 +6,7 @@ import { startVersionWatcher } from './versionWatcher';
 // Razorpay warm-up + standalone coins modal
 import CoinsModal from './components/CoinsModal';
 import IntroSlides from './ui/IntroSlides';
-import { prewarmRazorpay, handleCoinPurchase } from './lib/razorpay';
+import { prewarmRazorpay } from './lib/razorpay';
 // --- App context (TWA) flag — OFF on normal web ---
 // Reads ?src=twa once per tab; persists only for this tab/session.
 function detectAppModeOnce() {
@@ -1426,8 +1426,36 @@ useEffect(() => {
     window.removeEventListener('pageshow', onPageShow);
   };
 }, [user]);
+  // ✅ After returning from payment gateways, poll wallet for ~12s (webhook delay safe)
+useEffect(() => {
+  if (!user) return;
+
+  const qs = new URLSearchParams(window.location.search);
+  const looksLikeReturn =
+    qs.has('razorpay_payment_id') ||
+    qs.has('razorpay_order_id') ||
+    qs.has('payment_id') ||         // Cashfree often uses payment_id
+    qs.has('order_id') ||
+    qs.has('cf_id') ||
+    qs.has('gateway');
+
+  if (!looksLikeReturn) return;
+
+  let tries = 0;
+  const maxTries = 6; // 6 * 2s = 12 seconds
+
+  const tick = async () => {
+    tries += 1;
+    await refreshWallet();
+    if (tries >= maxTries) clearInterval(timer);
+  };
+
+  tick();
+  const timer = setInterval(tick, 2000);
+  return () => clearInterval(timer);
+}, [user]);
   async function maybeFinalizePayment(){
-  if (!window.location.pathname.includes('/payment/thanks')) return;
+  if (true) return; // legacy Razorpay payment-link flow disabled (we use /buy redirect now)
   const qs = new URLSearchParams(window.location.search);
   const link_id      = qs.get('razorpay_payment_link_id');
   const payment_id   = qs.get('razorpay_payment_id');
@@ -1469,8 +1497,6 @@ useEffect(() => { maybeFinalizePayment(); }, [user]);
 const [showCoins, setShowCoins] = useState(false);
   // Razorpay UI/flow helpers
 const [isPaying, setIsPaying] = useState(false);  // drives "Connecting…" and disables buttons
-const [orderCache, setOrderCache] = useState({}); // { daily: {...}, weekly: {...} }
-const ORDER_TTL_MS = 15 * 60 * 1000; // match server TTL for freshness
 const [autoRenew] = useState(loadAuto()); // setter not needed
 useEffect(() => saveAuto(autoRenew), [autoRenew]);
   // Auto-unlock Owner mode if signed-in email matches
@@ -1525,10 +1551,10 @@ const openGuestLockedGate = () => {
     }
   }));
 };
-  async function buyPack(pack){
+  async function buyPack(pack) {
   if (!user) return;
 
-  // App: never allow Razorpay packs (Phase A)
+  // App: never allow external payments (Phase A)
   if (IS_ANDROID_APP) {
     openNotice(
       'Recharge via Google Play',
@@ -1539,7 +1565,7 @@ const openGuestLockedGate = () => {
     return;
   }
 
-  // Web: block if disabled by server config
+  // Web: block if payments disabled by server config
   if (!allowWebRazorpay) {
     openNotice(
       'Recharge unavailable',
@@ -1548,108 +1574,42 @@ const openGuestLockedGate = () => {
     return;
   }
 
-  // show "Connecting…" immediately
   setIsPaying(true);
 
   try {
-    // Use pre-created order if available; otherwise create now
-    let ord = orderCache[pack.id];
-    if (!ord) {
-      const resp = await fetch(apiUrl(`/order/${pack.id}`), {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json', ...authHeaders(user), 'X-CSRF-Token': getCsrf() },
-  body: JSON.stringify({}),
-  credentials: 'include'
-});
-      const data = await resp.json();
-      if (!data?.ok) throw new Error(data?.error || 'order_failed');
-      ord = data;
-      setOrderCache(prev => ({ ...prev, [pack.id]: { ...data, at: Date.now() } }));
-    }
-    // 🔄 Freshness check: if cached order is too old, create a fresh one (keeps 1-tap feel)
-if (ord?.at && (Date.now() - ord.at > ORDER_TTL_MS)) {
-  const resp2 = await fetch(apiUrl(`/order/${pack.id}`), {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...authHeaders(user), 'X-CSRF-Token': getCsrf() },
-    body: JSON.stringify({}),
-    credentials: 'include'
-  });
-  const data2 = await resp2.json();
-  if (data2?.ok) {
-    ord = data2;
-    setOrderCache(prev => ({ ...prev, [pack.id]: { ...data2, at: Date.now() } }));
-  }
-}
-
-    // Build options (exactly what you were passing into new Razorpay)
-const options = {
-  key: ord.key_id,
-  amount: ord.amount,
-  currency: ord.currency,
-  name: 'BuddyBy',
-  description: `Shraddha ${pack.label}`,
-  order_id: ord.order_id,
-  prefill: {
-    name: user?.name || '',
-    email: (user?.email || '').toLowerCase(),
-    contact: user?.phone || ''
-  },
-  theme: { color: '#ff3fb0' },
-  modal: { ondismiss: () => setIsPaying(false) }
-};
-
-// Open checkout → close pricing → verify quietly → toast when credited
-await handleCoinPurchase({
-  options,
-  closePricingModal: closeCoins,
-  verifyPayment: async (resp) => {
-    const v = await fetch(apiUrl('/verify-order'), {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', ...authHeaders(user), 'X-CSRF-Token': getCsrf() },
-      body: JSON.stringify(resp), // { razorpay_order_id, razorpay_payment_id, razorpay_signature }
-      credentials: 'include'
-    });
-    const out = await v.json();
-    if (out?.ok) {
-      setWallet(out.wallet);
-      setCoins(out.wallet.coins);
-      markFirstRechargeIfNeeded(user);
-      return { creditedCoins: out?.lastCredit?.coins || 0 };
-    }
-    // not yet verified → let webhook do its job, but don't alert
-    throw new Error('not_verified_yet');
-  },
-  onWalletRefetch: refreshWallet,
-  toast: (msg) => openNotice('All set', msg) // friendly in-UI popup
-});
-setIsPaying(false);
-  } catch (e) {
-  // If the user simply closed the Razorpay modal, do NOT fallback to payment link.
-  if (e?.type === 'dismissed') {
-    setIsPaying(false);
-    return;
-  }
-
-  console.error('Checkout failed, falling back to Payment Link:', e?.message || e);
-  setIsPaying(false);  // clear state before fallback
-
-  // Fallback to old Payment Link flow (unchanged)
-  try {
+    // ✅ SINGLE entrypoint (Razorpay → Cashfree fallback happens in backend here)
     const resp = await fetch(apiUrl(`/buy/${pack.id}`), {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', ...authHeaders(user), 'X-CSRF-Token': getCsrf() },
-      body: JSON.stringify({ returnUrl: `${window.location.origin}/payment/thanks` }),
-      credentials: 'include'
+      headers: {
+        'Content-Type': 'application/json',
+        ...authHeaders(user),
+        'X-CSRF-Token': getCsrf()
+      },
+      credentials: 'include',
+      body: JSON.stringify({}) // backend controls returnUrl
     });
 
-    const data = await resp.json();
-    if (data?.ok) window.location.href = data.short_url;
-    else alert('Could not start payment: ' + (data?.error || e?.message || 'unknown_error'));
-  } catch (e2) {
-    alert('Could not start payment: ' + (e2?.message || 'unknown_error'));
+    const data = await resp.json().catch(() => ({}));
+
+    if (!resp.ok) {
+      openNotice('Could not start payment', data?.error || `http_${resp.status}`);
+      setIsPaying(false);
+      return;
+    }
+
+    if (data?.ok && data?.short_url) {
+      window.location.href = data.short_url; // Razorpay OR Cashfree
+      return;
+    }
+
+    openNotice('Could not start payment', data?.error || 'unknown_error');
+    setIsPaying(false);
+  } catch (e) {
+    setIsPaying(false);
+    openNotice('Could not start payment', e?.message || 'network_error');
   }
- }
 }
+
   const [cooldown, setCooldown] = useState(false);
   // --- PWA install control (Chrome) ---
 const deferredPromptRef = useRef(null);
@@ -1724,34 +1684,15 @@ function maybeShowPwaNudge() {
   }
 }
 
-  // Pre-create Razorpay orders as soon as the Coins modal opens (so click opens instantly)
+  // ✅ Warmup only (no /order precreate anymore; /buy handles gateway selection)
 useEffect(() => {
   if (!showCoins || !user) return;
-  const allowed = IS_ANDROID_APP ? allowAppRazorpay : allowWebRazorpay;
-  if (!allowed) return;
+  if (IS_ANDROID_APP) return;
+  if (!allowWebRazorpay) return;
+
+  // keep your existing warmup (safe)
   prewarmRazorpay().catch(() => {});
-  const packs = ['daily', 'weekly'];
-
-  packs.forEach(async (id) => {
-    if (orderCache[id] && (Date.now() - (orderCache[id].at || 0) < ORDER_TTL_MS)) return; // cached & fresh
-
-    try {
-      const resp = await fetch(apiUrl(`/order/${id}`), {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json', ...authHeaders(user), 'X-CSRF-Token': getCsrf() },
-  body: JSON.stringify({}),
-  credentials: 'include'
-});
-      const data = await resp.json();
-      if (data?.ok) {
-        setOrderCache(prev => ({ ...prev, [id]: { ...data, at: Date.now() } }));
-      }
-    } catch (e) {
-      // ignore; we'll fall back to creating on click
-      console.warn('precreate order failed:', id, e?.message);
-    }
-  });
-}, [showCoins, user, allowWebRazorpay, allowAppRazorpay]);
+}, [showCoins, user, allowWebRazorpay]);
   // DP lightbox
 const [showAvatarFull, setShowAvatarFull] = useState(false);
 
