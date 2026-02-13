@@ -1397,3 +1397,208 @@ img[src*="intro/"]{
     transition: transform 160ms ease;
   }
 }
+/* =========================================================
+   THEMES (PAINT-ONLY) — safe for keyboard/stable/fixed layout
+   Requires: document.documentElement.setAttribute('data-theme', theme)
+   ========================================================= */
+
+/* ---------- DEFAULT (your current look, re-declared so it always wins) ---------- */
+[data-theme="default"] html,
+[data-theme="default"] body {
+  background:
+    linear-gradient(to bottom, #ff99cc, #cc66cc, #9966cc);
+}
+
+[data-theme="default"] .App.signed-in{
+  background:
+    linear-gradient(to bottom, #ff99cc, #cc66cc, #9966cc),
+    url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"><path fill="%23ff99cc" fill-opacity="0.3" d="M0,64L60,80C120,96,240,128,360,138.7C480,149,600,139,720,133.3C840,128,960,128,1080,117.3C1200,107,1320,85,1380,74.7L1440,64L1440,320L1380,320C1320,320,1200,320,1080,320C960,320,840,320,720,320C600,320,480,320,360,320C240,320,120,320,60,320L0,320Z"/></svg>');
+  background-repeat: no-repeat, no-repeat;
+  background-size: auto, cover;
+  background-position: center, center;
+}
+
+[data-theme="default"] .header{
+  background: rgba(255, 105, 180, 0.15);
+}
+
+[data-theme="default"] .footer{
+  background: rgba(50, 20, 60, 0.12);
+}
+
+[data-theme="default"] .allie-message .bubble-content{
+  background: linear-gradient(135deg, #ffe3e3, #c2f0fc);
+  color: #222;
+}
+
+[data-theme="default"] .user-message .bubble-content{
+  background: linear-gradient(135deg, #ff99cc, #b388eb, #80d0f1);
+  color: #fff;
+}
+
+
+/* ---------- DARK (WhatsApp-ish premium dark) ---------- */
+[data-theme="dark"] html,
+[data-theme="dark"] body{
+  background: #0b0b10;
+}
+
+/* main chat canvas */
+[data-theme="dark"] .App.signed-in{
+  background:
+    radial-gradient(900px 500px at 10% 0%, rgba(167,139,250,.18), rgba(0,0,0,0) 60%),
+    radial-gradient(900px 500px at 90% 100%, rgba(34,211,238,.10), rgba(0,0,0,0) 55%),
+    linear-gradient(180deg, #0b0b10 0%, #0a0a12 100%);
+}
+
+/* glass bars */
+[data-theme="dark"] .header,
+[data-theme="dark"] .App.stable .header{
+  background: rgba(15, 23, 42, 0.55);
+}
+
+[data-theme="dark"] .footer,
+[data-theme="dark"] .App.stable .footer{
+  background: rgba(15, 23, 42, 0.55);
+}
+
+/* header pills */
+[data-theme="dark"] .coin-pill,
+[data-theme="dark"] .role-btn{
+  border-color: rgba(255,255,255,.18);
+  background: rgba(255,255,255,.10);
+  color: #fff;
+}
+
+/* bubbles */
+[data-theme="dark"] .allie-message .bubble-content{
+  background: linear-gradient(135deg, rgba(30,41,59,.96), rgba(15,23,42,.96));
+  color: rgba(255,255,255,.92);
+  box-shadow: 0 10px 28px rgba(0,0,0,.35);
+}
+
+[data-theme="dark"] .user-message .bubble-content{
+  background: linear-gradient(135deg, rgba(99,102,241,.95), rgba(168,85,247,.90));
+  color: #fff;
+  box-shadow: 0 10px 28px rgba(0,0,0,.35);
+}
+
+/* typing bubble dots */
+[data-theme="dark"] .typing-bounce span{
+  background: rgba(255,255,255,.70);
+}
+
+/* input */
+[data-theme="dark"] .footer input{
+  background: rgba(255,255,255,.10);
+  color: rgba(255,255,255,.92);
+}
+
+[data-theme="dark"] .footer input::placeholder{
+  color: rgba(255,255,255,.55);
+}
+
+/* emoji panel */
+[data-theme="dark"] .emoji-panel{
+  background: rgba(15,23,42,.96);
+  color: rgba(255,255,255,.9);
+  box-shadow: 0 18px 48px rgba(0,0,0,.55);
+}
+
+[data-theme="dark"] .emoji-item:active{
+  background: rgba(255,255,255,.10);
+}
+
+/* surface modals (coins/modes/confirm/welcome/auth) */
+[data-theme="dark"] .modal-content,
+[data-theme="dark"] .role-card,
+[data-theme="dark"] .confirm-modal,
+[data-theme="dark"] .welcome-card,
+[data-theme="dark"] .auth-card,
+[data-theme="dark"] .signin-card{
+  background: rgba(15,23,42,.96);
+  color: rgba(255,255,255,.92);
+  border: 1px solid rgba(255,255,255,.10);
+}
+
+[data-theme="dark"] .confirm-modal p,
+[data-theme="dark"] .coins-sub,
+[data-theme="dark"] .welcome-note,
+[data-theme="dark"] .auth-sub,
+[data-theme="dark"] .auth-foot,
+[data-theme="dark"] .signin-text{
+  color: rgba(255,255,255,.70);
+}
+
+/* buttons that were light */
+[data-theme="dark"] .btn-secondary,
+[data-theme="dark"] .modal-content .close-modal{
+  background: rgba(255,255,255,.10) !important;
+  color: rgba(255,255,255,.90) !important;
+}
+
+[data-theme="dark"] .role-chip{
+  background: rgba(255,255,255,.08);
+  border-color: rgba(255,255,255,.12);
+  color: rgba(255,255,255,.92);
+}
+
+[data-theme="dark"] .role-row{
+  background: rgba(255,255,255,.06);
+  border-color: rgba(255,255,255,.10);
+  color: rgba(255,255,255,.92);
+}
+
+/* optional: DP popup reads well on dark */
+[data-theme="dark"] .character-popup{
+  background: rgba(15,23,42,.72);
+  border-color: rgba(255,255,255,.14);
+  color: rgba(255,255,255,.92);
+}
+
+[data-theme="dark"] .charpop-title{ color: rgba(167,139,250,.95); }
+[data-theme="dark"] .charpop-body{ color: rgba(255,255,255,.80); }
+
+
+/* ---------- OCEAN (cool teal/blue vibe) ---------- */
+[data-theme="ocean"] html,
+[data-theme="ocean"] body{
+  background: linear-gradient(180deg, #0ea5e9 0%, #14b8a6 55%, #0f172a 100%);
+}
+
+[data-theme="ocean"] .App.signed-in{
+  background:
+    radial-gradient(900px 520px at 10% 0%, rgba(34,211,238,.22), rgba(0,0,0,0) 60%),
+    radial-gradient(900px 520px at 90% 100%, rgba(20,184,166,.18), rgba(0,0,0,0) 55%),
+    linear-gradient(180deg, #22d3ee 0%, #14b8a6 45%, #1e293b 100%);
+}
+
+[data-theme="ocean"] .header,
+[data-theme="ocean"] .App.stable .header{
+  background: rgba(2, 132, 199, 0.18);
+}
+
+[data-theme="ocean"] .footer,
+[data-theme="ocean"] .App.stable .footer{
+  background: rgba(15, 118, 110, 0.16);
+}
+
+[data-theme="ocean"] .allie-message .bubble-content{
+  background: linear-gradient(135deg, #d9f7ff, #c7fff0);
+  color: #0b1220;
+}
+
+[data-theme="ocean"] .user-message .bubble-content{
+  background: linear-gradient(135deg, #38bdf8, #22c55e);
+  color: #ffffff;
+}
+
+[data-theme="ocean"] .modal-content,
+[data-theme="ocean"] .role-card,
+[data-theme="ocean"] .confirm-modal,
+[data-theme="ocean"] .welcome-card,
+[data-theme="ocean"] .auth-card,
+[data-theme="ocean"] .signin-card{
+  background: rgba(255,255,255,.96);
+  color: #0b1220;
+}
