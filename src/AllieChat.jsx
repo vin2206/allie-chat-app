@@ -823,6 +823,52 @@ function CharacterPopup({ open, roleMode, roleType, onClose }) {
     </div>
   );
 }
+function ThemeModal({ open, onClose, value, onChange }) {
+  if (!open) return null;
+
+  const pick = (v) => { onChange(v); onClose(); };
+
+  return (
+    <div className="confirm-backdrop" role="dialog" aria-modal="true" onClick={onClose}>
+      <div className="confirm-modal" onClick={(e) => e.stopPropagation()}>
+        <h3>Theme</h3>
+        <p style={{ marginBottom: 12, color: '#444' }}>
+          Choose how Shraddha looks on your screen.
+        </p>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <button
+            className="btn-secondary"
+            onClick={() => pick('default')}
+            style={{ fontWeight: value === 'default' ? 800 : 600 }}
+          >
+            {value === 'default' ? '✓ ' : ''}Default (Pink)
+          </button>
+
+          <button
+            className="btn-secondary"
+            onClick={() => pick('dark')}
+            style={{ fontWeight: value === 'dark' ? 800 : 600 }}
+          >
+            {value === 'dark' ? '✓ ' : ''}Dark
+          </button>
+
+          <button
+            className="btn-secondary"
+            onClick={() => pick('ocean')}
+            style={{ fontWeight: value === 'ocean' ? 800 : 600 }}
+          >
+            {value === 'ocean' ? '✓ ' : ''}Ocean
+          </button>
+        </div>
+
+        <div className="confirm-buttons" style={{ marginTop: 12 }}>
+          <button className="btn-secondary" onClick={onClose}>Close</button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function AllieChat() {
   // NEW: auth + welcome
@@ -1775,6 +1821,24 @@ useEffect(() => {
   return () => document.removeEventListener('keydown', onKey);
 }, [showAvatarFull]);
 const [showRoleMenu, setShowRoleMenu] = useState(false);
+// =========================
+// THEME (local only)
+// =========================
+const THEME_KEY = 'bb_theme_v1';
+const [theme, setTheme] = useState(() => {
+  try { return localStorage.getItem(THEME_KEY) || 'default'; }
+  catch { return 'default'; }
+});
+
+// apply theme to <html> so CSS can target: [data-theme="dark"]
+useEffect(() => {
+  try {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem(THEME_KEY, theme);
+  } catch {}
+}, [theme]);
+
+const [showTheme, setShowTheme] = useState(false);
   // custom confirm modal state
 const [confirmState, setConfirmState] = useState({
   open: false,
@@ -3211,6 +3275,20 @@ if (!user) {
 ) : null}
       {/* ——— Tiny feedback entry at the bottom of Modes ——— */}
 <div className="role-section" style={{ marginTop: 10 }}>
+
+<button
+  className="role-row"
+  onClick={(e) => {
+    e.stopPropagation();
+    closeConfirm();       // ensure no confirm overlay
+    setShowTheme(true);   // open theme picker
+  }}
+  aria-label="Theme"
+  title="Theme"
+>
+  Theme
+</button>
+
 <button
   className="role-row"
   onClick={(e) => {
@@ -3306,6 +3384,12 @@ if (!user) {
   okOnly={confirmState.okOnly}
   okText={confirmState.okText}
   cancelText={confirmState.cancelText}
+/>
+  <ThemeModal
+  open={showTheme}
+  onClose={() => setShowTheme(false)}
+  value={theme}
+  onChange={setTheme}
 />
       {/* —— Minimal feedback modal —— */}
 {showFeedback && (
