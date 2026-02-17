@@ -11,7 +11,7 @@ html, body, #root {
 }
 
 /* stop browser pull-to-refresh; our chat scroller will handle it */
-html, body { overscroll-behavior-y: none; background-color: #000; }
+html, body { overscroll-behavior-y: none; background: #000 !important; }
 
 :root { --hdr-h: 80px; --ftr-h: 90px; --kb-h: 0px; }  /* measured at runtime; kb set at runtime */
 
@@ -55,15 +55,25 @@ html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 /* Glass panel behind messages (reversible, no layout impact) */
 .chat-container::before{
   content:"";
-  position:absolute;
-  inset: 10px 10px 10px 10px;     /* inset = looks like a card */
+  position: fixed; /* <-- key fix */
+  top:  calc(var(--hdr-h, 80px) + 10px);
+  bottom: calc(var(--ftr-h, 90px) + 10px);
+  left: 10px;
+  right: 10px;
+
   border-radius: 18px;
   background: rgba(255,255,255,0.10);
   box-shadow: 0 18px 55px rgba(0,0,0,0.16);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
+
   pointer-events:none;
   z-index: 0;
+}
+
+/* When keyboard opens, keep glass stopping ABOVE footer+keyboard */
+html.ime-open .chat-container::before{
+  bottom: calc(var(--ftr-h, 90px) + var(--kb-h, 0px) + 10px);
 }
 
 /* Keep actual chat content above the glass + prevent shrink */
