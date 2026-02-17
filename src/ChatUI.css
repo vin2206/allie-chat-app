@@ -217,7 +217,7 @@ html.ime-open .bottom-sentinel {
 }
 /* Message bubble layout */
 .message {
-  max-width: 82%;
+  max-width: min(92%, 560px);
   font-size: 16px;
   word-break: break-word;
   margin-bottom: 2px;
