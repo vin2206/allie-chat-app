@@ -3332,25 +3332,31 @@ if (!user) {
     key={index}
     className={`message ${msg.sender === 'user' ? 'user-message' : 'allie-message'}`}
   >
-    <span className={`bubble-content ${msg.audioUrl ? 'has-audio' : ''}`}>
+    <div className={`bubble-content ${msg.audioUrl ? 'has-audio' : ''}`}>
       {msg.audioUrl ? (
         <div className="audio-wrapper">
-  <audio
-    className="audio-player"
-    controls
-    controlsList="nodownload noplaybackrate noremoteplayback"
-    disablePictureInPicture
-    preload="none"
-    playsInline
-    src={msg.audioUrl}
-    onContextMenu={(e) => e.preventDefault()}
-    onError={(e) => console.warn('audio failed:', e.currentTarget.src)}
-  />
-</div>
+          <audio
+            className="audio-player"
+            controls
+            controlsList="nodownload noplaybackrate noremoteplayback"
+            disablePictureInPicture
+            preload="none"
+            playsInline
+            src={msg.audioUrl}
+            onContextMenu={(e) => e.preventDefault()}
+            onError={(e) => console.warn('audio failed:', e.currentTarget.src)}
+          />
+        </div>
       ) : (
-        msg.text
+        <div className="msg-text">{msg.text}</div>
       )}
-    </span>
+
+      {!!msg.time && (
+        <div className="meta-info">
+          <span className="time">{msg.time}</span>
+        </div>
+      )}
+    </div>
   </div>
 ))}
   {isTyping && (
