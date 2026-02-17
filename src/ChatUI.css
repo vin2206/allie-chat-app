@@ -1,4 +1,3 @@
-/* vercel sync */
 * { box-sizing: border-box; }
 
 /* 1) Keep all layout/reset here — NO background here */
@@ -48,19 +47,21 @@ html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 /* make scrollIntoView stop above the footer */
   scroll-padding-bottom: 16px;
 
-  padding: 12px 12px;
-  padding-bottom: 2px;
+  padding: 14px 12px;
+  padding-bottom: 14px;
     /* Premium glass surface */
   isolation: isolate; /* ensures ::before stays behind messages */
 }
 /* Glass panel behind messages (reversible, no layout impact) */
 .chat-container::before{
   content:"";
-  position: fixed; /* <-- key fix */
-  top:  calc(var(--hdr-h, 80px) + 10px);
-  bottom: calc(var(--ftr-h, 90px) + 10px);
-  left: 10px;
-  right: 10px;
+  position: fixed;
+
+  /* cover almost the full chat lane */
+  top:  calc(var(--hdr-h, 80px) + 2px);
+  bottom: calc(var(--ftr-h, 90px) + 2px);
+  left: 8px;
+  right: 8px;
 
   border-radius: 18px;
   background: rgba(255,255,255,0.10);
@@ -74,7 +75,7 @@ html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 
 /* When keyboard opens, keep glass stopping ABOVE footer+keyboard */
 html.ime-open .chat-container::before{
-  bottom: calc(var(--ftr-h, 90px) + var(--kb-h, 0px) + 10px);
+  bottom: calc(var(--ftr-h, 90px) + var(--kb-h, 0px) + 2px);
 }
 
 /* Keep actual chat content above the glass + prevent shrink */
@@ -216,7 +217,7 @@ html.ime-open .bottom-sentinel {
 }
 /* Message bubble layout */
 .message {
-  max-width: 92%;
+  max-width: 82%;
   font-size: 16px;
   word-break: break-word;
   margin-bottom: 2px;
@@ -226,16 +227,22 @@ html.ime-open .bottom-sentinel {
   animation-fill-mode: both;
 }
 
-.meta-info {
-  display: inline-flex;          /* key fix: not full width */
+.meta-info{
+  position: absolute;
+  right: 10px;
+  bottom: 6px;
+
+  display: inline-flex;
   align-items: center;
   gap: 6px;
+
   font-size: 11px;
   opacity: .75;
-  margin-top: 6px;
-
-  width: fit-content;            /* key fix */
-  margin-left: auto;             /* pushes it to right inside bubble */
+  margin: 0;
+  width: auto;
+}
+.msg-text{
+  padding-right: 52px;   /* reserve space for time */
 }
 .meta-info span { margin-right: 0; }
 
@@ -495,7 +502,7 @@ html.ime-open .bottom-sentinel {
 .bubble-content {
   display: flex;
   flex-direction: column;
-  padding: 12px 14px 12px 13px;
+  padding: 9px 12px 8px 12px;
   border-radius: 18px;
   box-shadow: 0 4px 18px 0 rgba(112, 76, 255, 0.09), 0 1.5px 8px rgba(60, 20, 60, 0.08);
   font-size: 16px;
