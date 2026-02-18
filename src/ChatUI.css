@@ -248,6 +248,10 @@ html.ime-open .bottom-sentinel {
   display: block;
   padding-right: 0; /* ✅ let text use full width */
 }
+/* ✅ Only user: tiny space so single-line text doesn't collide with time */
+.user-message .msg-text{
+  padding-right: 34px;   /* try 34px–42px if you want tighter/looser */
+}
 .meta-info span { margin-right: 0; }
 
 @keyframes fadeIn {
