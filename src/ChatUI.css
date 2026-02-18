@@ -217,7 +217,7 @@ html.ime-open .bottom-sentinel {
 }
 /* Message bubble layout */
 .message {
-  max-width: min(92%, 560px);
+  max-width: min(85%, 560px);
   font-size: 16px;
   word-break: break-word;
   margin-bottom: 2px;
@@ -230,8 +230,8 @@ html.ime-open .bottom-sentinel {
 /* time sits in a tiny reserved corner */
 .meta-info{
   position: absolute;
-  right: 8px;
-  bottom: 5px;
+  right: 10px;
+  bottom: 6px;
 
   display: inline-flex;
   align-items: center;
@@ -246,7 +246,7 @@ html.ime-open .bottom-sentinel {
 /* reduce the “time reserve” so text can go more right */
 .msg-text{
   display: block;
-  padding-right: 12px;   /* was 52px */
+  padding-right: 40px;   /* was 52px */
 }
 .meta-info span { margin-right: 0; }
 
@@ -257,12 +257,12 @@ html.ime-open .bottom-sentinel {
 
 .user-message{
   align-self: flex-end;
-  margin: 3px 8px 3px 18px;   /* top right bottom left */
+  margin: 3px 2px 3px 18px;   /* top right bottom left */
 }
 
 .allie-message{
   align-self: flex-start;
-  margin: 3px 22px 3px 6px;   /* top right bottom left */
+  margin: 3px 22px 3px 2px;   /* top right bottom left */
 }
 
 /* Footer (glassmorphism style) */
@@ -519,13 +519,13 @@ html.ime-open .bottom-sentinel {
   background: linear-gradient(135deg, #ffe3e3, #c2f0fc);
   color: #222;
   border-radius: 18px 18px 18px 6px;   /* TL TR BR BL → small at bottom-left */
-  padding: 10px 14px 10px 13px;         /* no extra room for time */
+  padding: 10px 12px 10px 12px;         /* no extra room for time */
 }
 .user-message .bubble-content {
   background: linear-gradient(135deg, #ff99cc, #b388eb, #80d0f1);
   color: #fff;
   border-radius: 18px 18px 6px 18px;   /* small at bottom-right */
-  padding: 10px 14px 10px 13px;         /* no extra room for time */
+  padding: 10px 12px 10px 13px;         /* no extra room for time */
 }
 
 /* Make sure generic .footer button rule doesn't force same look on both. */
@@ -1091,7 +1091,7 @@ html:not(.ime-open) .App.stable .footer .mic-btn {
 }
 
 .user-message .bubble-content:not(.has-audio),
-.allie-message .bubble-content:not(.has-audio) { padding-right: 14px; }
+.allie-message .bubble-content:not(.has-audio) { padding-right: 12px; }
 
 /* --- Instructions content inside the welcome card --- */
 .instr-title{
