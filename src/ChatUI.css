@@ -1649,5 +1649,12 @@ html[data-theme="ocean"] .signin-card{
 }
 .chat-container { align-items: flex-start; }  /* stop stretching all rows */
 .message { width: fit-content; }              /* bubble hugs content */
-.user-message { margin-right: 2px; }
-.allie-message { margin-left: 2px; }
+/* tighten chat lane */
+.chat-container { padding-left: 6px; padding-right: 6px; }
+
+/* tighten the glass panel inset to match */
+.chat-container::before { left: 4px; right: 4px; }
+
+/* keep user bubble near the edge */
+.user-message { margin-right: 0px; }
+.allie-message { margin-left: 0px; }
