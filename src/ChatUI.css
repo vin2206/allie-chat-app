@@ -246,7 +246,7 @@ html.ime-open .bottom-sentinel {
 /* reduce the “time reserve” so text can go more right */
 .msg-text{
   display: block;
-  padding-right: 40px;   /* was 52px */
+  padding-right: 16px;   /* was 52px */
 }
 .meta-info span { margin-right: 0; }
 
@@ -1647,3 +1647,5 @@ html[data-theme="ocean"] .signin-card{
   background: rgba(255,255,255,.96);
   color: #0b1220;
 }
+.allie-message .msg-text{ padding-right: 16px; }
+.user-message  .msg-text{ padding-right: 54px; }
