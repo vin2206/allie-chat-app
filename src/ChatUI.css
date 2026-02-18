@@ -257,12 +257,12 @@ html.ime-open .bottom-sentinel {
 
 .user-message{
   align-self: flex-end;
-  margin: 3px 6px 3px 18px;   /* top right bottom left */
+  margin: 3px 3px 3px 18px;   /* top right bottom left */
 }
 
 .allie-message{
   align-self: flex-start;
-  margin: 3px 18px 3px 6px;   /* top right bottom left */
+  margin: 3px 12px 3px 6px;   /* top right bottom left */
 }
 
 /* Footer (glassmorphism style) */
@@ -1647,14 +1647,3 @@ html[data-theme="ocean"] .signin-card{
   background: rgba(255,255,255,.96);
   color: #0b1220;
 }
-.chat-container { align-items: flex-start; }  /* stop stretching all rows */
-.message { width: fit-content; }              /* bubble hugs content */
-/* tighten chat lane */
-.chat-container { padding-left: 6px; padding-right: 6px; }
-
-/* tighten the glass panel inset to match */
-.chat-container::before { left: 4px; right: 4px; }
-
-/* keep user bubble near the edge */
-.user-message { margin-right: 0px; }
-.allie-message { margin-left: 0px; }
