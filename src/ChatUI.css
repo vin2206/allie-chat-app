@@ -1647,3 +1647,7 @@ html[data-theme="ocean"] .signin-card{
   background: rgba(255,255,255,.96);
   color: #0b1220;
 }
+.chat-container { align-items: flex-start; }  /* stop stretching all rows */
+.message { width: fit-content; }              /* bubble hugs content */
+.user-message { margin-right: 2px; }
+.allie-message { margin-left: 2px; }
