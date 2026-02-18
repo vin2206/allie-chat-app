@@ -246,7 +246,7 @@ html.ime-open .bottom-sentinel {
 /* reduce the “time reserve” so text can go more right */
 .msg-text{
   display: block;
-  padding-right: 28px;   /* was 52px */
+  padding-right: 24px;   /* was 52px */
 }
 .meta-info span { margin-right: 0; }
 
@@ -257,12 +257,12 @@ html.ime-open .bottom-sentinel {
 
 .user-message{
   align-self: flex-end;
-  margin: 3px 3px 3px 18px;   /* top right bottom left */
+  margin: 3px 4px 3px 18px;   /* top right bottom left */
 }
 
 .allie-message{
   align-self: flex-start;
-  margin: 3px 12px 3px 6px;   /* top right bottom left */
+  margin: 3px 16px 3px 6px;   /* top right bottom left */
 }
 
 /* Footer (glassmorphism style) */
