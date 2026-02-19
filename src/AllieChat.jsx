@@ -1218,7 +1218,7 @@ if (r.status === 401 || r.status === 403) {
   if (user?.guest) {
     try {
       // Prime/restore guest cookie session
-            const gi = await fetch(apiUrl('/auth/guest/init'), {
+      const gi = await fetch(apiUrl('/auth/guest/init'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...authHeaders(user) },
         credentials: 'include',
@@ -1247,16 +1247,18 @@ if (r.status === 401 || r.status === 403) {
         if (reqId !== walletReqIdRef.current) return;
 
         if (data2?.ok) {
-        setWallet(data2.wallet);
-        const serverCoins = Number(data2.wallet.coins || 0);
-        setCoins(serverCoins);
-        saveCachedCoins(user, serverCoins);
-        setWalletReady(true);
-        setShowSigninBanner(false);
-        return;
+          setWallet(data2.wallet);
+          const serverCoins = Number(data2.wallet.coins || 0);
+          setCoins(serverCoins);
+          saveCachedCoins(user, serverCoins);
+          setWalletReady(true);
+          setShowSigninBanner(false);
+          return;
+        }
       }
     } catch (e) {
-      // swallow: we'll just mark walletReady so UI works, but don't show signed-out for Guest
+      // swallow: we'll just mark walletReady so UI works,
+      // but don't show signed-out for Guest
     }
 
     setWalletReady(true);
