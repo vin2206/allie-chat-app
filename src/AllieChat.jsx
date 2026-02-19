@@ -154,18 +154,6 @@ const ROLE_LABELS = {
 };
 // --- Browser helpers (safe, additive) ---
 function isAndroid() { return /Android/i.test(navigator.userAgent || ''); }
-// --- HAPTICS (Android only, safe) ---
-const HAPTICS_KEY = 'haptics_v1'; // set to '0' to disable on a device
-
-function haptic(msOrPattern) {
-  try {
-    if (!isAndroid()) return; // Android only
-    if (localStorage.getItem(HAPTICS_KEY) === '0') return; // kill switch
-    if (!navigator.vibrate) return; // unsupported => no-op
-    if (document.visibilityState !== 'visible') return;
-    navigator.vibrate(msOrPattern);
-  } catch {}
-}
 
 function isChromeLike() {
   // Prefer UA-CH when available
@@ -922,8 +910,6 @@ const [prices, setPrices] = useState({ text: DEFAULT_TEXT_COST, voice: DEFAULT_V
   // server-driven wallet
 const [wallet, setWallet] = useState({ coins: 0, expires_at: 0, welcome_claimed: false });
 const welcomeDecidedRef = useRef(false);
-// --- HAPTICS: track last coins to vibrate only on credit ---
-const lastCoinsRef = useRef(null);
   // --- NEW: wallet load gate + welcome "seen once" helpers ---
 const [walletReady, setWalletReady] = useState(false);
 // ✅ NEW: blocks /wallet refresh until auth cookies are primed (fixes guest race)
@@ -1062,14 +1048,6 @@ const scrollerRef = useRef(null);
 const lastActionRef = useRef('');
  // ADD BELOW your other refs/state in AllieChat()
 const walletReqIdRef = useRef(0); // last-write-wins guard for /wallet fetches 
-// ✅ Send haptic throttle (prevents buzz-buzz during fast sends)
-const lastSendHapticAtRef = useRef(0);
-const sendHaptic = () => {
-  const now = Date.now();
-  if (now - lastSendHapticAtRef.current < 800) return; // 800ms throttle
-  lastSendHapticAtRef.current = now;
-  haptic(8); // softer than 10ms
-};
 const stickToBottomRef = useRef(true); // true only when truly at bottom
 const readingUpRef = useRef(false);    // true when user scrolled up (locks auto-scroll)
 const imeLockRef = useRef(false); // ignore scroll logic during IME open/close animation
@@ -1269,20 +1247,10 @@ if (r.status === 401 || r.status === 403) {
         if (reqId !== walletReqIdRef.current) return;
 
         if (data2?.ok) {
-          setWallet(data2.wallet);
-          const serverCoins = Number(data2.wallet.coins || 0);
-
-// haptic ONLY when coins increased (credit)
-const prev = lastCoinsRef.current;
-lastCoinsRef.current = serverCoins;
-if (prev != null && serverCoins > prev) {
-  haptic([10, 25, 10]);
-}
-
-setCoins(serverCoins);
-saveCachedCoins(user, serverCoins);
-}
-
+        setWallet(data2.wallet);
+        const serverCoins = Number(data2.wallet.coins || 0);
+        setCoins(serverCoins);
+        saveCachedCoins(user, serverCoins);
         setWalletReady(true);
         setShowSigninBanner(false);
         return;
@@ -1310,16 +1278,8 @@ saveCachedCoins(user, serverCoins);
       setWallet(data.wallet);
 
      const serverCoins = Number(data.wallet.coins || 0);
-
-// haptic ONLY when coins increased (credit)
-const prev = lastCoinsRef.current;
-lastCoinsRef.current = serverCoins;
-if (prev != null && serverCoins > prev) {
-  haptic([20, 30, 20]);
-}
-
-setCoins(serverCoins);
-saveCachedCoins(user, serverCoins);
+     setCoins(serverCoins);
+     saveCachedCoins(user, serverCoins);
 
       setWalletReady(true);
     } else {
@@ -2226,8 +2186,6 @@ const askedForVoice = (text = "") => {
 };
   
 const applyRoleChange = (mode, type) => {
-  // haptic: mode switch tap
-  haptic(8);
   // ✅ App safety: block roleplay entry so testers stay on Stranger (no packs / no external payment flow)
   if (IS_ANDROID_APP && mode === 'roleplay' && !isOwner) {
     setShowRoleMenu(false);
@@ -2285,8 +2243,6 @@ const startRecording = async () => {
     openNotice('Connecting…', 'Give me a second to reconnect.');
     return;
   }
-  // ✅ haptic: mic start
-  haptic(10);
 
   // 🚫 Daily voice limit guard (unified rules)
   if (!isOwner) {
@@ -2354,8 +2310,6 @@ const mr = new window.MediaRecorder(stream, { mimeType: 'audio/webm' });
 };
 
 const stopRecording = () => {
-  // haptic: mic stop
-  haptic(22);
   if (autoStopTimerRef.current) {
     clearTimeout(autoStopTimerRef.current);
     autoStopTimerRef.current = null;
@@ -2525,8 +2479,6 @@ const trimmed = formattedHistory.slice(-MAX_MSG);
     openNotice('Connecting…', 'Give me a second to reconnect.');
     return;
   }
-  // ✅ haptic: send tap (soft + throttled)
-  sendHaptic();
 
 // Decide cost before sending
 const wantVoiceNow = askedForVoice(inputValue);
