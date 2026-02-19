@@ -2960,7 +2960,10 @@ useEffect(() => {
 };
 }, [layoutClass]);
   
-  const displayedMessages = messages;
+  // ✅ UI perf: render only last N bubbles (keep full messages in state/storage)
+const MAX_RENDER = 80;
+const renderStart = Math.max(0, messages.length - MAX_RENDER);
+const displayedMessages = messages.slice(renderStart);
 
 // ✅ Intro ALWAYS first (once per device), even if already signed-in
 if (showIntro) {
@@ -3327,38 +3330,41 @@ if (!user) {
 
       <div className="chat-container" ref={scrollerRef}>
        <div className="chat-pad" aria-hidden="true" />
-  {displayedMessages.map((msg, index) => (
-  <div
-    key={index}
-    className={`message ${msg.sender === 'user' ? 'user-message' : 'allie-message'}`}
-  >
-    <div className={`bubble-content ${msg.audioUrl ? 'has-audio' : ''}`}>
-      {msg.audioUrl ? (
-        <div className="audio-wrapper">
-          <audio
-            className="audio-player"
-            controls
-            controlsList="nodownload noplaybackrate noremoteplayback"
-            disablePictureInPicture
-            preload="none"
-            playsInline
-            src={msg.audioUrl}
-            onContextMenu={(e) => e.preventDefault()}
-            onError={(e) => console.warn('audio failed:', e.currentTarget.src)}
-          />
-        </div>
-      ) : (
-        <div className="msg-text">{msg.text}</div>
-      )}
+  {displayedMessages.map((msg, index) => {
+  const realIndex = renderStart + index; // ✅ stable key across slicing
+  return (
+    <div
+      key={realIndex}
+      className={`message ${msg.sender === 'user' ? 'user-message' : 'allie-message'}`}
+    >
+      <div className={`bubble-content ${msg.audioUrl ? 'has-audio' : ''}`}>
+        {msg.audioUrl ? (
+          <div className="audio-wrapper">
+            <audio
+              className="audio-player"
+              controls
+              controlsList="nodownload noplaybackrate noremoteplayback"
+              disablePictureInPicture
+              preload="none"
+              playsInline
+              src={msg.audioUrl}
+              onContextMenu={(e) => e.preventDefault()}
+              onError={(e) => console.warn('audio failed:', e.currentTarget.src)}
+            />
+          </div>
+        ) : (
+          <div className="msg-text">{msg.text}</div>
+        )}
 
-      {!!msg.time && (
-        <div className="meta-info">
-          <span className="time">{msg.time}</span>
-        </div>
-      )}
+        {!!msg.time && (
+          <div className="meta-info">
+            <span className="time">{msg.time}</span>
+          </div>
+        )}
+      </div>
     </div>
-  </div>
-))}
+  );
+})}
   {isTyping && (
     <div className="message allie-message typing-bounce">
       <span></span><span></span><span></span>
