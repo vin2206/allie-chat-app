@@ -3599,7 +3599,9 @@ if (!user) {
         </button>
 
         {/* Send */}
-        <button type="button" className="send-btn" onClick={handleSend}>➤</button>
+        <button type="button" className="send-btn" onClick={handleSend}>
+  <span style={{ display: 'inline-block', transform: 'rotate(-90deg)' }}>➤</span>
+</button>
       </div>
     </div>
   );
