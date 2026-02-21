@@ -1,6 +1,6 @@
 /* eslint-env browser */
 /* eslint-disable no-console, no-alert, react-hooks/exhaustive-deps, no-unused-vars */
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useLayoutEffect } from 'react';
 import './ChatUI.css';
 import { startVersionWatcher } from './versionWatcher';
 // Razorpay warm-up + standalone coins modal
@@ -1062,6 +1062,12 @@ const scrollToBottomNow = (force = false) => {
   // Let the browser scroll the *active* container (inner or page)
   anchor.scrollIntoView({ block: 'end', inline: 'nearest', behavior: 'auto' });
 };
+  // ✅ First mount: chase bottom a few times (fixes “first render sits high” on some Android/Chrome)
+useEffect(() => {
+  const bumps = [0, 80, 180, 320];
+  bumps.forEach(ms => setTimeout(() => scrollToBottomNow(true), ms));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+}, []);
   // persist thread on changes (debounced)
 useEffect(() => {
   if (!user) return;
@@ -2732,28 +2738,39 @@ if (closeBtn && typeof closeBtn.focus === 'function') closeBtn.focus();
   };
 }, [showRoleMenu]);
   // --- Measure header/footer (both layouts; drives pinned scroller) ---
-useEffect(() => {
+// ✅ useLayoutEffect runs before paint → fixes “first paint wrong vars”
+useLayoutEffect(() => {
   const root = document.documentElement;
-  const headerEl = document.querySelector('.header');
-  const footerEl = document.querySelector('.footer');
 
   const setVars = () => {
+    const headerEl = document.querySelector('.header');
+    const footerEl = document.querySelector('.footer');
+
     let hdr = headerEl ? Math.round(headerEl.getBoundingClientRect().height) : 80;
     let ftr = footerEl ? Math.round(footerEl.getBoundingClientRect().height) : 90;
 
-    // Ignore bogus reads during IME/font reflow
-    if (hdr < 40 || hdr > 160) hdr = 80;
-    if (ftr < 40 || ftr > 160) ftr = 90;
+    // clamp weird first-paint values
+    if (hdr < 40 || hdr > 180) hdr = 80;
+    if (ftr < 40 || ftr > 220) ftr = 90;
 
     root.style.setProperty('--hdr-h', hdr + 'px');
     root.style.setProperty('--ftr-h', ftr + 'px');
   };
 
+  // 1) immediate, before paint
   setVars();
 
-  const ro = typeof window.ResizeObserver !== 'undefined'
+  // 2) a few bumps for “first paint lies” cases (address bar / font swap)
+  const bumps = [0, 50, 150, 350];
+  const timers = bumps.map(ms => setTimeout(setVars, ms));
+
+  const ro = (typeof window.ResizeObserver !== 'undefined')
     ? new window.ResizeObserver(setVars)
     : null;
+
+  // Observe header/footer whenever size changes
+  const headerEl = document.querySelector('.header');
+  const footerEl = document.querySelector('.footer');
   if (ro && headerEl) ro.observe(headerEl);
   if (ro && footerEl) ro.observe(footerEl);
 
@@ -2761,19 +2778,20 @@ useEffect(() => {
   if (vv) vv.addEventListener('resize', setVars);
   window.addEventListener('resize', setVars);
   window.addEventListener('orientationchange', setVars);
-  if (document.fonts?.ready) { document.fonts.ready.then(() => { try { setVars(); } catch {} }); }
-  document.addEventListener('visibilitychange', setVars);
-  window.addEventListener('pageshow', setVars);
+
+  // fonts-ready bump (keep it)
+  if (document.fonts?.ready) {
+    document.fonts.ready.then(() => { try { setVars(); } catch {} });
+  }
 
   return () => {
+    timers.forEach(t => clearTimeout(t));
     if (ro) ro.disconnect();
     if (vv) vv.removeEventListener('resize', setVars);
     window.removeEventListener('resize', setVars);
     window.removeEventListener('orientationchange', setVars);
-    document.removeEventListener('visibilitychange', setVars);
-    window.removeEventListener('pageshow', setVars);
   };
-}, [layoutClass, messages.length, isTyping]);
+}, [layoutClass]);
 
   // Legacy header compact mode: ONLY on old Android WebViews + real overflow
 useEffect(() => {
