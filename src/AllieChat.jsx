@@ -3599,8 +3599,25 @@ if (!user) {
         </button>
 
         {/* Send */}
-        <button type="button" className="send-btn" onClick={handleSend}>
-  <span style={{ display: 'inline-block', transform: 'rotate(-90deg)' }}>➤</span>
+<button
+  type="button"
+  className="send-btn"
+  onClick={handleSend}
+  aria-label="Send"
+  title="Send"
+>
+  <svg
+    viewBox="0 0 24 24"
+    width="22"
+    height="22"
+    aria-hidden="true"
+    style={{ display: 'block' }}
+  >
+    <path
+      d="M3.4 20.4l17.45-7.48c.76-.33.76-1.42 0-1.75L3.4 3.69c-.67-.29-1.36.31-1.18 1.02l1.53 6.1c.08.31.35.53.67.55l8.9.64-8.9.64a.75.75 0 0 0-.67.55l-1.53 6.1c-.18.71.51 1.31 1.18 1.02z"
+      fill="currentColor"
+    />
+  </svg>
 </button>
       </div>
     </div>
