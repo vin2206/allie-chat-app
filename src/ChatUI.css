@@ -532,33 +532,54 @@ html.ime-open .bottom-sentinel {
   padding: 10px 12px 10px 13px;         /* no extra room for time */
 }
 
-/* Make sure generic .footer button rule doesn't force same look on both. */
+/* Make sure generic .footer button rule doesn't force same look on both */
 .footer .send-btn,
 .footer .mic-btn {
-  background: #ffffff;
-  color: #5b45ff;              /* richer icon color */
   border: 0;
-  width: 50px; height: 50px;
+  width: 50px;
+  height: 50px;
   aspect-ratio: 1 / 1;
   border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
-  box-shadow: 0 10px 22px rgba(0,0,0,.25);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0; /* important for true centering */
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.25);
   transition: transform .12s ease, box-shadow .2s ease, background .2s ease;
+  -webkit-tap-highlight-color: transparent;
 }
 
-/* Send keeps your gradient */
+/* Send keeps gradient */
 .footer .send-btn {
   background: linear-gradient(135deg, #ff6ec4, #7873f5);
-  font-size: 24px;
   color: #ffffff;
 }
-.footer .mic-btn:active { transform: scale(.96); }
 
-/* Mic: white by default, turns glowing red while recording */
-.footer .mic-btn svg {
-  width: 28px; height: 28px;
+/* SVG sizing for send */
+.footer .send-btn svg {
   display: block;
-  opacity: 1;                  /* ensure not “light” */
+  width: 22px;
+  height: 22px;
+  flex: 0 0 22px;
+  transform: translateX(0.5px); /* tiny visual centering tweak */
+}
+
+/* Mic default */
+.footer .mic-btn {
+  background: #ffffff;
+  color: #5b45ff;
+}
+
+.footer .mic-btn svg {
+  width: 28px;
+  height: 28px;
+  display: block;
+  opacity: 1;
+}
+
+.footer .send-btn:active,
+.footer .mic-btn:active {
+  transform: scale(.96);
 }
 .footer .mic-btn.recording {
   color: #fff;
