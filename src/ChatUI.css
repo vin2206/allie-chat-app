@@ -243,14 +243,24 @@ html.ime-open .bottom-sentinel {
   width: auto;
 }
 
-/* reduce the “time reserve” so text can go more right */
+/* ===== Time reserve (ONLY on last line) ===== */
+
+/* how much space to reserve for the absolute time on the last line */
+:root { --time-reserve: 44px; } /* tweak 38px–52px if needed */
+
+/* allow full width (no “wall”) */
 .msg-text{
   display: block;
-  padding-right: 0; /* ✅ let text use full width */
+  padding-right: 0;
 }
-/* ✅ Only user: tiny space so single-line text doesn't collide with time */
-.user-message .msg-text{
-  padding-right: 32px;   /* try 34px–42px if you want tighter/looser */
+
+/* reserve space ONLY at the end of the text (affects last line only) */
+.msg-text::after{
+  content: "";
+  display: inline-block;
+  width: var(--time-reserve);
+  height: 1em;              /* keeps it stable */
+  vertical-align: baseline;
 }
 .meta-info span { margin-right: 0; }
 
@@ -1117,6 +1127,11 @@ html:not(.ime-open) .App.stable .footer .mic-btn {
 
 .user-message .bubble-content:not(.has-audio),
 .allie-message .bubble-content:not(.has-audio) { padding-right: 12px; }
+/* give time a little breathing room (prevents text/time touching vertically) */
+.user-message .bubble-content:not(.has-audio),
+.allie-message .bubble-content:not(.has-audio){
+  padding-bottom: 20px; /* matches your original 20px reserve */
+}
 
 /* --- Instructions content inside the welcome card --- */
 .instr-title{
