@@ -3374,11 +3374,18 @@ if (!user) {
           <div className="msg-text">{msg.text}</div>
         )}
 
-        {!!msg.time && (
-          <div className="meta-info">
-            <span className="time">{msg.time}</span>
-          </div>
-        )}
+        {(() => {
+  const isVoiceMsg =
+    !!msg.audioUrl ||
+    msg.text === '[voice note]' ||
+    msg.text === '🔊 (voice note)';
+
+  return !!msg.time && !isVoiceMsg ? (
+    <div className="meta-info">
+      <span className="time">{msg.time}</span>
+    </div>
+  ) : null;
+})()}
       </div>
     </div>
   );
