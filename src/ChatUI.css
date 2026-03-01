@@ -231,7 +231,7 @@ html.ime-open .bottom-sentinel {
 .meta-info{
   position: absolute;
   right: 8px;
-  bottom: 5px;
+  bottom: 6px;
 
   display: inline-flex;
   align-items: center;
@@ -505,7 +505,7 @@ html.ime-open .bottom-sentinel {
 .bubble-content {
   display: flex;
   flex-direction: column;
-  padding: 9px 12px 20px 12px;
+  padding: 9px 12px 24px 12px;
   border-radius: 18px;
   box-shadow: 0 4px 18px 0 rgba(112, 76, 255, 0.09), 0 1.5px 8px rgba(60, 20, 60, 0.08);
   font-size: 16px;
@@ -524,13 +524,13 @@ html.ime-open .bottom-sentinel {
   background: linear-gradient(135deg, #ffe3e3, #c2f0fc);
   color: #222;
   border-radius: 18px 18px 18px 6px;
-  padding: 10px 12px 22px 12px;
+  padding: 10px 12px 24px 12px;
 }
 .user-message .bubble-content {
   background: linear-gradient(135deg, #ff99cc, #b388eb, #80d0f1);
   color: #fff;
   border-radius: 18px 18px 6px 18px;
-  padding: 10px 12px 22px 13px;
+  padding: 10px 12px 24px 13px;
 }
 
 /* Make sure generic .footer button rule doesn't force same look on both */
