@@ -503,9 +503,8 @@ html.ime-open .bottom-sentinel {
 
 /* Neutral default — specific .allie-message/.user-message rules set the tilt */
 .bubble-content {
-  display: flex;
-  flex-direction: column;
-  padding: 9px 12px 24px 12px;
+  display: block;
+  padding: 9px 12px 22px 12px;
   border-radius: 18px;
   box-shadow: 0 4px 18px 0 rgba(112, 76, 255, 0.09), 0 1.5px 8px rgba(60, 20, 60, 0.08);
   font-size: 16px;
