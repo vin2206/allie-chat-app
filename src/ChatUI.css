@@ -253,15 +253,6 @@ html.ime-open .bottom-sentinel {
   display: block;
   padding-right: 0;
 }
-
-/* reserve space ONLY at the end of the text (affects last line only) */
-.msg-text::after{
-  content: "";
-  display: inline-block;
-  width: var(--time-reserve);
-  height: 0;              /* keeps it stable */
-  vertical-align: baseline;
-}
 .meta-info span { margin-right: 0; }
 
 @keyframes fadeIn {
@@ -532,14 +523,14 @@ html.ime-open .bottom-sentinel {
 .allie-message .bubble-content {
   background: linear-gradient(135deg, #ffe3e3, #c2f0fc);
   color: #222;
-  border-radius: 18px 18px 18px 6px;   /* TL TR BR BL → small at bottom-left */
-  padding: 10px 12px 10px 12px;         /* no extra room for time */
+  border-radius: 18px 18px 18px 6px;
+  padding: 10px 12px 22px 12px;
 }
 .user-message .bubble-content {
   background: linear-gradient(135deg, #ff99cc, #b388eb, #80d0f1);
   color: #fff;
-  border-radius: 18px 18px 6px 18px;   /* small at bottom-right */
-  padding: 10px 12px 10px 13px;         /* no extra room for time */
+  border-radius: 18px 18px 6px 18px;
+  padding: 10px 12px 22px 13px;
 }
 
 /* Make sure generic .footer button rule doesn't force same look on both */
