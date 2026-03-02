@@ -3350,12 +3350,17 @@ if (!user) {
        <div className="chat-pad" aria-hidden="true" />
   {displayedMessages.map((msg, index) => {
   const realIndex = renderStart + index; // ✅ stable key across slicing
+  const isVoiceMsg =
+    !!msg.audioUrl ||
+    msg.text === '[voice note]' ||
+    msg.text === '🔊 (voice note)';
+  const showTime = !!msg.time && !isVoiceMsg;
   return (
     <div
       key={realIndex}
       className={`message ${msg.sender === 'user' ? 'user-message' : 'allie-message'}`}
     >
-      <div className={`bubble-content ${msg.audioUrl ? 'has-audio' : ''}`}>
+      <div className={`bubble-content ${msg.audioUrl ? 'has-audio' : ''} ${showTime ? 'has-time' : ''}`}>
         {msg.audioUrl ? (
           <div className="audio-wrapper">
             <audio
@@ -3374,18 +3379,11 @@ if (!user) {
           <div className="msg-text">{msg.text}</div>
         )}
 
-        {(() => {
-  const isVoiceMsg =
-    !!msg.audioUrl ||
-    msg.text === '[voice note]' ||
-    msg.text === '🔊 (voice note)';
-
-  return !!msg.time && !isVoiceMsg ? (
-    <div className="meta-info">
-      <span className="time">{msg.time}</span>
-    </div>
-  ) : null;
-})()}
+        {showTime ? (
+          <div className="meta-info">
+            <span className="time">{msg.time}</span>
+          </div>
+        ) : null}
       </div>
     </div>
   );
