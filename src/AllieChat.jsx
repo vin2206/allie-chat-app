@@ -25,6 +25,11 @@ function detectAppModeOnce() {
 // Single source of truth for this runtime
 const IS_ANDROID_APP = detectAppModeOnce();
 const IS_LOVE_WEB = !IS_ANDROID_APP && (window.location.hostname === 'love.buddyby.com');
+const IS_VERCEL_PREVIEW =
+  !IS_ANDROID_APP &&
+  /\.vercel\.app$/i.test(window.location.hostname) &&
+  window.location.hostname !== 'chat.buddyby.com' &&
+  window.location.hostname !== 'love.buddyby.com';
 // --- small utility ---
 function debounce(fn, wait = 120) {
   let t;
@@ -359,6 +364,8 @@ function AuthGate({ onSignedIn }) {
   const isGuestDisabledUI = () => { try { return localStorage.getItem(DISABLE_GUEST_KEY) === '1'; } catch { return false; } };
 
   useEffect(() => {
+    if (IS_VERCEL_PREVIEW) return;
+
     let cancelled = false;
     // Ensure the GIS script exists (if not already added in index.html)
 if (!document.querySelector('script[src*="gsi/client"]')) {
@@ -451,17 +458,42 @@ if (!document.querySelector('script[src*="gsi/client"]')) {
       <div className="auth-card">
         <img className="auth-logo" src="/shraddha-logo.png" alt="Shraddha — AI Girlfriend" />
 
-        <div className="auth-sub">Sign in to chat with a Realistic AI Girlfriend</div>
+        <div className="auth-sub">
+  {IS_VERCEL_PREVIEW
+    ? 'Preview mode — sign-in disabled for this test link'
+    : 'Sign in to chat with a Realistic AI Girlfriend'}
+</div>
 
         {/* Google on its own full-width row */}
-<div className="google-row">
-  <div className="gbtn-wrap">
-    <div id="googleSignIn" />
+{!IS_VERCEL_PREVIEW && (
+  <div className="google-row">
+    <div className="gbtn-wrap">
+      <div id="googleSignIn" />
+    </div>
   </div>
-</div>
+)}
 
 {/* Actions */}
 <div className="auth-actions">
+  {IS_VERCEL_PREVIEW && (
+    <button
+      className="btn"
+      onClick={() => {
+        onSignedIn({
+          preview: true,
+          guest: false,
+          guestId: '',
+          name: 'Preview User',
+          email: '',
+          sub: 'preview_user',
+          picture: '',
+          idToken: ''
+        });
+      }}
+    >
+      Open Preview
+    </button>
+  )}
   {/* Guest (working) */}
   {!isGuestDisabledUI() && (
   <button
@@ -1202,6 +1234,12 @@ useEffect(() => {
 
 async function refreshWallet() {
   if (!user) return;
+
+  // ✅ Preview mode: skip wallet auth checks completely
+  if (user?.preview) {
+    setWalletReady(true);
+    return;
+  }
 
   // ✅ FIX: do not hit /wallet while we are still priming cookies (guest/init)
   if (authBooting) return;
@@ -3000,6 +3038,19 @@ if (!user) {
   return (
     <AuthGate
   onSignedIn={async (u) => {
+    if (u?.preview) {
+      saveUser(u);
+      setUser(u);
+      resetChatUI(u);
+      try { sessionStorage.removeItem(ROLE_KEY(u)); } catch {}
+      setAuthBooting(false);
+      setShowSigninBanner(false);
+      setWalletReady(true);
+      setCoins(0);
+      setWallet({ coins: 0, expires_at: 0, welcome_claimed: false });
+      return;
+    }
+
     setAuthBooting(true);
     setShowSigninBanner(false);
     setWalletReady(false);
