@@ -12,15 +12,32 @@ import { prewarmRazorpay } from './lib/razorpay';
 function detectAppModeOnce() {
   try {
     const KEY = 'is_app_mode_v1';
-    // already decided in this tab?
+    const params = new URLSearchParams(window.location.search);
+    const host = window.location.hostname || '';
+
+    // 1) Explicit query param always wins
+    if (params.has('src')) {
+      const isTwa = params.get('src') === 'twa';
+      sessionStorage.setItem(KEY, isTwa ? '1' : '0');
+      return isTwa;
+    }
+
+    // 2) Vercel preview must NEVER inherit old app-mode from this tab
+    if (/\.vercel\.app$/i.test(host)) {
+      sessionStorage.setItem(KEY, '0');
+      return false;
+    }
+
+    // 3) Otherwise use the saved tab decision if present
     const saved = sessionStorage.getItem(KEY);
     if (saved === '1' || saved === '0') return saved === '1';
 
-    const params = new URLSearchParams(window.location.search);
-    const isTwa = params.get('src') === 'twa';
-    sessionStorage.setItem(KEY, isTwa ? '1' : '0');
-    return isTwa;
-  } catch { return false; }
+    // 4) Default = normal web
+    sessionStorage.setItem(KEY, '0');
+    return false;
+  } catch {
+    return false;
+  }
 }
 // Single source of truth for this runtime
 const IS_ANDROID_APP = detectAppModeOnce();
@@ -626,11 +643,25 @@ const doClaim = async () => {
   if (claimed) return;
 
     if (IS_UI_PREVIEW) {
-    setClaimed(true);
-    setSparkle(true);
-    setTimeout(() => setSparkle(false), 900);
-    return;
+  setClaimed(true);
+  setSparkle(true);
+
+  try {
+    const u = loadUser();
+    if (u) {
+      saveCachedCoins(u, amount);
+      localStorage.setItem(welcomeKeyFor(userIdFor(u)), '1');
+      markDeviceWelcomeClaimed();
+    }
+  } catch {}
+
+  if (typeof window.setPreviewCoins === 'function') {
+    window.setPreviewCoins(amount);
   }
+
+  setTimeout(() => setSparkle(false), 900);
+  return;
+}
 
   setClaimed(true);     // lock UI (no double call)
   setSparkle(true);
@@ -1456,6 +1487,23 @@ useEffect(() => {
   window.refreshWalletGlobal = () => refreshWallet();
   return () => { delete window.refreshWalletGlobal; };
 }, [user]);
+  useEffect(() => {
+  window.setPreviewCoins = (n) => {
+    const amt = Number(n || 0);
+
+    setCoins(amt);
+    setWallet({
+      coins: amt,
+      expires_at: 0,
+      welcome_claimed: true
+    });
+    setWalletReady(true);
+  };
+
+  return () => {
+    delete window.setPreviewCoins;
+  };
+}, []);
   useEffect(() => {
   if (!pendingClaimCheck) return;
   if (!user) return;
