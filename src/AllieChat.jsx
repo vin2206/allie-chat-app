@@ -941,12 +941,18 @@ function ThemeModal({ open, onClose, value, onChange }) {
 
 function AllieChat() {
   // NEW: auth + welcome
-const [user, setUser] = useState(loadUser());
+const [user, setUser] = useState(() => (IS_UI_PREVIEW ? null : loadUser()));
 const [showIntro, setShowIntro] = useState(() => {
   try { return localStorage.getItem('intro_seen_v1') !== '1'; } catch { return true; }
 });
 const [showSigninBanner, setShowSigninBanner] = useState(false);
- // --- Stop background Google prompts; rely on our 14-day server cookie ---
+
+useEffect(() => {
+  if (!IS_UI_PREVIEW) return;
+  try { localStorage.removeItem(USER_KEY); } catch {}
+}, []);
+
+// --- Stop background Google prompts; rely on our 14-day server cookie ---
 useEffect(() => {
   if (__idRefreshTimer) { clearTimeout(__idRefreshTimer); __idRefreshTimer = null; }
 }, [user?.idToken]);
@@ -1506,6 +1512,12 @@ useEffect(() => {
 }, []);
   useEffect(() => {
   if (!pendingClaimCheck) return;
+
+  if (IS_UI_PREVIEW) {
+    setPendingClaimCheck(false);
+    return;
+  }
+
   if (!user) return;
   if (!walletReady) return;       // ✅ wait for real wallet
   if (!trialEnabled) return;
@@ -3120,17 +3132,27 @@ if (!user) {
     <AuthGate
   onSignedIn={async (u) => {
     if (u?.preview) {
-      saveUser(u);
-      setUser(u);
-      resetChatUI(u);
-      try { sessionStorage.removeItem(ROLE_KEY(u)); } catch {}
-      setAuthBooting(false);
-      setShowSigninBanner(false);
-      setWalletReady(true);
-      setCoins(0);
-      setWallet({ coins: 0, expires_at: 0, welcome_claimed: false });
-      return;
-    }
+  const previewCoins = Number(trialAmount || 250);
+
+  saveUser(u);
+  setUser(u);
+  resetChatUI(u);
+
+  try { sessionStorage.removeItem(ROLE_KEY(u)); } catch {}
+  try { saveCachedCoins(u, previewCoins); } catch {}
+  try { localStorage.setItem(welcomeKeyFor(userIdFor(u)), '1'); } catch {}
+
+  setAuthBooting(false);
+  setShowSigninBanner(false);
+  setWalletReady(true);
+  setCoins(previewCoins);
+  setWallet({
+    coins: previewCoins,
+    expires_at: 0,
+    welcome_claimed: true
+  });
+  return;
+}
 
     setAuthBooting(true);
     setShowSigninBanner(false);
