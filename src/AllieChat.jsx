@@ -30,6 +30,7 @@ const IS_VERCEL_PREVIEW =
   /\.vercel\.app$/i.test(window.location.hostname) &&
   window.location.hostname !== 'chat.buddyby.com' &&
   window.location.hostname !== 'love.buddyby.com';
+const IS_UI_PREVIEW = IS_VERCEL_PREVIEW;
 // --- small utility ---
 function debounce(fn, wait = 120) {
   let t;
@@ -475,7 +476,7 @@ if (!document.querySelector('script[src*="gsi/client"]')) {
 
 {/* Actions */}
 <div className="auth-actions">
-  {IS_VERCEL_PREVIEW && (
+  {IS_UI_PREVIEW ? (
     <button
       className="btn"
       onClick={() => {
@@ -493,75 +494,73 @@ if (!document.querySelector('script[src*="gsi/client"]')) {
     >
       Open Preview
     </button>
+  ) : (
+    <>
+      {/* Guest (working) */}
+      {!isGuestDisabledUI() && (
+        <button
+          className="btn"
+          onClick={async () => {
+            const GKEY = 'guest_id_v1';
+            let gid = '';
+            try { gid = localStorage.getItem(GKEY) || ''; } catch {}
+
+            if (!gid) {
+              gid =
+                (window.crypto && typeof window.crypto.randomUUID === 'function')
+                  ? window.crypto.randomUUID()
+                  : String(Date.now());
+              try { localStorage.setItem(GKEY, gid); } catch {}
+            }
+
+            try {
+              const tempUser = { guest: true, guestId: gid, idToken: '' };
+              const r = await fetch(apiUrl('/auth/guest/init'), {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', ...authHeaders(tempUser) },
+                credentials: 'include',
+                body: JSON.stringify({})
+              });
+
+              if (r.status === 403) {
+                const d = await r.json().catch(() => ({}));
+                if (d?.error === 'guest_disabled') {
+                  disableGuest();
+                  alert('Guest trial already used on this device. Please continue with Google.');
+                  return;
+                }
+              }
+
+              if (!r.ok) {
+                alert('Could not start guest session. Please continue with Google.');
+                return;
+              }
+            } catch {
+              alert('Could not start guest session. Please continue with Google.');
+              return;
+            }
+
+            onSignedIn({
+              guestId: gid,
+              guest: true,
+              name: 'Guest',
+              email: '',
+              sub: '',
+              picture: '',
+              idToken: ''
+            });
+          }}
+        >
+          Continue as Guest
+        </button>
+      )}
+
+      <button className="btn btn--disabled" disabled>
+        <span className="btn-ico apple" aria-hidden="true"></span>
+        Continue with Apple
+      </button>
+    </>
   )}
-  {/* Guest (working) */}
-  {!isGuestDisabledUI() && (
-  <button
-    className="btn"
-    onClick={async () => {
-      const GKEY = 'guest_id_v1';
-      let gid = '';
-      try { gid = localStorage.getItem(GKEY) || ''; } catch {}
-
-      if (!gid) {
-        gid =
-          (window.crypto && typeof window.crypto.randomUUID === 'function')
-            ? window.crypto.randomUUID()
-            : String(Date.now());
-        try { localStorage.setItem(GKEY, gid); } catch {}
-      }
-
-      // ✅ Ask backend if guest is allowed on this device
-      try {
-        const tempUser = { guest: true, guestId: gid, idToken: '' };
-        const r = await fetch(apiUrl('/auth/guest/init'), {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', ...authHeaders(tempUser) },
-          credentials: 'include',
-          body: JSON.stringify({})
-        });
-
-        // Backend says: guest trial already used => force Google-only UI
-        if (r.status === 403) {
-          const d = await r.json().catch(() => ({}));
-          if (d?.error === 'guest_disabled') {
-            disableGuest();
-            alert('Guest trial already used on this device. Please continue with Google.');
-            return;
-          }
-        }
-
-        if (!r.ok) {
-          // soft fail: don’t break sign-in screen
-          alert('Could not start guest session. Please continue with Google.');
-          return;
-        }
-      } catch {
-        alert('Could not start guest session. Please continue with Google.');
-        return;
-      }
-
-      // Allowed => proceed as guest
-      onSignedIn({
-        guestId: gid,
-        guest: true,
-        name: 'Guest',
-        email: '',
-        sub: '',
-        picture: '',
-        idToken: ''
-      });
-    }}
-  >
-    Continue as Guest
-  </button>
-)}
-
-  {/* Disabled Apple */}
-  <button className="btn btn--disabled" disabled>
-    <span className="btn-ico apple" aria-hidden="true"></span>
-    Continue with Apple
-  </button>
 </div>
       </div>
     </div>
@@ -625,6 +624,13 @@ function WelcomeClaimModal({ open, onClose, amount = 250 }) {
     // ✅ background auto-claim (auto, non-blocking, dismiss-anywhere safe)
 const doClaim = async () => {
   if (claimed) return;
+
+    if (IS_UI_PREVIEW) {
+    setClaimed(true);
+    setSparkle(true);
+    setTimeout(() => setSparkle(false), 900);
+    return;
+  }
 
   setClaimed(true);     // lock UI (no double call)
   setSparkle(true);
@@ -959,21 +965,21 @@ const [allowWebRazorpay, setAllowWebRazorpay] = useState(true);
 const [allowAppRazorpay, setAllowAppRazorpay] = useState(false);
 
 useEffect(() => {
+  if (IS_UI_PREVIEW) return;
+
   const url = apiUrl('/config');
-    fetch(url, { headers: authHeaders(loadUser()), credentials: 'include' })
+  fetch(url, { headers: authHeaders(loadUser()), credentials: 'include' })
     .then(r => r.json())
     .then(d => {
       setRoleplayNeedsPremium(!!d?.roleplayNeedsPremium);
 
-      // trial controls
       if (typeof d?.trialEnabled === 'boolean') setTrialEnabled(d.trialEnabled);
       if (d?.trialAmount != null) setTrialAmount(Number(d.trialAmount));
 
-      // payment switches
       if (typeof d?.allowWebRazorpay === 'boolean') setAllowWebRazorpay(d.allowWebRazorpay);
       if (typeof d?.allowAppRazorpay === 'boolean') setAllowAppRazorpay(d.allowAppRazorpay);
     })
-    .catch(() => {}); // safe defaults above
+    .catch(() => {});
 }, []);
 
 // Open "How to talk" instantly (no wallet wait). Once per tab per user.
@@ -1411,6 +1417,8 @@ useEffect(() => {
   prevUserKeyRef.current = userKey;
 }, [userKey, user, resetChatUI]);
  useEffect(() => {
+  if (IS_UI_PREVIEW) return;
+
   let alive = true;
 
   (async () => {
@@ -1423,7 +1431,6 @@ useEffect(() => {
       const d = await r.json().catch(() => ({}));
       if (!alive) return;
 
-      // support both shapes: {text, voice} OR {prices:{text,voice}}
       const t = d?.text ?? d?.prices?.text;
       const v = d?.voice ?? d?.prices?.voice;
 
@@ -1616,6 +1623,10 @@ useEffect(() => {
 }, [user]);
 
 const openCoins = () => {
+    if (IS_UI_PREVIEW || user?.preview) {
+    openNotice('Preview mode', 'Payments are disabled in preview. Use this preview only for visual UI checks.');
+    return;
+  }
   // ANDROID APP (Phase A): never show Razorpay UI
   if (IS_ANDROID_APP) {
     openNotice(
@@ -2283,6 +2294,10 @@ const applyRoleChange = (mode, type) => {
 const startRecording = async () => {
   if (isTyping || cooldown) return;
   if (showWelcome || showWelcomeClaim) return;
+    if (IS_UI_PREVIEW || user?.preview) {
+    openNotice('Preview mode', 'Voice recording is disabled in preview. Use this preview for UI checks only.');
+    return;
+  }
 
   // NEW: don’t let users record until wallet/cookies are ready
   if (!walletReady) {
@@ -2504,6 +2519,24 @@ const trimmed = formattedHistory.slice(-MAX_MSG);
   setShowCharPopup(false);
   if (inputValue.trim() === '' || isTyping || cooldown || isRecording) return;
   if (showWelcome || showWelcomeClaim) return;
+    if (IS_UI_PREVIEW || user?.preview) {
+    const text = inputValue.trim();
+    const currentTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+    setMessages(prev => [
+      ...prev,
+      { text, sender: 'user', time: currentTime },
+      {
+        text: 'Preview reply only — backend chat is disabled here. Use this preview to inspect UI spacing, bubbles, header, footer, and timestamps.',
+        sender: 'allie',
+        time: currentTime
+      }
+    ]);
+
+    setInputValue('');
+    setTimeout(() => scrollToBottomNow(true), 0);
+    return;
+  }
 
   // Quick commands
   if (inputValue.trim().toLowerCase() === '#stranger') {
