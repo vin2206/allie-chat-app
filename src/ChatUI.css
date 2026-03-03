@@ -517,13 +517,17 @@ html.ime-open .bottom-sentinel {
   background: linear-gradient(135deg, #ffe3e3, #c2f0fc);
   color: #222;
   border-radius: 18px 18px 18px 6px;
-  padding: 10px 12px 8px 12px;
+  padding: 10px 12px 4px 12px;
 }
 .user-message .bubble-content {
   background: linear-gradient(135deg, #ff99cc, #b388eb, #80d0f1);
   color: #fff;
   border-radius: 18px 18px 6px 18px;
-  padding: 10px 12px 8px 13px;
+  padding: 10px 12px 4px 13px;
+}
+
+.bubble-content.has-time {
+  padding-bottom: 8px;
 }
 
 /* Make sure generic .footer button rule doesn't force same look on both */
