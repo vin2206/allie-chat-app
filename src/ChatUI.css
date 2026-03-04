@@ -229,23 +229,37 @@ html.ime-open .bottom-sentinel {
 
 /* time sits in a tiny reserved corner */
 .meta-info{
-  display: block;
-  text-align: right;
+  position: absolute;
+  right: 8px;
+  bottom: 4px;
+  display: inline-flex;
+  align-items: flex-end;
+  justify-content: flex-end;
   font-size: 10px;
   opacity: .72;
-  margin-top: 2px;
+  margin: 0;
+  line-height: 1;
+  pointer-events: none;
+}
+.meta-info .time {
+  display: inline-block;
+  white-space: nowrap;
   line-height: 1;
 }
 
 /* ===== Time reserve (ONLY on last line) ===== */
 
 /* how much space to reserve for the absolute time on the last line */
-:root { --time-reserve: 52px; } /* tweak 38px–52px if needed */
+:root { --time-reserve: 38px; } /* tighter reserve so text can flow farther right */
+@media (max-width: 480px) {
+  :root { --time-reserve: 34px; }
+}
 
 /* allow full width (no “wall”) */
 .msg-text{
   display: block;
-  padding-right: 0;
+  margin: 0;
+  padding-right: var(--time-reserve, 50px);
 }
 .meta-info span { margin-right: 0; }
 
@@ -517,13 +531,13 @@ html.ime-open .bottom-sentinel {
   background: linear-gradient(135deg, #ffe3e3, #c2f0fc);
   color: #222;
   border-radius: 18px 18px 18px 6px;
-  padding: 10px 12px 8px 12px;
+  padding: 8px 12px 6px 12px;
 }
 .user-message .bubble-content {
   background: linear-gradient(135deg, #ff99cc, #b388eb, #80d0f1);
   color: #fff;
   border-radius: 18px 18px 6px 18px;
-  padding: 10px 12px 8px 13px;
+  padding: 8px 12px 6px 13px;
 }
 
 /* Make sure generic .footer button rule doesn't force same look on both */
