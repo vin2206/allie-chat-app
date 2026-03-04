@@ -2581,7 +2581,7 @@ const trimmed = formattedHistory.slice(-MAX_MSG);
   if (showWelcome || showWelcomeClaim) return;
     if (IS_UI_PREVIEW || user?.preview) {
     const text = inputValue.trim();
-    const currentTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const currentTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
 
     setMessages(prev => [
       ...prev,
