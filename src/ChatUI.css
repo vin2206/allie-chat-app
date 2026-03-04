@@ -251,6 +251,9 @@ html.ime-open .bottom-sentinel {
 
 /* how much space to reserve for the absolute time on the last line */
 :root { --time-reserve: 38px; } /* tighter reserve so text can flow farther right */
+@media (max-width: 480px) {
+  :root { --time-reserve: 34px; }
+}
 
 /* allow full width (no “wall”) */
 .msg-text{
