@@ -250,7 +250,7 @@ html.ime-open .bottom-sentinel {
 /* ===== Time reserve (ONLY on last line) ===== */
 
 /* how much space to reserve for the absolute time on the last line */
-:root { --time-reserve: 44px; } /* tighter reserve so text can flow farther right */
+:root { --time-reserve: 38px; } /* tighter reserve so text can flow farther right */
 
 /* allow full width (no “wall”) */
 .msg-text{
@@ -528,13 +528,13 @@ html.ime-open .bottom-sentinel {
   background: linear-gradient(135deg, #ffe3e3, #c2f0fc);
   color: #222;
   border-radius: 18px 18px 18px 6px;
-  padding: 9px 12px 5px 12px;
+  padding: 8px 12px 6px 12px;
 }
 .user-message .bubble-content {
   background: linear-gradient(135deg, #ff99cc, #b388eb, #80d0f1);
   color: #fff;
   border-radius: 18px 18px 6px 18px;
-  padding: 9px 12px 5px 13px;
+  padding: 8px 12px 6px 13px;
 }
 
 /* Make sure generic .footer button rule doesn't force same look on both */
