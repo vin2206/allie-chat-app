@@ -230,15 +230,21 @@ html.ime-open .bottom-sentinel {
 /* time sits in a tiny reserved corner */
 .meta-info{
   position: absolute;
-  right: 10px;
+  right: 8px;
   bottom: 4px;
-  display: block;
-  text-align: right;
+  display: inline-flex;
+  align-items: flex-end;
+  justify-content: flex-end;
   font-size: 10px;
   opacity: .72;
-  margin-top: 0;
+  margin: 0;
   line-height: 1;
   pointer-events: none;
+}
+.meta-info .time {
+  display: inline-block;
+  white-space: nowrap;
+  line-height: 1;
 }
 
 /* ===== Time reserve (ONLY on last line) ===== */
@@ -250,7 +256,7 @@ html.ime-open .bottom-sentinel {
 .msg-text{
   display: block;
   margin: 0;
-  padding-right: var(--time-reserve, 52px);
+  padding-right: var(--time-reserve, 50px);
 }
 .meta-info span { margin-right: 0; }
 

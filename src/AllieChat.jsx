@@ -1936,6 +1936,19 @@ useEffect(() => {
   return () => document.removeEventListener('keydown', onKey);
 }, [showAvatarFull]);
 const [showRoleMenu, setShowRoleMenu] = useState(false);
+
+const formatPreviewTime24 = (value) => {
+  if (!value) return value;
+  const raw = String(value).trim();
+  const m = raw.match(/^(\d{1,2}):(\d{2})\s*([AaPp][Mm])$/);
+  if (!m) return raw;
+  let h = Number(m[1]);
+  const mm = m[2];
+  const ap = m[3].toUpperCase();
+  if (ap === 'AM') h = (h === 12 ? 0 : h);
+  if (ap === 'PM') h = (h === 12 ? 12 : h + 12);
+  return `${String(h).padStart(2, '0')}:${mm}`;
+};
 // =========================
 // THEME (local only)
 // =========================
@@ -3536,7 +3549,7 @@ if (!user) {
 
   return !!msg.time && !isVoiceMsg ? (
     <div className="meta-info">
-      <span className="time">{msg.time}</span>
+      <span className="time">{(IS_UI_PREVIEW || user?.preview) ? formatPreviewTime24(msg.time) : msg.time}</span>
     </div>
   ) : null;
 })()}
