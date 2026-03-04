@@ -229,11 +229,11 @@ html.ime-open .bottom-sentinel {
 
 /* time sits in a tiny reserved corner */
 .meta-info{
-  display: block;
-  text-align: right;
+  display: flex;
+  justify-content: flex-end;
   font-size: 10px;
   opacity: .72;
-  margin-top: 2px;
+  margin-top: 0;
   line-height: 1;
 }
 
@@ -245,6 +245,7 @@ html.ime-open .bottom-sentinel {
 /* allow full width (no “wall”) */
 .msg-text{
   display: block;
+  margin: 0;
   padding-right: 0;
 }
 .meta-info span { margin-right: 0; }
@@ -517,13 +518,13 @@ html.ime-open .bottom-sentinel {
   background: linear-gradient(135deg, #ffe3e3, #c2f0fc);
   color: #222;
   border-radius: 18px 18px 18px 6px;
-  padding: 10px 12px 8px 12px;
+  padding: 10px 12px 6px 12px;
 }
 .user-message .bubble-content {
   background: linear-gradient(135deg, #ff99cc, #b388eb, #80d0f1);
   color: #fff;
   border-radius: 18px 18px 6px 18px;
-  padding: 10px 12px 8px 13px;
+  padding: 10px 12px 6px 13px;
 }
 
 /* Make sure generic .footer button rule doesn't force same look on both */
