@@ -227,19 +227,18 @@ html.ime-open .bottom-sentinel {
   animation-fill-mode: both;
 }
 
-/* time sits in a tiny reserved corner */
+/* time follows message text with a small clean gap */
 .meta-info{
-  position: absolute;
-  right: 8px;
-  bottom: 4px;
+  position: static;
   display: inline-flex;
-  align-items: flex-end;
-  justify-content: flex-end;
+  align-items: baseline;
+  justify-content: flex-start;
   font-size: 10px;
   opacity: .72;
-  margin: 0;
+  margin: 0 0 0 6px;
   line-height: 1;
   pointer-events: none;
+  vertical-align: baseline;
 }
 .meta-info .time {
   display: inline-block;
@@ -247,19 +246,11 @@ html.ime-open .bottom-sentinel {
   line-height: 1;
 }
 
-/* ===== Time reserve (ONLY on last line) ===== */
-
-/* how much space to reserve for the absolute time on the last line */
-:root { --time-reserve: 38px; } /* tighter reserve so text can flow farther right */
-@media (max-width: 480px) {
-  :root { --time-reserve: 34px; }
-}
-
-/* allow full width (no “wall”) */
+/* natural text width with no fixed time reserve strip */
 .msg-text{
-  display: block;
+  display: inline;
   margin: 0;
-  padding-right: var(--time-reserve, 50px);
+  padding-right: 0;
 }
 .meta-info span { margin-right: 0; }
 
