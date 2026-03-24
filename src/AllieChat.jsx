@@ -1,3 +1,4 @@
+/* eslint-env browser */
 /* eslint-disable no-console, no-alert, react-hooks/exhaustive-deps, no-unused-vars */
 import React, { useState, useEffect, useRef, useLayoutEffect } from 'react';
 import './ChatUI.css';
