@@ -876,32 +876,99 @@ html.ime-open .bottom-sentinel {
 .renew-note{
   font-size:11px; color:#777; margin-top:10px;
 }
-/* --- Auth gate --- */
+/* --- Auth gate (premium landing continuation) --- */
 .auth-backdrop{
-  position: fixed; inset: 0;
-  display:flex; align-items:center; justify-content:center;
-  /* Lighter pastel background just for the sign-in overlay */
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding: 20px;
   background:
-    linear-gradient(180deg, #ffeaf5 0%, #f6dcff 45%, #ece8ff 100%),
-    radial-gradient(600px 300px at 50% 0%, rgba(255,255,255,.55), rgba(0,0,0,.12));
-  backdrop-filter: blur(3px);
+    radial-gradient(174% 96% at 12% -28%, rgba(252, 237, 225, .18), rgba(12, 8, 18, 0) 74%),
+    radial-gradient(142% 90% at 88% -22%, rgba(245, 209, 226, .13), rgba(8, 5, 13, 0) 76%),
+    radial-gradient(92% 62% at 50% 34%, rgba(133, 97, 126, .11), rgba(8, 5, 13, 0) 80%),
+    linear-gradient(180deg, #09060d 0%, #11091a 46%, #07040b 100%);
+  background-size: 120% 120%, 120% 120%, 110% 110%, 100% 100%;
+  animation: authBgShift 34s ease-in-out infinite alternate;
   z-index: 10000;
 }
+
+.auth-backdrop::before,
+.auth-backdrop::after{
+  content: "";
+  position: absolute;
+  pointer-events: none;
+}
+
+.auth-backdrop::before{
+  inset: -24%;
+  background:
+    linear-gradient(112deg, rgba(255, 236, 219, .08) 0%, rgba(255, 236, 219, 0) 42%),
+    linear-gradient(326deg, rgba(229, 173, 206, .07) 0%, rgba(229, 173, 206, 0) 44%);
+  animation: authAuroraDrift 34s ease-in-out infinite alternate;
+}
+
+.auth-backdrop::after{
+  width: 360px;
+  height: 200px;
+  border-radius: 44% 56% 48% 52% / 58% 46% 54% 42%;
+  right: -170px;
+  bottom: -108px;
+  background: rgba(222, 160, 191, .11);
+  filter: blur(10px);
+  animation: authOrbFloat 24s ease-in-out infinite;
+}
+
 .auth-card{
-  width: min(92vw, 380px);
-  background:#fff; color:#222; border-radius:18px;
-  padding:22px;
-  box-shadow:0 26px 60px rgba(0,0,0,.24);
+  position: relative;
+  width: min(92vw, 420px);
+  padding: 26px 22px 24px;
+  border-radius: 22px;
+  border: 1px solid rgba(248, 228, 239, .22);
+  background: linear-gradient(160deg, rgba(31, 18, 43, .84) 0%, rgba(17, 11, 27, .86) 100%);
+  box-shadow:
+    0 38px 70px rgba(4, 0, 10, .58),
+    0 10px 30px rgba(108, 66, 126, .2),
+    inset 0 1px 0 rgba(255, 255, 255, .09);
+  backdrop-filter: blur(8px);
+  color: #f6efff;
   text-align:center;
-  display:flex; flex-direction:column; align-items:center; gap:10px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap: 10px;
+  animation: authCardPulse 14s ease-in-out infinite;
+  font-family: 'Inter', 'Avenir Next', 'Segoe UI', sans-serif;
+}
+
+.auth-card::before{
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(115deg, rgba(255,255,255,0), rgba(255,255,255,.07), rgba(255,255,255,0));
+  transform: translateX(-130%);
+  animation: authSheen 12s ease-in-out infinite;
 }
 
 .auth-logo{
-  width: 180px; height: auto;
-  display:block; margin: 2px auto 4px;
+  width: 172px;
+  height: auto;
+  display: block;
+  margin: 0 auto 4px;
+  filter: drop-shadow(0 8px 28px rgba(227, 127, 198, .22));
 }
 
-.auth-sub{ font-size:13px; color:#666; margin: 0 0 8px; }
+.auth-sub{
+  font-size: 13px;
+  line-height: 1.5;
+  color: rgba(235, 223, 246, .78);
+  margin: 0 0 6px;
+  max-width: 300px;
+}
 
 .auth-title{ font-size:22px; font-weight:900; margin-bottom:4px; color:#ff0a85; }
 .auth-input{
@@ -939,21 +1006,25 @@ html.ime-open .bottom-sentinel {
 }
 /* Center the Google Sign-In button */
 .google-row {
+  width: 100%;
   display: flex;
   justify-content: center;
   margin-top: 10px;
 }
+
 /* Reserve space + hide until GIS paints */
 .gbtn-wrap {
-  width: min(320px, 82vw);
-  height: 44px;                 /* matches "large" GIS button */
+  width: 100%;
+  max-width: 320px;
+  min-height: 44px;
   display: flex;
   align-items: center;
   justify-content: center;
-  visibility: hidden;           /* <- start hidden to avoid flash */
+  visibility: hidden;
+  border-radius: 999px;
 }
 
-.gbtn-wrap.ready {              /* shown after GIS finishes */
+.gbtn-wrap.ready {
   visibility: visible;
 }
 
@@ -962,6 +1033,67 @@ html.ime-open .bottom-sentinel {
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+@keyframes authAuroraDrift{
+  from{
+    transform: translate3d(-1%, -1%, 0) scale(1);
+    opacity: .9;
+  }
+  to{
+    transform: translate3d(1%, 1%, 0) scale(1.04);
+    opacity: 1;
+  }
+}
+
+@keyframes authBgShift{
+  from{
+    background-position: 12% -24%, 88% -18%, 50% 36%, 50% 50%;
+  }
+  to{
+    background-position: 16% -20%, 84% -14%, 54% 40%, 50% 55%;
+  }
+}
+
+@keyframes authOrbFloat{
+  0%{
+    transform: translate3d(0, 0, 0);
+  }
+  50%{
+    transform: translate3d(-8px, -16px, 0);
+  }
+  100%{
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes authSheen{
+  0%,
+  70%,
+  100%{
+    transform: translateX(-130%);
+    opacity: .1;
+  }
+  35%{
+    transform: translateX(130%);
+    opacity: .5;
+  }
+}
+
+@keyframes authCardPulse{
+  0%,
+  100%{
+    box-shadow:
+      0 38px 70px rgba(4, 0, 10, .58),
+      0 10px 30px rgba(108, 66, 126, .2),
+      inset 0 1px 0 rgba(255, 255, 255, .09);
+  }
+  50%{
+    box-shadow:
+      0 42px 76px rgba(4, 0, 10, .6),
+      0 12px 34px rgba(108, 66, 126, .24),
+      inset 0 1px 0 rgba(255, 255, 255, .11);
+  }
 }
 
 .App.stable {
@@ -1311,47 +1443,44 @@ html.legacy-zoom .username-container {
 
 /* --- Auth actions row + disabled buttons (Apple / Email) --- */
 .auth-actions{
-  display:flex;
-  flex-direction:column;
-  gap:14px;
-  width:100%;
-  margin-top: 2px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  margin-top: 4px;
 }
 
 /* keep layout tidy on tiny screens */
 @media (max-width: 360px){
-  .auth-actions{ gap:8px; }
-  .auth-card .btn{ height:44px; font-size:13px; }
+  .auth-actions{ gap: 8px; }
+  .auth-card .btn{ height: 46px; font-size: 13px; }
 }
 
 /* nicer keyboard focus for accessibility */
 .auth-card .btn:focus-visible{
-  outline: 2px solid #7b61ff;
+  outline: 2px solid rgba(244, 173, 227, .86);
   outline-offset: 2px;
 }
 .auth-card .btn--disabled[disabled]:focus-visible{
   outline: none;
 }
 
-/* --- Make Google row first & same size without changing markup --- */
-/* Put the Google row ABOVE the Apple/Email stack visually */
-.auth-card{ display:flex; flex-direction:column; }  /* already set, re-assert */
-.auth-card .google-row{ order: 30; }   /* will move as a group */
-.auth-card .auth-actions{ order: 40; } /* sits below Google */
+/* Keep Google row before actions */
+.auth-card .google-row{ order: 30; }
+.auth-card .auth-actions{ order: 40; }
 
-/* Match widths/heights so all three look identical */
 .auth-card .google-row{
-  width:100%;
-  display:flex;
-  justify-content:center;
+  width: 100%;
+  display: flex;
+  justify-content: center;
 }
 .auth-card .google-row .gbtn-wrap{
-  width: min(320px, 82vw);              /* same as .btn (full width of the card) */
-  max-width: none;          /* prevent narrower look */
-  height:44px;              /* same height as the others */
+  width: min(320px, 100%);
+  max-width: none;
+  height: 44px;
 }
 
-/* Apple & Email = Google spec */
+/* Guest/Preview + Apple button shell */
 .auth-card .btn{
   all: unset;
   position: relative;
@@ -1359,32 +1488,42 @@ html.legacy-zoom .username-container {
   align-items: center;
   justify-content: center;
   margin: 0 auto;
-  width: min(320px, 82vw);
-  height: 44px;                         /* Google large height */
-  padding: 0 48px;               /* room for left icon */
-  background: #fff;
-  color: #3c4043;
-  border: 1px solid rgba(218,220,224,.70);
-  border-radius: 22px;                    /* match GIS corners */
-  font: 500 14px/1 system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  width: min(320px, 100%);
+  height: 48px;
+  padding: 0 48px;
+  border-radius: 999px;
+  font: 600 14px/1 'Avenir Next', 'Nunito Sans', 'Segoe UI', sans-serif;
   cursor: pointer;
   box-sizing: border-box;
+  transition: transform .2s ease, box-shadow .2s ease, opacity .2s ease;
+}
+
+.auth-card .auth-actions .btn:not(.btn--disabled){
+  border: 1px solid rgba(255, 220, 245, .26);
+  color: #fff6ff;
+  background: linear-gradient(135deg, rgba(217, 93, 165, .9), rgba(134, 76, 198, .92));
+  box-shadow: 0 14px 32px rgba(58, 24, 87, .34);
+}
+
+.auth-card .auth-actions .btn:not(.btn--disabled):active{
+  transform: translateY(1px);
 }
 
 .auth-card .btn--disabled[disabled]{
-  opacity: 1;                          /* keep size identical */
+  opacity: 1;
   cursor: not-allowed;
-  background: #F8FAFC;                 /* light grey fill */
-  color: #9AA0A6;                      /* grey text */
-  border-color: rgba(218,220,224,.95); /* slightly stronger grey */
+  background: rgba(250, 243, 255, .06);
+  color: rgba(225, 207, 238, .52);
+  border: 1px solid rgba(235, 208, 255, .14);
+  box-shadow: none;
 }
 .auth-card .btn--disabled[disabled] .btn-ico{
-  color: #9AA0A6;                      /* grey icon tint */
+  color: rgba(225, 207, 238, .5);
 }
 
 .auth-card .btn-ico{
   position: absolute;
-  left: 14px;                            /* same inset as Google */
+  left: 14px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -1396,11 +1535,9 @@ html.legacy-zoom .username-container {
   border: 0;
 }
 
-/* Draw a monochrome Apple mark using a CSS mask */
 .auth-card .btn-ico.apple{
   width: 20px;
   height: 20px;
-  /* color controls the icon tint (uses currentColor) */
 }
 .auth-card .btn-ico.apple::before{
   content:"";
@@ -1580,7 +1717,6 @@ html[data-theme="dark"] .modal-content,
 html[data-theme="dark"] .role-card,
 html[data-theme="dark"] .confirm-modal,
 html[data-theme="dark"] .welcome-card,
-html[data-theme="dark"] .auth-card,
 html[data-theme="dark"] .signin-card{
   background: rgba(15,23,42,.96);
   color: rgba(255,255,255,.92);
@@ -1663,7 +1799,6 @@ html[data-theme="ocean"] .modal-content,
 html[data-theme="ocean"] .role-card,
 html[data-theme="ocean"] .confirm-modal,
 html[data-theme="ocean"] .welcome-card,
-html[data-theme="ocean"] .auth-card,
 html[data-theme="ocean"] .signin-card{
   background: rgba(255,255,255,.96);
   color: #0b1220;
