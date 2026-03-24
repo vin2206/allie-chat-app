@@ -7,46 +7,12 @@ import { startVersionWatcher } from './versionWatcher';
 import CoinsModal from './components/CoinsModal';
 import IntroSlides from './ui/IntroSlides';
 import { prewarmRazorpay } from './lib/razorpay';
-// --- App context (TWA) flag — OFF on normal web ---
-// Reads ?src=twa once per tab; persists only for this tab/session.
-function detectAppModeOnce() {
-  try {
-    const KEY = 'is_app_mode_v1';
-    const params = new URLSearchParams(window.location.search);
-    const host = window.location.hostname || '';
-
-    // 1) Explicit query param always wins
-    if (params.has('src')) {
-      const isTwa = params.get('src') === 'twa';
-      sessionStorage.setItem(KEY, isTwa ? '1' : '0');
-      return isTwa;
-    }
-
-    // 2) Vercel preview must NEVER inherit old app-mode from this tab
-    if (/\.vercel\.app$/i.test(host)) {
-      sessionStorage.setItem(KEY, '0');
-      return false;
-    }
-
-    // 3) Otherwise use the saved tab decision if present
-    const saved = sessionStorage.getItem(KEY);
-    if (saved === '1' || saved === '0') return saved === '1';
-
-    // 4) Default = normal web
-    sessionStorage.setItem(KEY, '0');
-    return false;
-  } catch {
-    return false;
-  }
-}
-// Single source of truth for this runtime
-const IS_ANDROID_APP = detectAppModeOnce();
-const IS_LOVE_WEB = !IS_ANDROID_APP && (window.location.hostname === 'love.buddyby.com');
+// Single source of truth for this runtime (love-only production + preview-safe)
+const HOSTNAME = window.location.hostname || '';
+const IS_LOVE_WEB = HOSTNAME === 'love.buddyby.com';
 const IS_VERCEL_PREVIEW =
-  !IS_ANDROID_APP &&
-  /\.vercel\.app$/i.test(window.location.hostname) &&
-  window.location.hostname !== 'chat.buddyby.com' &&
-  window.location.hostname !== 'love.buddyby.com';
+  /\.vercel\.app$/i.test(HOSTNAME) &&
+  !IS_LOVE_WEB;
 const IS_UI_PREVIEW = IS_VERCEL_PREVIEW;
 // --- small utility ---
 function debounce(fn, wait = 120) {
@@ -127,12 +93,11 @@ function enableSilentReauth(clientId, setUser) {
 }
 // --- backend base ---
 const BACKEND_BASE = 'https://api.buddyby.com';
+const REQUEST_SRC = 'love';
 
-// Always add src=twa for app calls (extra hardening; server also checks header)
 const apiUrl = (path) => {
   const p = path.startsWith('/') ? path : `/${path}`;
-  if (!IS_ANDROID_APP) return `${BACKEND_BASE}${p}`;
-  return `${BACKEND_BASE}${p}${p.includes('?') ? '&' : '?'}src=twa`;
+  return `${BACKEND_BASE}${p}`;
 };
 const authHeaders = (u) => {
   const base = {};
@@ -147,9 +112,6 @@ const authHeaders = (u) => {
 
   // Always send guest id if we have it (lets backend merge Guest -> Google for shared trial)
   if (u?.guestId) base['X-Guest-Id'] = u.guestId;
-
-  // Tell backend this is the Android app (TWA) when loaded with ?src=twa
-  if (IS_ANDROID_APP) base['X-App-Mode'] = 'twa';
 
   return base;
 };
@@ -171,7 +133,7 @@ const OWNER_EMAILS = ['vinayvedic23@gmail.com'];
 const ROLE_LABELS = {
   wife: 'Wife',
   girlfriend: 'Girlfriend',
-  bhabhi: IS_LOVE_WEB ? 'Bhabhi' : 'Mrs Next Door',
+  bhabhi: 'Bhabhi',
   exgf: 'Ex-GF',
   stranger: 'Stranger'
 };
@@ -609,11 +571,7 @@ function WelcomeFlow({ open, onClose }) {
           <li><b>Choose your bond.</b> She can be your friend, a safe space for confessions, or your emotional partner—whatever you need today.</li>
           <li><b>Talk it out, regain focus.</b> Let her ease your urge to chat with a loving presence so you can return to real life with better concentration.</li>
 
-          {IS_ANDROID_APP ? (
-            <li><b>More modes coming soon.</b> Wife/Girlfriend/Mrs Next Door/Ex-GF will unlock after Google Play recharge is enabled.</li>
-          ) : (
-            <li><b>Unlock deeper modes.</b> Access Wife, Girlfriend, Mrs Next Door, or Ex-GF role-play for more personalized chats—upgrade anytime with a Daily or Weekly plan.</li>
-          )}
+          <li><b>Unlock deeper modes.</b> Access Wife, Girlfriend, Bhabhi, or Ex-GF role-play for more personalized chats—upgrade anytime with a Daily or Weekly plan.</li>
         </ul>
 
         <div className="instr-quick">Quick tips</div>
@@ -862,21 +820,7 @@ function CharacterPopup({ open, roleMode, roleType, onClose }) {
       "A 26-yr spicy girl who gets bored quickly. Confused right now — loves her boyfriend but also likes her ex and chats with him when alone."
   };
 
-  // App (TWA) — toned-down, PG-13 copy
-  const INSIGHTS_TWA = {
-    stranger:
-      "A 24-yr aspiring actor; introvert, kind, and supportive. She helps her father’s small business and opens up slowly online.",
-    wife:
-      "A 28-yr housewife, who loves to fulfill her husband's every wish — a little jealous too.",
-    bhabhi:
-      "A 30-yr confident, mature woman who gets witty and affectionate toward her neighbour.",
-    girlfriend:
-      "A 25-yr possessive girl who loves her boyfriend more than anyone, but her jealousy often causes problems.",
-    exgf:
-      "A 26-yr independent girl who gets bored quickly. Confused right now — likes her boyfriend but also loves her ex and chats with him when alone."
-  };
-
-  const INSIGHTS = IS_ANDROID_APP ? INSIGHTS_TWA : INSIGHTS_WEB;
+  const INSIGHTS = INSIGHTS_WEB;
 
   const key = roleMode === 'roleplay' ? (roleType || 'stranger') : 'stranger';
   const text = INSIGHTS[key];
@@ -999,7 +943,6 @@ const [roleplayNeedsPremium, setRoleplayNeedsPremium] = useState(true);
 const [trialEnabled, setTrialEnabled] = useState(true);
 const [trialAmount, setTrialAmount] = useState(250);
 const [allowWebRazorpay, setAllowWebRazorpay] = useState(true);
-const [allowAppRazorpay, setAllowAppRazorpay] = useState(false);
 
 useEffect(() => {
   if (IS_UI_PREVIEW) return;
@@ -1014,7 +957,6 @@ useEffect(() => {
       if (d?.trialAmount != null) setTrialAmount(Number(d.trialAmount));
 
       if (typeof d?.allowWebRazorpay === 'boolean') setAllowWebRazorpay(d.allowWebRazorpay);
-      if (typeof d?.allowAppRazorpay === 'boolean') setAllowAppRazorpay(d.allowAppRazorpay);
     })
     .catch(() => {});
 }, []);
@@ -1687,16 +1629,6 @@ const openCoins = () => {
     openNotice('Preview mode', 'Payments are disabled in preview. Use this preview only for visual UI checks.');
     return;
   }
-  // ANDROID APP (Phase A): never show Razorpay UI
-  if (IS_ANDROID_APP) {
-    openNotice(
-      'Recharge via Google Play',
-      'Coming soon. For now, you can chat using your free trial coins.',
-      null,
-      'Recharge via Google Play (Coming soon)'
-    );
-    return;
-  }
 
   // WEB: allow Razorpay if enabled
   if (!allowWebRazorpay) {
@@ -1740,17 +1672,6 @@ const openGuestLockedGate = () => {
 };
   async function buyPack(pack) {
   if (!user) return;
-
-  // App: never allow external payments (Phase A)
-  if (IS_ANDROID_APP) {
-    openNotice(
-      'Recharge via Google Play',
-      'Coming soon.',
-      null,
-      'Recharge via Google Play (Coming soon)'
-    );
-    return;
-  }
 
   // Web: block if payments disabled by server config
   if (!allowWebRazorpay) {
@@ -1913,7 +1834,6 @@ function maybeShowPwaNudge() {
   // ✅ Warmup only (no /order precreate anymore; /buy handles gateway selection)
 useEffect(() => {
   if (!showCoins || !user) return;
-  if (IS_ANDROID_APP) return;
   if (!allowWebRazorpay) return;
 
   // keep your existing warmup (safe)
@@ -2316,16 +2236,6 @@ const askedForVoice = (text = "") => {
 };
   
 const applyRoleChange = (mode, type) => {
-  // ✅ App safety: block roleplay entry so testers stay on Stranger (no packs / no external payment flow)
-  if (IS_ANDROID_APP && mode === 'roleplay' && !isOwner) {
-    setShowRoleMenu(false);
-    openNotice(
-      'Modes access coming soon',
-      'Roleplay modes will unlock after Google Play recharge is enabled. Until now, please use Stranger mode.'
-    );
-    return;
-  }
-
   // premium gate for roleplay (web)
   if (mode === 'roleplay' && roleplayNeedsPremium && !isOwner) {
     const active = (wallet?.expires_at || 0) > Date.now();
@@ -2528,7 +2438,7 @@ const trimmed = formattedHistory.slice(-MAX_MSG);
     fd.append('session_id', sessionIdWithRole);
     fd.append('roleMode', roleMode);
     fd.append('roleType', roleType || 'stranger');
-    fd.append('src', IS_ANDROID_APP ? 'twa' : (IS_LOVE_WEB ? 'love' : 'web'));
+    fd.append('src', REQUEST_SRC);
     if (shouldResetRef.current) { fd.append('reset', 'true'); shouldResetRef.current = false; }
 
     const resp = await fetch(apiUrl('/chat'), { method: 'POST', headers: { ...authHeaders(user), 'X-CSRF-Token': getCsrf() }, body: fd, credentials: 'include' });
@@ -2711,7 +2621,7 @@ const fetchBody = {
   session_id: sessionIdWithRole,
   roleMode,
   roleType: roleType || 'stranger',
-  src: IS_ANDROID_APP ? 'twa' : (IS_LOVE_WEB ? 'love' : 'web')
+  src: REQUEST_SRC
 };
 
 if (shouldResetRef.current) { fetchBody.reset = true; shouldResetRef.current = false; }
@@ -2800,7 +2710,7 @@ bumpVoiceUsed(true, user); // (optional UI counter)
   session_id: sessionIdWithRole,
   roleMode,
   roleType: roleType || 'stranger',
-  src: IS_ANDROID_APP ? 'twa' : (IS_LOVE_WEB ? 'love' : 'web') // ✅ optional but good (matches main call)
+  src: REQUEST_SRC // ✅ optional but good (matches main call)
 };
     if (shouldResetRef.current) { fetchRetryBody.reset = true; shouldResetRef.current = false; }
 
@@ -3275,12 +3185,12 @@ if (!user) {
   className="coin-pill"
   onClick={() => {
   if (isOwner) return;
-  if (!IS_ANDROID_APP && allowWebRazorpay) prewarmRazorpay().catch(() => {});
+  if (allowWebRazorpay) prewarmRazorpay().catch(() => {});
   openCoins();
 }}
   title={
   isOwner ? "Owner: unlimited"
-  : (IS_ANDROID_APP ? "Your balance (recharge coming soon)" : "Your balance (tap to buy coins)")
+  : "Your balance (tap to buy coins)"
 }
   aria-label="Coins"
 >
@@ -3428,12 +3338,12 @@ if (!user) {
           className="role-chip"
           onClick={() => {
             openConfirm(
-              `Start as Shraddha (${IS_LOVE_WEB ? 'Bhabhi' : 'Mrs Next Door'})?`,
+              'Start as Shraddha (Bhabhi)?',
               'A fresh chat will begin and current messages will be cleared.',
               () => { closeConfirm(); applyRoleChange('roleplay','bhabhi'); }
             );
           }}
-        >{IS_LOVE_WEB ? 'Bhabhi' : 'Mrs Next Door'}</button>
+        >Bhabhi</button>
 
         <button
           className="role-chip"
@@ -3565,19 +3475,17 @@ if (!user) {
   <div ref={bottomRef} className="bottom-sentinel" />
 </div>
 
-{!IS_ANDROID_APP && (
-  <CoinsModal
-    key={coinsModalKey}
-    open={showCoins}
-    onClose={closeCoins}
-    prefill={{ name: user?.name, email: user?.email, contact: user?.phone }}
-    onChoose={(packId) => {
-      if (packId === 'daily')  return buyPack(DAILY_PACK);
-      if (packId === 'weekly') return buyPack(WEEKLY_PACK);
-    }}
-    busy={isPaying}
-  />
-)}
+<CoinsModal
+  key={coinsModalKey}
+  open={showCoins}
+  onClose={closeCoins}
+  prefill={{ name: user?.name, email: user?.email, contact: user?.phone }}
+  onChoose={(packId) => {
+    if (packId === 'daily')  return buyPack(DAILY_PACK);
+    if (packId === 'weekly') return buyPack(WEEKLY_PACK);
+  }}
+  busy={isPaying}
+/>
 
       <ConfirmDialog
   open={confirmState.open}
