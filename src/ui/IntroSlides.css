@@ -1,25 +1,25 @@
 @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap');
 
 /* ═══════════════════════════════════════════════════════════════
-   PREMIUM DARK-PLUM LANDING — v3
+   PREMIUM DARK LANDING — v4  (cooler palette + dimensional hero)
    ═══════════════════════════════════════════════════════════════ */
 
 /* ── Palette ───────────────────────────────────────────────── */
 .shr-landing {
-  --bg: #0d0a12;
-  --surface: rgba(255, 255, 255, 0.032);
-  --surface-raised: rgba(255, 255, 255, 0.052);
-  --border: rgba(255, 255, 255, 0.065);
-  --border-subtle: rgba(255, 255, 255, 0.038);
-  --text-primary: #f2ece8;
-  --text-secondary: rgba(240, 230, 224, 0.55);
-  --text-muted: rgba(240, 230, 224, 0.3);
-  --accent-gold: #e4bfb1;
-  --accent-rose: #cf6e8a;
-  --accent-mauve: #a07a9a;
-  --accent-gradient: linear-gradient(135deg, #e4bfb1 0%, #cf6e8a 55%, #a07a9a 100%);
-  --glow-gold: rgba(228, 191, 177, 0.1);
-  --glow-rose: rgba(207, 110, 138, 0.1);
+  --bg: #09080f;
+  --surface: rgba(255, 255, 255, 0.03);
+  --surface-raised: rgba(255, 255, 255, 0.05);
+  --border: rgba(255, 255, 255, 0.07);
+  --border-subtle: rgba(255, 255, 255, 0.04);
+  --text-primary: #f0ecf4;
+  --text-secondary: rgba(234, 228, 240, 0.5);
+  --text-muted: rgba(234, 228, 240, 0.26);
+  --accent-blush: #e8c4b8;
+  --accent-rose: #d4728e;
+  --accent-mauve: #9b7db8;
+  --accent-gradient: linear-gradient(135deg, #e8c4b8 0%, #d4728e 55%, #9b7db8 100%);
+  --glow-rose: rgba(212, 114, 142, 0.09);
+  --glow-mauve: rgba(155, 125, 184, 0.07);
 
   position: fixed;
   inset: 0;
@@ -34,7 +34,7 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* ambient atmosphere */
+/* ambient atmosphere — cooled down */
 .shr-landing::before {
   content: '';
   position: fixed;
@@ -42,9 +42,9 @@
   pointer-events: none;
   z-index: 0;
   background:
-    radial-gradient(ellipse 80% 55% at 20% -15%, rgba(207, 110, 138, 0.08) 0%, transparent 55%),
-    radial-gradient(ellipse 65% 45% at 82% 8%, rgba(160, 122, 154, 0.06) 0%, transparent 50%),
-    radial-gradient(ellipse 70% 40% at 50% 105%, rgba(228, 191, 177, 0.05) 0%, transparent 50%);
+    radial-gradient(ellipse 70% 50% at 18% -12%, rgba(212, 114, 142, 0.06) 0%, transparent 55%),
+    radial-gradient(ellipse 55% 40% at 84% 6%, rgba(155, 125, 184, 0.045) 0%, transparent 48%),
+    radial-gradient(ellipse 60% 35% at 50% 108%, rgba(212, 114, 142, 0.035) 0%, transparent 48%);
 }
 
 /* ── Noise ──────────────────────────────────────────────────── */
@@ -53,13 +53,13 @@
   inset: 0;
   z-index: 1;
   pointer-events: none;
-  opacity: 0.028;
+  opacity: 0.022;
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.78' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   background-repeat: repeat;
   background-size: 200px 200px;
 }
 
-/* ── Floating Lights ───────────────────────────────────────── */
+/* ── Floating Lights (cooler) ──────────────────────────────── */
 .shr-landing__glow {
   position: fixed;
   inset: 0;
@@ -72,33 +72,33 @@
   position: absolute;
   display: block;
   border-radius: 50%;
-  filter: blur(100px);
+  filter: blur(110px);
 }
 
 .shr-landing__light--one {
-  width: 480px;
-  height: 480px;
-  top: -18%;
-  left: -8%;
-  background: rgba(207, 110, 138, 0.07);
+  width: 460px;
+  height: 460px;
+  top: -16%;
+  left: -6%;
+  background: rgba(212, 114, 142, 0.055);
   animation: shrFloatShape 28s ease-in-out infinite;
 }
 
 .shr-landing__light--two {
-  width: 560px;
-  height: 380px;
-  top: 32%;
-  right: -18%;
-  background: rgba(160, 122, 154, 0.05);
+  width: 520px;
+  height: 360px;
+  top: 34%;
+  right: -16%;
+  background: rgba(155, 125, 184, 0.04);
   animation: shrFloatShape 34s ease-in-out infinite reverse;
 }
 
 .shr-landing__light--three {
-  width: 400px;
-  height: 380px;
-  bottom: -8%;
-  left: 18%;
-  background: rgba(228, 191, 177, 0.05);
+  width: 380px;
+  height: 360px;
+  bottom: -6%;
+  left: 20%;
+  background: rgba(212, 114, 142, 0.035);
   animation: shrFloatShape 30s ease-in-out infinite;
 }
 
@@ -115,7 +115,6 @@
   z-index: 2;
 }
 
-/* subtle bottom divider */
 .shr-landing__hero::after {
   content: '';
   position: absolute;
@@ -164,7 +163,6 @@
   flex-direction: column;
   align-items: center;
   gap: 0;
-  /* reset any inherited h1 styles */
   background: none;
   -webkit-background-clip: initial;
   -webkit-text-fill-color: initial;
@@ -176,42 +174,41 @@
   font-family: 'Manrope', sans-serif;
 }
 
-/* Line 1 — eyebrow */
 .shr-hero-title__line--top {
   font-size: clamp(13px, 3.2vw, 18px);
   font-weight: 600;
-  letter-spacing: 0.2em;
+  letter-spacing: 0.22em;
   text-transform: uppercase;
-  color: var(--accent-gold);
+  color: var(--accent-blush);
   margin-bottom: 6px;
   animation: shrFadeUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.08s both;
 }
 
-/* Line 2 — hero */
 .shr-hero-title__line--mid {
   font-size: clamp(54px, 15vw, 100px);
   font-weight: 800;
   line-height: 0.9;
   letter-spacing: -0.045em;
-  background: linear-gradient(140deg, #fff 25%, var(--accent-rose) 75%, var(--accent-mauve) 100%);
+  background: linear-gradient(140deg, #fff 20%, var(--accent-rose) 70%, var(--accent-mauve) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
   animation: shrFadeUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both;
 }
 
-/* Line 3 — supporting */
 .shr-hero-title__line--bot {
   font-size: clamp(38px, 10.5vw, 76px);
   font-weight: 800;
   line-height: 0.95;
   letter-spacing: -0.035em;
   color: var(--text-primary);
-  opacity: 0.55;
+  opacity: 0.45;
   animation: shrFadeUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.34s both;
 }
 
-/* ── Hero Chat Mockup ──────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════════════
+   HERO CHAT MOCKUP — dimensional polish
+   ═══════════════════════════════════════════════════════════════ */
 .shr-landing__hero-media {
   display: flex;
   justify-content: center;
@@ -219,39 +216,51 @@
 
 .shr-hero-chat-wrap {
   position: relative;
-  padding: 18px;
+  padding: 22px 20px;
   animation: shrChatReveal 1.1s cubic-bezier(0.16, 1, 0.3, 1) 0.6s both;
 }
 
+/* ambient glow behind card */
 .shr-hero-chat-glow {
   position: absolute;
-  width: 260px;
-  height: 260px;
+  width: 300px;
+  height: 300px;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
   border-radius: 50%;
   background: radial-gradient(
     circle,
-    rgba(207, 110, 138, 0.14) 0%,
-    rgba(160, 122, 154, 0.06) 50%,
-    transparent 72%
+    rgba(212, 114, 142, 0.1) 0%,
+    rgba(155, 125, 184, 0.05) 48%,
+    transparent 70%
   );
-  filter: blur(30px);
+  filter: blur(40px);
   pointer-events: none;
   animation: shrPulseSoft 7s ease-in-out infinite;
 }
 
+/* main chat card */
 .shr-hero-chat {
   position: relative;
-  width: min(78vw, 290px);
-  border-radius: 22px;
-  background: rgba(255, 255, 255, 0.035);
-  backdrop-filter: blur(28px);
-  -webkit-backdrop-filter: blur(28px);
+  width: min(80vw, 300px);
+  border-radius: 24px;
+  background:
+    linear-gradient(
+      168deg,
+      rgba(255, 255, 255, 0.05) 0%,
+      rgba(255, 255, 255, 0.018) 40%,
+      rgba(255, 255, 255, 0.008) 100%
+    );
+  backdrop-filter: blur(32px) saturate(1.2);
+  -webkit-backdrop-filter: blur(32px) saturate(1.2);
   box-shadow:
-    0 28px 56px rgba(0, 0, 0, 0.38),
-    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    0 2px 4px rgba(0, 0, 0, 0.2),
+    0 8px 16px rgba(0, 0, 0, 0.22),
+    0 32px 64px rgba(0, 0, 0, 0.32),
+    0 0 0 0.5px rgba(255, 255, 255, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.12);
   overflow: hidden;
 }
 
@@ -263,10 +272,10 @@
   padding: 1px;
   background: linear-gradient(
     165deg,
-    rgba(228, 191, 177, 0.22) 0%,
-    transparent 38%,
-    transparent 62%,
-    rgba(207, 110, 138, 0.16) 100%
+    rgba(232, 196, 184, 0.2) 0%,
+    transparent 35%,
+    transparent 60%,
+    rgba(155, 125, 184, 0.14) 100%
   );
   -webkit-mask:
     linear-gradient(#fff 0 0) content-box,
@@ -277,30 +286,91 @@
   -webkit-mask-composite: xor;
   mask-composite: exclude;
   pointer-events: none;
-  z-index: 2;
+  z-index: 3;
 }
 
-/* header */
+/* specular top-edge highlight */
+.shr-hero-chat__shine {
+  position: absolute;
+  top: 0;
+  left: 14%;
+  right: 14%;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.18) 30%,
+    rgba(255, 255, 255, 0.22) 50%,
+    rgba(255, 255, 255, 0.18) 70%,
+    transparent 100%
+  );
+  z-index: 4;
+  pointer-events: none;
+}
+
+/* specular bottom-right reflection */
+.shr-hero-chat::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 55%;
+  height: 45%;
+  border-radius: 0 0 24px 0;
+  background: radial-gradient(
+    ellipse at 85% 90%,
+    rgba(155, 125, 184, 0.04) 0%,
+    transparent 60%
+  );
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* ── Chat Header ───────────────────────────────────────────── */
 .shr-hero-chat__head {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 13px 14px 11px;
+  padding: 14px 16px 12px;
   border-bottom: 1px solid var(--border-subtle);
+  position: relative;
+  z-index: 2;
 }
 
 .shr-hero-chat__av {
-  width: 34px;
-  height: 34px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   background: var(--accent-gradient);
   display: grid;
   place-items: center;
+  flex-shrink: 0;
+  position: relative;
+  box-shadow:
+    0 0 0 2px rgba(9, 8, 15, 0.6),
+    0 0 16px rgba(212, 114, 142, 0.22),
+    0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.shr-hero-chat__av > span {
   color: #fff;
   font-weight: 700;
   font-size: 13px;
-  flex-shrink: 0;
-  box-shadow: 0 0 18px rgba(207, 110, 138, 0.2);
+  position: relative;
+  z-index: 1;
+}
+
+/* small reflection inside avatar */
+.shr-hero-chat__av::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 5px;
+  width: 10px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.25);
+  filter: blur(2px);
 }
 
 .shr-hero-chat__info strong {
@@ -324,56 +394,111 @@
   height: 5px;
   border-radius: 50%;
   background: #6fcf97;
-  box-shadow: 0 0 8px rgba(111, 207, 151, 0.45);
+  box-shadow: 0 0 8px rgba(111, 207, 151, 0.4);
   display: inline-block;
 }
 
-/* body */
+/* ── Chat Body ─────────────────────────────────────────────── */
 .shr-hero-chat__body {
-  padding: 12px 12px 8px;
+  padding: 14px 14px 10px;
   display: flex;
   flex-direction: column;
-  gap: 9px;
+  gap: 10px;
+  position: relative;
+  z-index: 2;
 }
 
-.shr-chat-row { display: flex; }
+.shr-chat-row {
+  display: flex;
+}
 
-.shr-chat-row--her { justify-content: flex-start; align-items: flex-end; gap: 6px; }
-.shr-chat-row--you { justify-content: flex-end; }
+.shr-chat-row--her {
+  justify-content: flex-start;
+  align-items: flex-end;
+  gap: 6px;
+}
 
+.shr-chat-row--you {
+  justify-content: flex-end;
+}
+
+/* her bubbles */
 .shr-chat-bbl {
   max-width: 82%;
-  padding: 9px 11px;
-  border-radius: 14px 14px 14px 5px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid var(--border-subtle);
+  padding: 10px 13px;
+  border-radius: 16px 16px 16px 5px;
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.055) 0%,
+      rgba(255, 255, 255, 0.025) 100%
+    );
+  border: 1px solid rgba(255, 255, 255, 0.06);
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 6px;
+  position: relative;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 2px 8px rgba(0, 0, 0, 0.12);
 }
 
+/* rose edge-glow on her bubbles */
+.shr-chat-bbl::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 6px;
+  bottom: 6px;
+  width: 2px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, var(--accent-rose), transparent);
+  opacity: 0.3;
+}
+
+/* your bubbles */
 .shr-chat-bbl--you {
-  border-radius: 14px 14px 5px 14px;
-  background: rgba(207, 110, 138, 0.1);
-  border-color: rgba(207, 110, 138, 0.14);
+  border-radius: 16px 16px 5px 16px;
+  background:
+    linear-gradient(
+      135deg,
+      rgba(212, 114, 142, 0.14) 0%,
+      rgba(212, 114, 142, 0.06) 100%
+    );
+  border-color: rgba(212, 114, 142, 0.12);
 }
 
+.shr-chat-bbl--you::before {
+  display: none;
+}
+
+/* text placeholder lines */
 .shr-chat-ln {
   display: block;
   height: 5px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.09);
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.1) 0%,
+    rgba(255, 255, 255, 0.06) 100%
+  );
 }
 
 .shr-chat-bbl--you .shr-chat-ln {
-  background: rgba(207, 110, 138, 0.22);
+  background: linear-gradient(
+    90deg,
+    rgba(212, 114, 142, 0.28) 0%,
+    rgba(212, 114, 142, 0.14) 100%
+  );
 }
 
+/* heart reaction */
 .shr-chat-heart {
-  font-size: 13px;
+  font-size: 14px;
   color: var(--accent-rose);
   align-self: flex-end;
   flex-shrink: 0;
+  filter: drop-shadow(0 0 6px rgba(212, 114, 142, 0.35));
   animation: shrHeartPulse 2.4s ease-in-out infinite;
 }
 
@@ -381,118 +506,225 @@
 .shr-chat-dots {
   display: flex;
   gap: 4px;
-  padding: 9px 14px;
-  border-radius: 14px 14px 14px 5px;
-  background: rgba(255, 255, 255, 0.035);
-  border: 1px solid var(--border-subtle);
-  width: -moz-fit-content;
+  padding: 10px 15px;
+  border-radius: 16px 16px 16px 5px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
   width: fit-content;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
 }
 
 .shr-chat-dots span {
   width: 5px;
   height: 5px;
   border-radius: 50%;
-  background: var(--accent-gold);
-  opacity: 0.5;
+  background: var(--accent-blush);
+  opacity: 0.45;
   animation: shrDotBounce 1.4s ease-in-out infinite;
 }
 
 .shr-chat-dots span:nth-child(2) { animation-delay: 0.18s; }
 .shr-chat-dots span:nth-child(3) { animation-delay: 0.36s; }
 
-/* input */
+/* ── Chat Input ────────────────────────────────────────────── */
 .shr-hero-chat__foot {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 12px 12px;
+  padding: 10px 14px 14px;
   border-top: 1px solid var(--border-subtle);
+  position: relative;
+  z-index: 2;
 }
 
 .shr-chat-input {
   flex: 1;
-  height: 32px;
+  height: 36px;
   border-radius: 999px;
   border: 1px solid var(--border);
-  background: rgba(255, 255, 255, 0.025);
+  background: rgba(255, 255, 255, 0.02);
+  display: flex;
+  align-items: center;
+  padding: 0 14px;
+}
+
+.shr-chat-input__placeholder {
+  display: block;
+  width: 52%;
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
 }
 
 .shr-chat-send {
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   background: var(--accent-gradient);
   display: grid;
   place-items: center;
   color: #fff;
   flex-shrink: 0;
-  box-shadow: 0 0 16px rgba(207, 110, 138, 0.25);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.06),
+    0 0 20px rgba(212, 114, 142, 0.22),
+    0 4px 12px rgba(0, 0, 0, 0.25);
+  position: relative;
 }
 
-/* ── Floating Chips ────────────────────────────────────────── */
+/* specular dot on send */
+.shr-chat-send::after {
+  content: '';
+  position: absolute;
+  top: 5px;
+  left: 7px;
+  width: 8px;
+  height: 5px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  filter: blur(2px);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   FLOATING CHIPS — polished
+   ═══════════════════════════════════════════════════════════════ */
 .shr-hero-chip {
   position: absolute;
   border-radius: 16px;
-  border: 1px solid var(--border);
-  background: rgba(255, 255, 255, 0.035);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
-  box-shadow: 0 14px 28px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  background:
+    linear-gradient(
+      150deg,
+      rgba(255, 255, 255, 0.05) 0%,
+      rgba(255, 255, 255, 0.015) 100%
+    );
+  backdrop-filter: blur(22px) saturate(1.1);
+  -webkit-backdrop-filter: blur(22px) saturate(1.1);
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.18),
+    0 12px 28px rgba(0, 0, 0, 0.26),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
+/* voice chip */
 .shr-hero-chip--voice {
-  top: 2%;
-  right: -8%;
-  padding: 9px 13px;
+  top: 0;
+  right: -10%;
+  padding: 10px 14px;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 9px;
   animation: shrFloatChip 7s ease-in-out infinite;
   --chip-tilt: -5deg;
   transform: rotate(-5deg);
 }
 
-.shr-hero-chip__bars {
-  display: flex;
-  align-items: flex-end;
-  gap: 2px;
-  height: 18px;
+/* specular edge on voice chip */
+.shr-hero-chip--voice::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 12%;
+  right: 12%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.14), transparent);
 }
 
-.shr-hero-chip__bars i {
+.shr-hero-chip__icon {
+  display: flex;
+  align-items: flex-end;
+  gap: 2.5px;
+  height: 20px;
+}
+
+.shr-hero-chip__icon i {
   width: 3px;
   height: 6px;
   border-radius: 999px;
-  background: var(--accent-rose);
+  background: linear-gradient(180deg, var(--accent-rose) 0%, var(--accent-mauve) 100%);
   animation: shrVoiceBars 1.6s ease-in-out infinite;
 }
 
-.shr-hero-chip__bars i:nth-child(2n) { animation-delay: 0.12s; }
-.shr-hero-chip__bars i:nth-child(3n) { animation-delay: 0.24s; }
+.shr-hero-chip__icon i:nth-child(2n) { animation-delay: 0.12s; }
+.shr-hero-chip__icon i:nth-child(3n) { animation-delay: 0.24s; }
 
 .shr-hero-chip__label {
-  font-size: 10px;
-  color: var(--text-muted);
+  font-size: 11px;
+  color: var(--text-secondary);
   font-weight: 600;
+  letter-spacing: 0.02em;
 }
 
+/* heart chip */
 .shr-hero-chip--heart {
-  bottom: 8%;
-  left: -4%;
-  width: 42px;
-  height: 42px;
+  bottom: 10%;
+  left: -6%;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
   display: grid;
   place-items: center;
-  font-size: 17px;
-  color: var(--accent-rose);
-  box-shadow:
-    0 12px 24px rgba(0, 0, 0, 0.3),
-    0 0 22px rgba(207, 110, 138, 0.12);
   animation: shrFloatChip 6.4s ease-in-out 1.6s infinite;
   --chip-tilt: 6deg;
   transform: rotate(6deg);
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.18),
+    0 12px 28px rgba(0, 0, 0, 0.26),
+    0 0 28px rgba(212, 114, 142, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.shr-hero-chip--heart > span {
+  font-size: 18px;
+  color: var(--accent-rose);
+  filter: drop-shadow(0 0 8px rgba(212, 114, 142, 0.3));
+}
+
+/* pulse ring around heart */
+.shr-hero-chip--heart::after {
+  content: '';
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  border: 1px solid rgba(212, 114, 142, 0.12);
+  animation: shrPulseRing 3.4s ease-out infinite 0.8s;
+}
+
+/* mode pill */
+.shr-hero-chip--mode {
+  bottom: 2%;
+  right: -4%;
+  padding: 7px 13px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--accent-rose);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  animation: shrFloatChip 8s ease-in-out 0.6s infinite;
+  --chip-tilt: -3deg;
+  transform: rotate(-3deg);
+}
+
+.shr-hero-chip--mode::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 14%;
+  right: 14%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+}
+
+.shr-hero-chip__dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--accent-rose);
+  box-shadow: 0 0 8px rgba(212, 114, 142, 0.35);
+  flex-shrink: 0;
 }
 
 /* ── Scroll Hint ───────────────────────────────────────────── */
@@ -522,7 +754,7 @@
   width: 2px;
   height: 52px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.05);
   position: relative;
   overflow: hidden;
 }
@@ -540,7 +772,7 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   MAIN & SECTIONS (unchanged layout — only colors via vars)
+   MAIN & SECTIONS — unchanged layout (colors via vars)
    ═══════════════════════════════════════════════════════════════ */
 .shr-landing__main {
   position: relative;
@@ -558,7 +790,7 @@
   font-weight: 600;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: var(--accent-gold);
+  color: var(--accent-blush);
 }
 
 .shr-section__tag::before {
@@ -566,11 +798,10 @@
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: var(--accent-gold);
-  box-shadow: 0 0 12px var(--glow-gold);
+  background: var(--accent-blush);
+  box-shadow: 0 0 10px rgba(232, 196, 184, 0.15);
 }
 
-/* ── Section Base ──────────────────────────────────────────── */
 .shr-section {
   margin-bottom: 20px;
   padding: 40px 24px;
@@ -598,31 +829,31 @@
 
 .shr-section--about {
   background:
-    radial-gradient(ellipse 420px 220px at 0% 0%, rgba(207, 110, 138, 0.05), transparent 70%),
+    radial-gradient(ellipse 420px 220px at 0% 0%, rgba(212, 114, 142, 0.04), transparent 70%),
     var(--surface);
 }
 
 .shr-section--modes {
   background:
-    radial-gradient(ellipse 500px 260px at 100% 0%, rgba(160, 122, 154, 0.045), transparent 60%),
+    radial-gradient(ellipse 500px 260px at 100% 0%, rgba(155, 125, 184, 0.035), transparent 60%),
     var(--surface);
 }
 
 .shr-section--flow {
   background:
-    radial-gradient(ellipse 420px 220px at 50% 100%, rgba(228, 191, 177, 0.04), transparent 60%),
+    radial-gradient(ellipse 420px 220px at 50% 100%, rgba(232, 196, 184, 0.03), transparent 60%),
     var(--surface);
 }
 
 .shr-section--voice {
   background:
-    radial-gradient(ellipse 420px 220px at 0% 100%, rgba(207, 110, 138, 0.05), transparent 60%),
+    radial-gradient(ellipse 420px 220px at 0% 100%, rgba(212, 114, 142, 0.04), transparent 60%),
     var(--surface);
 }
 
 .shr-section--coins {
   background:
-    radial-gradient(ellipse 420px 220px at 100% 50%, rgba(228, 191, 177, 0.05), transparent 60%),
+    radial-gradient(ellipse 420px 220px at 100% 50%, rgba(232, 196, 184, 0.04), transparent 60%),
     var(--surface);
 }
 
@@ -717,7 +948,7 @@
   left: 0;
   right: 0;
   height: 40%;
-  background: linear-gradient(to top, rgba(13, 10, 18, 0.55), transparent);
+  background: linear-gradient(to top, rgba(9, 8, 15, 0.55), transparent);
   pointer-events: none;
   z-index: 1;
 }
@@ -767,8 +998,8 @@
 
 .shr-pill.is-locked {
   color: var(--accent-rose);
-  border-color: rgba(207, 110, 138, 0.2);
-  background: rgba(207, 110, 138, 0.08);
+  border-color: rgba(212, 114, 142, 0.2);
+  background: rgba(212, 114, 142, 0.08);
 }
 
 /* ── Flow / UI Card ────────────────────────────────────────── */
@@ -808,8 +1039,8 @@
 .shr-mini-topbar button {
   border: 1px solid var(--border);
   border-radius: 999px;
-  color: var(--accent-gold);
-  background: rgba(228, 191, 177, 0.07);
+  color: var(--accent-blush);
+  background: rgba(232, 196, 184, 0.06);
   padding: 5px 14px;
   font-weight: 700;
   font-size: 12px;
@@ -852,7 +1083,7 @@
   font-weight: 700;
   padding: 3px 10px;
   border-radius: 999px;
-  background: rgba(207, 110, 138, 0.12);
+  background: rgba(212, 114, 142, 0.1);
   color: var(--accent-rose);
 }
 
@@ -888,8 +1119,8 @@
   font-weight: 700;
   font-size: 14px;
   box-shadow:
-    0 0 36px rgba(207, 110, 138, 0.22),
-    0 0 72px rgba(160, 122, 154, 0.12);
+    0 0 32px rgba(212, 114, 142, 0.18),
+    0 0 64px rgba(155, 125, 184, 0.1);
   position: relative;
 }
 
@@ -898,7 +1129,7 @@
   content: '';
   position: absolute;
   border-radius: 50%;
-  border: 1px solid rgba(207, 110, 138, 0.14);
+  border: 1px solid rgba(212, 114, 142, 0.12);
   animation: shrPulseRing 3s ease-out infinite;
 }
 
@@ -960,8 +1191,8 @@
 }
 
 .shr-pack-row.featured {
-  border-color: rgba(207, 110, 138, 0.28);
-  background: rgba(207, 110, 138, 0.05);
+  border-color: rgba(212, 114, 142, 0.25);
+  background: rgba(212, 114, 142, 0.04);
 }
 
 .shr-pack-row.featured::before {
@@ -979,7 +1210,7 @@
     linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
   mask-composite: exclude;
-  opacity: 0.35;
+  opacity: 0.3;
   pointer-events: none;
 }
 
@@ -993,7 +1224,7 @@
 .shr-final-cta {
   text-align: center;
   background:
-    radial-gradient(ellipse 520px 220px at 50% -20%, rgba(207, 110, 138, 0.08), transparent 60%),
+    radial-gradient(ellipse 520px 220px at 50% -20%, rgba(212, 114, 142, 0.06), transparent 60%),
     var(--surface) !important;
 }
 
@@ -1020,11 +1251,11 @@
   margin-top: 18px;
   min-width: 200px;
   color: #fff;
-  background: linear-gradient(135deg, #e4bfb1 0%, #cf6e8a 60%, #a07a9a 100%);
+  background: linear-gradient(135deg, #e8c4b8 0%, #d4728e 55%, #9b7db8 100%);
   background-size: 200% 100%;
   box-shadow:
-    0 0 28px rgba(207, 110, 138, 0.18),
-    0 0 56px rgba(160, 122, 154, 0.08);
+    0 0 24px rgba(212, 114, 142, 0.15),
+    0 0 48px rgba(155, 125, 184, 0.07);
   animation: shrBtnShimmer 6s ease-in-out infinite;
 }
 
@@ -1033,9 +1264,9 @@
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  background: linear-gradient(135deg, #e4bfb1 0%, #cf6e8a 60%, #a07a9a 100%);
+  background: linear-gradient(135deg, #e8c4b8 0%, #d4728e 55%, #9b7db8 100%);
   filter: blur(26px);
-  opacity: 0.28;
+  opacity: 0.24;
   z-index: -1;
   transition: opacity 0.3s ease;
 }
@@ -1049,12 +1280,12 @@
   .shr-btn--primary:hover {
     transform: translateY(-2px);
     box-shadow:
-      0 0 40px rgba(207, 110, 138, 0.26),
-      0 0 80px rgba(160, 122, 154, 0.12);
+      0 0 36px rgba(212, 114, 142, 0.22),
+      0 0 72px rgba(155, 125, 184, 0.1);
   }
 
   .shr-btn--primary:hover::after {
-    opacity: 0.45;
+    opacity: 0.4;
   }
 
   .shr-mode-card:hover {
@@ -1079,44 +1310,24 @@
    KEYFRAMES
    ═══════════════════════════════════════════════════════════════ */
 @keyframes shrFadeUp {
-  from {
-    opacity: 0;
-    transform: translateY(26px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(26px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes shrChatReveal {
-  from {
-    opacity: 0;
-    transform: translateY(34px) scale(0.96);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
+  from { opacity: 0; transform: translateY(34px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 @keyframes shrScrollGlow {
-  0% {
-    top: -30%;
-    opacity: 0;
-  }
-  25% {
-    opacity: 1;
-  }
-  100% {
-    top: 100%;
-    opacity: 0;
-  }
+  0% { top: -30%; opacity: 0; }
+  25% { opacity: 1; }
+  100% { top: 100%; opacity: 0; }
 }
 
 @keyframes shrHeartPulse {
   0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.25); }
+  50% { transform: scale(1.22); }
 }
 
 @keyframes shrDotBounce {
@@ -1126,12 +1337,12 @@
 
 @keyframes shrFloatShape {
   0%, 100% { transform: translate3d(0, 0, 0); }
-  50% { transform: translate3d(0, 20px, 0); }
+  50% { transform: translate3d(0, 18px, 0); }
 }
 
 @keyframes shrPulseSoft {
-  0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.7; }
-  50% { transform: translate(-50%, -50%) scale(1.08); opacity: 1; }
+  0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.65; }
+  50% { transform: translate(-50%, -50%) scale(1.06); opacity: 0.95; }
 }
 
 @keyframes shrFloatChip {
@@ -1140,8 +1351,8 @@
 }
 
 @keyframes shrVoiceBars {
-  0%, 100% { height: 6px; opacity: 0.4; }
-  50% { height: 18px; opacity: 1; }
+  0%, 100% { height: 6px; opacity: 0.35; }
+  50% { height: 20px; opacity: 1; }
 }
 
 @keyframes shrWave {
@@ -1150,7 +1361,7 @@
 }
 
 @keyframes shrPulseRing {
-  0% { transform: scale(1); opacity: 0.5; }
+  0% { transform: scale(1); opacity: 0.45; }
   100% { transform: scale(1.6); opacity: 0; }
 }
 
@@ -1183,7 +1394,7 @@
   }
 
   .shr-hero-chat {
-    width: 300px;
+    width: 310px;
   }
 
   .shr-feature-grid {
@@ -1224,7 +1435,7 @@
   }
 
   .shr-hero-chat {
-    width: min(80vw, 270px);
+    width: min(82vw, 280px);
   }
 
   .shr-section {
@@ -1241,11 +1452,15 @@
   }
 
   .shr-hero-chip--voice {
-    right: -2%;
+    right: -4%;
   }
 
   .shr-hero-chip--heart {
-    left: 0;
+    left: -1%;
+  }
+
+  .shr-hero-chip--mode {
+    right: 0;
   }
 }
 
@@ -1254,7 +1469,8 @@
   .shr-landing__light,
   .shr-hero-chat-glow,
   .shr-hero-chip,
-  .shr-hero-chip__bars i,
+  .shr-hero-chip__icon i,
+  .shr-hero-chip--heart::after,
   .shr-chat-dots span,
   .shr-chat-heart,
   .shr-wave span,
