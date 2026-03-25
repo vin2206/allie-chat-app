@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import './IntroSlides.css';
 
 const companionFeatures = [
@@ -34,8 +34,26 @@ function scrollToSection(sectionId) {
 }
 
 export default function IntroSlides({ onDone }) {
+  useEffect(() => {
+    const sections = document.querySelectorAll('.shr-section');
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('is-visible');
+          }
+        });
+      },
+      { threshold: 0.08, rootMargin: '0px 0px -50px 0px' }
+    );
+    sections.forEach((s) => observer.observe(s));
+    return () => observer.disconnect();
+  }, []);
+
   return (
     <div className="shr-landing">
+      <div className="shr-noise" aria-hidden="true" />
+
       <div className="shr-landing__glow" aria-hidden="true">
         <span className="shr-landing__light shr-landing__light--one" />
         <span className="shr-landing__light shr-landing__light--two" />
