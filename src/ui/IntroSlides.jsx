@@ -99,12 +99,14 @@ export default function IntroSlides({ onDone }) {
                 <span className="shr-hero-chat-glow" />
 
                 <div className="shr-hero-chat">
-                  {/* gradient border overlay */}
                   <span className="shr-hero-chat__border" />
+                  <span className="shr-hero-chat__shine" />
 
                   {/* header */}
                   <div className="shr-hero-chat__head">
-                    <div className="shr-hero-chat__av">S</div>
+                    <div className="shr-hero-chat__av">
+                      <span>S</span>
+                    </div>
                     <div className="shr-hero-chat__info">
                       <strong>Shraddha</strong>
                       <span>
@@ -117,22 +119,22 @@ export default function IntroSlides({ onDone }) {
                   <div className="shr-hero-chat__body">
                     <div className="shr-chat-row shr-chat-row--her">
                       <div className="shr-chat-bbl">
-                        <span className="shr-chat-ln" style={{ width: '88%' }} />
-                        <span className="shr-chat-ln" style={{ width: '60%' }} />
+                        <span className="shr-chat-ln" style={{ width: '92%' }} />
+                        <span className="shr-chat-ln" style={{ width: '68%' }} />
                       </div>
                     </div>
 
                     <div className="shr-chat-row shr-chat-row--you">
                       <div className="shr-chat-bbl shr-chat-bbl--you">
-                        <span className="shr-chat-ln" style={{ width: '74%' }} />
+                        <span className="shr-chat-ln" style={{ width: '80%' }} />
                       </div>
                     </div>
 
                     <div className="shr-chat-row shr-chat-row--her">
                       <div className="shr-chat-bbl">
-                        <span className="shr-chat-ln" style={{ width: '94%' }} />
-                        <span className="shr-chat-ln" style={{ width: '76%' }} />
-                        <span className="shr-chat-ln" style={{ width: '46%' }} />
+                        <span className="shr-chat-ln" style={{ width: '96%' }} />
+                        <span className="shr-chat-ln" style={{ width: '78%' }} />
+                        <span className="shr-chat-ln" style={{ width: '52%' }} />
                       </div>
                       <span className="shr-chat-heart">♥</span>
                     </div>
@@ -148,9 +150,11 @@ export default function IntroSlides({ onDone }) {
 
                   {/* input */}
                   <div className="shr-hero-chat__foot">
-                    <div className="shr-chat-input" />
+                    <div className="shr-chat-input">
+                      <span className="shr-chat-input__placeholder" />
+                    </div>
                     <div className="shr-chat-send">
-                      <svg viewBox="0 0 24 24" fill="none" width="13" height="13">
+                      <svg viewBox="0 0 24 24" fill="none" width="14" height="14">
                         <path
                           d="M22 2L11 13"
                           stroke="currentColor"
@@ -171,7 +175,7 @@ export default function IntroSlides({ onDone }) {
 
                 {/* floating voice chip */}
                 <div className="shr-hero-chip shr-hero-chip--voice">
-                  <span className="shr-hero-chip__bars">
+                  <span className="shr-hero-chip__icon">
                     {Array.from({ length: 7 }).map((_, i) => (
                       <i key={i} />
                     ))}
@@ -180,7 +184,15 @@ export default function IntroSlides({ onDone }) {
                 </div>
 
                 {/* floating heart */}
-                <div className="shr-hero-chip shr-hero-chip--heart">♥</div>
+                <div className="shr-hero-chip shr-hero-chip--heart">
+                  <span>♥</span>
+                </div>
+
+                {/* floating mode pill */}
+                <div className="shr-hero-chip shr-hero-chip--mode">
+                  <span className="shr-hero-chip__dot" />
+                  Girlfriend mode
+                </div>
               </div>
             </div>
           </div>
