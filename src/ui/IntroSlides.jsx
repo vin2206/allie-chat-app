@@ -51,28 +51,35 @@ export default function IntroSlides({ onDone }) {
                 Step into intimate conversations, emotionally rich roleplay, and voice moments that
                 feel personal, elegant, and deeply immersive every time you return.
               </p>
-              <div className="shr-landing__hero-actions">
-                <button
-                  type="button"
-                  className="shr-btn shr-btn--soft"
-                  onClick={() => scrollToSection('shr-about')}
-                >
-                  Explore experience
-                </button>
-              </div>
             </div>
 
-            <div className="shr-landing__hero-media">
-              <div className="shr-landing__portrait-shell">
-                <img
-                  src="/avatars/shraddha_girlfriend_full.jpg"
-                  alt="Shraddha portrait"
-                  loading="eager"
-                  fetchPriority="high"
-                  decoding="async"
-                  width="1280"
-                  height="1920"
-                />
+            <div className="shr-landing__hero-media" aria-hidden="true">
+              <div className="shr-hero-composition">
+                <span className="shr-hero-aura shr-hero-aura--one" />
+                <span className="shr-hero-aura shr-hero-aura--two" />
+
+                <div className="shr-hero-panel shr-hero-panel--main">
+                  <span className="shr-hero-msg shr-hero-msg--one" />
+                  <span className="shr-hero-msg shr-hero-msg--two" />
+                  <span className="shr-hero-msg shr-hero-msg--three" />
+                  <span className="shr-hero-wave">
+                    {Array.from({ length: 10 }).map((_, index) => (
+                      <i key={index} />
+                    ))}
+                  </span>
+                </div>
+
+                <div className="shr-hero-panel shr-hero-panel--chat">
+                  <span className="shr-hero-dot shr-hero-dot--chat" />
+                  <span className="shr-hero-mini-line" />
+                </div>
+
+                <div className="shr-hero-panel shr-hero-panel--voice">
+                  <span className="shr-hero-dot shr-hero-dot--voice" />
+                  <span className="shr-hero-mini-line shr-hero-mini-line--short" />
+                </div>
+
+                <span className="shr-hero-badge" />
               </div>
             </div>
           </div>

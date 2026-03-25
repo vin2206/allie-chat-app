@@ -126,7 +126,10 @@ html.ime-open .bottom-sentinel {
 
 /* Sign-in screen background (soft) */
 .App.auth {
-  background: linear-gradient(180deg, #fce7f3 0%, #ede9fe 100%);
+  background:
+    radial-gradient(132% 84% at 12% -18%, rgba(252, 233, 223, 0.66), rgba(255, 255, 255, 0) 72%),
+    radial-gradient(124% 82% at 88% -16%, rgba(244, 219, 230, 0.58), rgba(255, 255, 255, 0) 74%),
+    linear-gradient(180deg, #fffdfa 0%, #f9f4ee 100%);
 }
 
 /* Chat screen background — gradient + waves directly on the app */
@@ -886,10 +889,10 @@ html.ime-open .bottom-sentinel {
   justify-content:center;
   padding: 20px;
   background:
-    radial-gradient(174% 96% at 12% -28%, rgba(252, 237, 225, .18), rgba(12, 8, 18, 0) 74%),
-    radial-gradient(142% 90% at 88% -22%, rgba(245, 209, 226, .13), rgba(8, 5, 13, 0) 76%),
-    radial-gradient(92% 62% at 50% 34%, rgba(133, 97, 126, .11), rgba(8, 5, 13, 0) 80%),
-    linear-gradient(180deg, #09060d 0%, #11091a 46%, #07040b 100%);
+    radial-gradient(158% 92% at 12% -22%, rgba(252, 232, 221, .7), rgba(255, 255, 255, 0) 74%),
+    radial-gradient(136% 86% at 88% -18%, rgba(243, 216, 228, .58), rgba(255, 255, 255, 0) 76%),
+    radial-gradient(108% 68% at 50% 32%, rgba(252, 243, 236, .9), rgba(255, 255, 255, 0) 80%),
+    linear-gradient(180deg, #fffdfa 0%, #f9f4ee 48%, #f5efe8 100%);
   background-size: 120% 120%, 120% 120%, 110% 110%, 100% 100%;
   animation: authBgShift 34s ease-in-out infinite alternate;
   z-index: 10000;
@@ -905,8 +908,8 @@ html.ime-open .bottom-sentinel {
 .auth-backdrop::before{
   inset: -24%;
   background:
-    linear-gradient(112deg, rgba(255, 236, 219, .08) 0%, rgba(255, 236, 219, 0) 42%),
-    linear-gradient(326deg, rgba(229, 173, 206, .07) 0%, rgba(229, 173, 206, 0) 44%);
+    linear-gradient(112deg, rgba(255, 250, 246, .88) 0%, rgba(255, 250, 246, 0) 44%),
+    linear-gradient(326deg, rgba(242, 218, 230, .68) 0%, rgba(242, 218, 230, 0) 46%);
   animation: authAuroraDrift 34s ease-in-out infinite alternate;
 }
 
@@ -916,8 +919,8 @@ html.ime-open .bottom-sentinel {
   border-radius: 44% 56% 48% 52% / 58% 46% 54% 42%;
   right: -170px;
   bottom: -108px;
-  background: rgba(222, 160, 191, .11);
-  filter: blur(10px);
+  background: rgba(233, 206, 197, .44);
+  filter: blur(12px);
   animation: authOrbFloat 24s ease-in-out infinite;
 }
 
@@ -926,21 +929,21 @@ html.ime-open .bottom-sentinel {
   width: min(92vw, 420px);
   padding: 26px 22px 24px;
   border-radius: 22px;
-  border: 1px solid rgba(248, 228, 239, .22);
-  background: linear-gradient(160deg, rgba(31, 18, 43, .84) 0%, rgba(17, 11, 27, .86) 100%);
+  border: 1px solid rgba(222, 190, 180, .5);
+  background: linear-gradient(160deg, rgba(255, 255, 255, .8) 0%, rgba(253, 244, 238, .86) 100%);
   box-shadow:
-    0 38px 70px rgba(4, 0, 10, .58),
-    0 10px 30px rgba(108, 66, 126, .2),
-    inset 0 1px 0 rgba(255, 255, 255, .09);
-  backdrop-filter: blur(8px);
-  color: #f6efff;
+    0 30px 60px rgba(132, 100, 92, .15),
+    0 10px 24px rgba(141, 106, 103, .1),
+    inset 0 1px 0 rgba(255, 255, 255, .86);
+  backdrop-filter: blur(10px);
+  color: #312527;
   text-align:center;
   display:flex;
   flex-direction:column;
   align-items:center;
   gap: 10px;
   animation: authCardPulse 14s ease-in-out infinite;
-  font-family: 'Inter', 'Avenir Next', 'Segoe UI', sans-serif;
+  font-family: 'Manrope', 'Avenir Next', 'Segoe UI', sans-serif;
 }
 
 .auth-card::before{
@@ -949,7 +952,7 @@ html.ime-open .bottom-sentinel {
   inset: 0;
   border-radius: inherit;
   pointer-events: none;
-  background: linear-gradient(115deg, rgba(255,255,255,0), rgba(255,255,255,.07), rgba(255,255,255,0));
+  background: linear-gradient(115deg, rgba(255,255,255,0), rgba(255,255,255,.62), rgba(255,255,255,0));
   transform: translateX(-130%);
   animation: authSheen 12s ease-in-out infinite;
 }
@@ -959,26 +962,26 @@ html.ime-open .bottom-sentinel {
   height: auto;
   display: block;
   margin: 0 auto 4px;
-  filter: drop-shadow(0 8px 28px rgba(227, 127, 198, .22));
+  filter: drop-shadow(0 10px 22px rgba(182, 141, 126, .18));
 }
 
 .auth-sub{
   font-size: 13px;
   line-height: 1.5;
-  color: rgba(235, 223, 246, .78);
+  color: rgba(86, 64, 73, .78);
   margin: 0 0 6px;
   max-width: 300px;
 }
 
-.auth-title{ font-size:22px; font-weight:900; margin-bottom:4px; color:#ff0a85; }
+.auth-title{ font-size:22px; font-weight:900; margin-bottom:4px; color:#845f60; }
 .auth-input{
   width:100%; padding:12px 14px; border-radius:12px; border:1px solid #eee; outline:none;
   margin:6px 0; font-size:14px; background:#fafafa;
 }
 .auth-btn{
   width:100%; padding:12px 14px; border:none; border-radius:12px; cursor:pointer;
-  background: linear-gradient(135deg,#ff2a95,#7b61ff); color:#fff; font-weight:900;
-  margin-top:8px; box-shadow:0 12px 28px rgba(0,0,0,.18);
+  background: linear-gradient(135deg,#c98c84,#a77e91); color:#fff; font-weight:900;
+  margin-top:8px; box-shadow:0 12px 28px rgba(137,101,112,.24);
 }
 .auth-btn:disabled{ opacity:.6; cursor:not-allowed; }
 .auth-foot{ margin-top:10px; font-size:12px; color:#777; }
@@ -986,15 +989,17 @@ html.ime-open .bottom-sentinel {
 .signin-overlay{
   position: fixed; inset: 0;
   display: flex; align-items: center; justify-content: center;
-  background: rgba(0,0,0,.30);
+  background: rgba(135, 105, 101, .2);
   z-index: 1400;               /* above header/role/charpop; below Coins & Welcome */
   padding: 16px;
 }
 .signin-card{
   width: min(92vw, 420px);
-  background: #fff; color: #222;
-  border-radius: 14px;
-  box-shadow: 0 18px 48px rgba(0,0,0,.28);
+  background: linear-gradient(158deg, rgba(255, 255, 255, .92), rgba(252, 245, 239, .94));
+  color: #2d2326;
+  border-radius: 16px;
+  border: 1px solid rgba(222, 190, 180, .5);
+  box-shadow: 0 20px 48px rgba(132, 100, 92, .2);
   padding: 14px;
   display: flex; gap: 10px; align-items: center;
 }
@@ -1002,6 +1007,7 @@ html.ime-open .bottom-sentinel {
 .signin-actions{ display: flex; gap: 8px; align-items: center; }
 .signin-close{
   background: transparent; border: none; font-size: 18px; line-height: 1;
+  color: rgba(97, 72, 79, .9);
   padding: 6px; cursor: pointer;
 }
 /* Center the Google Sign-In button */
@@ -1084,15 +1090,15 @@ html.ime-open .bottom-sentinel {
   0%,
   100%{
     box-shadow:
-      0 38px 70px rgba(4, 0, 10, .58),
-      0 10px 30px rgba(108, 66, 126, .2),
-      inset 0 1px 0 rgba(255, 255, 255, .09);
+      0 30px 60px rgba(122, 94, 82, .16),
+      0 10px 24px rgba(132, 101, 93, .1),
+      inset 0 1px 0 rgba(255, 255, 255, .86);
   }
   50%{
     box-shadow:
-      0 42px 76px rgba(4, 0, 10, .6),
-      0 12px 34px rgba(108, 66, 126, .24),
-      inset 0 1px 0 rgba(255, 255, 255, .11);
+      0 34px 66px rgba(122, 94, 82, .2),
+      0 12px 26px rgba(132, 101, 93, .13),
+      inset 0 1px 0 rgba(255, 255, 255, .9);
   }
 }
 
@@ -1458,7 +1464,7 @@ html.legacy-zoom .username-container {
 
 /* nicer keyboard focus for accessibility */
 .auth-card .btn:focus-visible{
-  outline: 2px solid rgba(244, 173, 227, .86);
+  outline: 2px solid rgba(186, 141, 130, .86);
   outline-offset: 2px;
 }
 .auth-card .btn--disabled[disabled]:focus-visible{
@@ -1492,17 +1498,17 @@ html.legacy-zoom .username-container {
   height: 48px;
   padding: 0 48px;
   border-radius: 999px;
-  font: 600 14px/1 'Avenir Next', 'Nunito Sans', 'Segoe UI', sans-serif;
+  font: 600 14px/1 'Manrope', 'Avenir Next', 'Nunito Sans', 'Segoe UI', sans-serif;
   cursor: pointer;
   box-sizing: border-box;
   transition: transform .2s ease, box-shadow .2s ease, opacity .2s ease;
 }
 
 .auth-card .auth-actions .btn:not(.btn--disabled){
-  border: 1px solid rgba(255, 220, 245, .26);
-  color: #fff6ff;
-  background: linear-gradient(135deg, rgba(217, 93, 165, .9), rgba(134, 76, 198, .92));
-  box-shadow: 0 14px 32px rgba(58, 24, 87, .34);
+  border: 1px solid rgba(214, 178, 165, .48);
+  color: #fff;
+  background: linear-gradient(135deg, rgba(205, 143, 134, .94), rgba(176, 129, 151, .96));
+  box-shadow: 0 14px 30px rgba(144, 104, 119, .27);
 }
 
 .auth-card .auth-actions .btn:not(.btn--disabled):active{
@@ -1512,13 +1518,13 @@ html.legacy-zoom .username-container {
 .auth-card .btn--disabled[disabled]{
   opacity: 1;
   cursor: not-allowed;
-  background: rgba(250, 243, 255, .06);
-  color: rgba(225, 207, 238, .52);
-  border: 1px solid rgba(235, 208, 255, .14);
+  background: rgba(251, 246, 241, .76);
+  color: rgba(144, 122, 128, .62);
+  border: 1px solid rgba(209, 184, 173, .42);
   box-shadow: none;
 }
 .auth-card .btn--disabled[disabled] .btn-ico{
-  color: rgba(225, 207, 238, .5);
+  color: rgba(144, 122, 128, .52);
 }
 
 .auth-card .btn-ico{
