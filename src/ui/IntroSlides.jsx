@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import './IntroSlides.css';
 
 const companionFeatures = [
@@ -34,6 +34,8 @@ function scrollToSection(sectionId) {
 }
 
 export default function IntroSlides({ onDone }) {
+  const [heroScrolled, setHeroScrolled] = useState(false);
+
   useEffect(() => {
     const sections = document.querySelectorAll('.shr-section');
     const observer = new IntersectionObserver(
@@ -47,7 +49,17 @@ export default function IntroSlides({ onDone }) {
       { threshold: 0.08, rootMargin: '0px 0px -50px 0px' }
     );
     sections.forEach((s) => observer.observe(s));
-    return () => observer.disconnect();
+
+    const container = document.querySelector('.shr-landing');
+    const onScroll = () => {
+      if (container) setHeroScrolled(container.scrollTop > 80);
+    };
+    container?.addEventListener('scroll', onScroll, { passive: true });
+
+    return () => {
+      observer.disconnect();
+      container?.removeEventListener('scroll', onScroll);
+    };
   }, []);
 
   return (
@@ -60,11 +72,22 @@ export default function IntroSlides({ onDone }) {
         <span className="shr-landing__light shr-landing__light--three" />
       </div>
 
+      {/* ─── HERO ─── */}
       <section className="shr-landing__hero">
         <div className="shr-landing__wrap">
           <div className="shr-landing__hero-grid">
             <div className="shr-landing__hero-copy">
-              <h1>India&apos;s best roleplay AI companion</h1>
+              <h1 className="shr-hero-title">
+                <span className="shr-hero-title__line shr-hero-title__line--top">
+                  India&apos;s best
+                </span>
+                <span className="shr-hero-title__line shr-hero-title__line--mid">
+                  roleplay AI
+                </span>
+                <span className="shr-hero-title__line shr-hero-title__line--bot">
+                  companion
+                </span>
+              </h1>
               <p>
                 Step into intimate conversations, emotionally rich roleplay, and voice moments that
                 feel personal, elegant, and deeply immersive every time you return.
@@ -72,48 +95,115 @@ export default function IntroSlides({ onDone }) {
             </div>
 
             <div className="shr-landing__hero-media" aria-hidden="true">
-              <div className="shr-hero-composition">
-                <span className="shr-hero-aura shr-hero-aura--one" />
-                <span className="shr-hero-aura shr-hero-aura--two" />
+              <div className="shr-hero-chat-wrap">
+                <span className="shr-hero-chat-glow" />
 
-                <div className="shr-hero-panel shr-hero-panel--main">
-                  <span className="shr-hero-msg shr-hero-msg--one" />
-                  <span className="shr-hero-msg shr-hero-msg--two" />
-                  <span className="shr-hero-msg shr-hero-msg--three" />
-                  <span className="shr-hero-wave">
-                    {Array.from({ length: 10 }).map((_, index) => (
-                      <i key={index} />
+                <div className="shr-hero-chat">
+                  {/* gradient border overlay */}
+                  <span className="shr-hero-chat__border" />
+
+                  {/* header */}
+                  <div className="shr-hero-chat__head">
+                    <div className="shr-hero-chat__av">S</div>
+                    <div className="shr-hero-chat__info">
+                      <strong>Shraddha</strong>
+                      <span>
+                        <i /> Online now
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* messages */}
+                  <div className="shr-hero-chat__body">
+                    <div className="shr-chat-row shr-chat-row--her">
+                      <div className="shr-chat-bbl">
+                        <span className="shr-chat-ln" style={{ width: '88%' }} />
+                        <span className="shr-chat-ln" style={{ width: '60%' }} />
+                      </div>
+                    </div>
+
+                    <div className="shr-chat-row shr-chat-row--you">
+                      <div className="shr-chat-bbl shr-chat-bbl--you">
+                        <span className="shr-chat-ln" style={{ width: '74%' }} />
+                      </div>
+                    </div>
+
+                    <div className="shr-chat-row shr-chat-row--her">
+                      <div className="shr-chat-bbl">
+                        <span className="shr-chat-ln" style={{ width: '94%' }} />
+                        <span className="shr-chat-ln" style={{ width: '76%' }} />
+                        <span className="shr-chat-ln" style={{ width: '46%' }} />
+                      </div>
+                      <span className="shr-chat-heart">♥</span>
+                    </div>
+
+                    <div className="shr-chat-row shr-chat-row--her">
+                      <div className="shr-chat-dots">
+                        <span />
+                        <span />
+                        <span />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* input */}
+                  <div className="shr-hero-chat__foot">
+                    <div className="shr-chat-input" />
+                    <div className="shr-chat-send">
+                      <svg viewBox="0 0 24 24" fill="none" width="13" height="13">
+                        <path
+                          d="M22 2L11 13"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                        />
+                        <path
+                          d="M22 2L15 22L11 13L2 9L22 2Z"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+
+                {/* floating voice chip */}
+                <div className="shr-hero-chip shr-hero-chip--voice">
+                  <span className="shr-hero-chip__bars">
+                    {Array.from({ length: 7 }).map((_, i) => (
+                      <i key={i} />
                     ))}
                   </span>
+                  <span className="shr-hero-chip__label">0:12</span>
                 </div>
 
-                <div className="shr-hero-panel shr-hero-panel--chat">
-                  <span className="shr-hero-dot shr-hero-dot--chat" />
-                  <span className="shr-hero-mini-line" />
-                </div>
-
-                <div className="shr-hero-panel shr-hero-panel--voice">
-                  <span className="shr-hero-dot shr-hero-dot--voice" />
-                  <span className="shr-hero-mini-line shr-hero-mini-line--short" />
-                </div>
-
-                <span className="shr-hero-badge" />
+                {/* floating heart */}
+                <div className="shr-hero-chip shr-hero-chip--heart">♥</div>
               </div>
             </div>
           </div>
         </div>
 
-        <button
-          type="button"
-          className="shr-scroll-cue"
+        {/* scroll hint */}
+        <div
+          className={`shr-scroll-hint${heroScrolled ? ' is-hidden' : ''}`}
           onClick={() => scrollToSection('shr-about')}
+          role="button"
+          tabIndex={0}
           aria-label="Scroll to explore"
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') scrollToSection('shr-about');
+          }}
         >
-          <span>Scroll to explore</span>
-          <i />
-        </button>
+          <span className="shr-scroll-hint__track">
+            <span className="shr-scroll-hint__glow" />
+          </span>
+        </div>
       </section>
 
+      {/* ─── MAIN (unchanged) ─── */}
       <main className="shr-landing__main">
         <section className="shr-section shr-section--about" id="shr-about">
           <div className="shr-section__head">
@@ -173,10 +263,18 @@ export default function IntroSlides({ onDone }) {
               </div>
               <ul>
                 <li className="active">Stranger</li>
-                <li>Girlfriend <span>Premium</span></li>
-                <li>Wife <span>Premium</span></li>
-                <li>Bhabhi <span>Premium</span></li>
-                <li>Ex-GF <span>Premium</span></li>
+                <li>
+                  Girlfriend <span>Premium</span>
+                </li>
+                <li>
+                  Wife <span>Premium</span>
+                </li>
+                <li>
+                  Bhabhi <span>Premium</span>
+                </li>
+                <li>
+                  Ex-GF <span>Premium</span>
+                </li>
               </ul>
             </div>
           </div>
