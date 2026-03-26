@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import './IntroSlides.css';
 
 const companionFeatures = [
@@ -27,11 +27,6 @@ const modePreview = [
   { name: 'Bhabhi', image: '/avatars/shraddha_bhabhi_full.jpg', status: 'Premium' },
   { name: 'Ex-GF', image: '/avatars/shraddha_exgf_full.jpg', status: 'Premium' }
 ];
-
-function scrollToSection(sectionId) {
-  const section = document.getElementById(sectionId);
-  if (section) section.scrollIntoView({ behavior: 'smooth', block: 'start' });
-}
 
 export default function IntroSlides({ onDone }) {
 
