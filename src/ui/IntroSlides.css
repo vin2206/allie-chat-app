@@ -1573,7 +1573,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 16px;
+  gap: 12px;
   border: none;
   border-radius: 18px;
   background: transparent;
@@ -1586,68 +1586,76 @@
   transition: transform 0.25s ease;
 }
 
-/* ambient glow behind heart — larger, brighter */
+/* ambient glow */
 .shr-mode-heart-cta__glow {
   position: absolute;
-  width: 140px;
-  height: 140px;
-  top: 40%;
+  width: 160px;
+  height: 160px;
+  top: 38%;
   left: 50%;
   transform: translate(-50%, -50%);
   border-radius: 50%;
   background: radial-gradient(
     circle,
-    rgba(212, 114, 142, 0.2) 0%,
+    rgba(212, 114, 142, 0.22) 0%,
     rgba(212, 114, 142, 0.06) 45%,
-    transparent 70%
+    transparent 68%
   );
-  filter: blur(20px);
+  filter: blur(22px);
   pointer-events: none;
-  animation: shrHrtCTAGlow 3.2s ease-in-out infinite;
+  animation: shrHrtCTAGlow 3s ease-in-out infinite;
 }
 
-/* concentric pulse rings — slightly bigger */
+/* pulse rings */
 .shr-mode-heart-cta__ring {
   position: absolute;
-  top: 40%;
+  top: 38%;
   left: 50%;
-  width: 68px;
-  height: 68px;
-  margin-top: -34px;
-  margin-left: -34px;
+  width: 78px;
+  height: 78px;
+  margin-top: -39px;
+  margin-left: -39px;
   border-radius: 50%;
   border: 1px solid rgba(212, 114, 142, 0.1);
   pointer-events: none;
-  animation: shrHrtCTARing 3.6s ease-out infinite;
+  animation: shrHrtCTARing 3.4s ease-out infinite;
 }
 
 .shr-mode-heart-cta__ring--2 {
-  animation-delay: 1.4s;
+  animation-delay: 1.3s;
 }
 
-/* heart SVG — 25% bigger */
+/* heart SVG — bigger */
 .shr-mode-heart-cta__heart {
-  width: 64px;
-  height: 64px;
+  width: 72px;
+  height: 72px;
   position: relative;
   z-index: 2;
   filter:
-    drop-shadow(0 0 18px rgba(212, 114, 142, 0.4))
-    drop-shadow(0 0 44px rgba(212, 114, 142, 0.14));
-  animation: shrHrtCTAPulse 3.2s ease-in-out infinite;
+    drop-shadow(0 0 20px rgba(212, 114, 142, 0.45))
+    drop-shadow(0 0 48px rgba(212, 114, 142, 0.15));
+  animation: shrHrtCTAPulse 3s ease-in-out infinite;
 }
 
-/* label — brighter, more visible */
+/* pill label */
 .shr-mode-heart-cta__label {
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
-  color: var(--accent-rose);
   position: relative;
   z-index: 2;
-  opacity: 0.88;
-  transition: opacity 0.3s ease;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #fff;
+  background: linear-gradient(135deg, rgba(212, 114, 142, 0.5) 0%, rgba(155, 125, 184, 0.35) 100%);
+  border: 1px solid rgba(212, 114, 142, 0.2);
+  border-radius: 999px;
+  padding: 6px 18px;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow:
+    0 0 16px rgba(212, 114, 142, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  transition: background 0.3s ease, box-shadow 0.3s ease;
 }
 
 /* tap feedback */
@@ -1656,50 +1664,53 @@
 }
 
 .shr-mode-heart-cta:active .shr-mode-heart-cta__label {
-  opacity: 1;
+  background: linear-gradient(135deg, rgba(212, 114, 142, 0.65) 0%, rgba(155, 125, 184, 0.45) 100%);
 }
 
 /* keyframes */
 @keyframes shrHrtCTAPulse {
   0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.09); }
+  50% { transform: scale(1.08); }
 }
 
 @keyframes shrHrtCTAGlow {
-  0%, 100% { opacity: 0.45; transform: translate(-50%, -50%) scale(1); }
+  0%, 100% { opacity: 0.4; transform: translate(-50%, -50%) scale(1); }
   50% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
 }
 
 @keyframes shrHrtCTARing {
-  0% { transform: scale(1); opacity: 0.35; }
+  0% { transform: scale(1); opacity: 0.3; }
   100% { transform: scale(2.8); opacity: 0; }
 }
 
-/* ── hide on desktop ─────────────────────────────────────── */
+/* hide on desktop */
 @media (min-width: 760px) {
   .shr-mode-heart-cta {
     display: none;
   }
 }
 
-/* ── hover polish ────────────────────────────────────────── */
+/* hover */
 @media (hover: hover) {
   .shr-mode-heart-cta:hover {
     transform: translateY(-2px);
   }
 
   .shr-mode-heart-cta:hover .shr-mode-heart-cta__label {
-    opacity: 1;
+    background: linear-gradient(135deg, rgba(212, 114, 142, 0.6) 0%, rgba(155, 125, 184, 0.4) 100%);
+    box-shadow:
+      0 0 22px rgba(212, 114, 142, 0.18),
+      inset 0 1px 0 rgba(255, 255, 255, 0.1);
   }
 
   .shr-mode-heart-cta:hover .shr-mode-heart-cta__heart {
     filter:
-      drop-shadow(0 0 22px rgba(212, 114, 142, 0.5))
-      drop-shadow(0 0 52px rgba(212, 114, 142, 0.18));
+      drop-shadow(0 0 24px rgba(212, 114, 142, 0.55))
+      drop-shadow(0 0 56px rgba(212, 114, 142, 0.2));
   }
 }
 
-/* ── reduced motion ──────────────────────────────────────── */
+/* reduced motion */
 @media (prefers-reduced-motion: reduce) {
   .shr-mode-heart-cta__glow,
   .shr-mode-heart-cta__ring,
@@ -1707,16 +1718,6 @@
     animation: none !important;
   }
 }
-
-/* ── reduced motion ──────────────────────────────────────── */
-@media (prefers-reduced-motion: reduce) {
-  .shr-mode-heart-cta__glow,
-  .shr-mode-heart-cta__ring,
-  .shr-mode-heart-cta__heart {
-    animation: none !important;
-  }
-}
-
 /* ── Reduced Motion ────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
   .shr-landing__light,
