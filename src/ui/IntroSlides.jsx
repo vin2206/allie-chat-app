@@ -222,7 +222,6 @@ export default function IntroSlides({ onDone }) {
           <path d="M3 11L8 16L13 11" stroke="rgba(255,255,255,0.25)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       </div>
-      </section>
 
       {/* ─── MAIN (unchanged) ─── */}
       <main className="shr-landing__main">
