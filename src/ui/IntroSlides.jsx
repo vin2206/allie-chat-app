@@ -43,8 +43,6 @@ export default function IntroSlides({ onDone }) {
       { threshold: 0.08, rootMargin: '0px 0px -50px 0px' }
     );
     sections.forEach((s) => observer.observe(s));
-
-    const container = document.querySelector('.shr-landing');
     return () => {
       observer.disconnect();
     };
