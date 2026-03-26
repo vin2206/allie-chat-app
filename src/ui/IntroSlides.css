@@ -1573,7 +1573,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 12px;
+  gap: 14px;
   border: none;
   border-radius: 18px;
   background: transparent;
@@ -1586,58 +1586,71 @@
   transition: transform 0.25s ease;
 }
 
-/* ambient glow */
 .shr-mode-heart-cta__glow {
   position: absolute;
   width: 160px;
   height: 160px;
-  top: 38%;
+  top: 36%;
   left: 50%;
   transform: translate(-50%, -50%);
   border-radius: 50%;
   background: radial-gradient(
     circle,
-    rgba(212, 114, 142, 0.22) 0%,
-    rgba(212, 114, 142, 0.06) 45%,
+    rgba(212, 114, 142, 0.2) 0%,
+    rgba(212, 114, 142, 0.05) 45%,
     transparent 68%
   );
   filter: blur(22px);
   pointer-events: none;
-  animation: shrHrtCTAGlow 3s ease-in-out infinite;
+  animation: shrHrtCTAGlow 3.4s ease-in-out infinite;
 }
 
-/* pulse rings */
 .shr-mode-heart-cta__ring {
   position: absolute;
-  top: 38%;
+  top: 36%;
   left: 50%;
-  width: 78px;
-  height: 78px;
-  margin-top: -39px;
-  margin-left: -39px;
+  width: 80px;
+  height: 80px;
+  margin-top: -40px;
+  margin-left: -40px;
   border-radius: 50%;
-  border: 1px solid rgba(212, 114, 142, 0.1);
+  border: 1px solid rgba(212, 114, 142, 0.08);
   pointer-events: none;
-  animation: shrHrtCTARing 3.4s ease-out infinite;
+  animation: shrHrtCTARing 3.6s ease-out infinite;
 }
 
 .shr-mode-heart-cta__ring--2 {
-  animation-delay: 1.3s;
+  animation-delay: 1.4s;
 }
 
-/* heart SVG — bigger */
+/* heart — 3D depth via layered shadows + specular highlight */
 .shr-mode-heart-cta__heart {
   width: 72px;
   height: 72px;
   position: relative;
   z-index: 2;
   filter:
-    drop-shadow(0 0 20px rgba(212, 114, 142, 0.45))
-    drop-shadow(0 0 48px rgba(212, 114, 142, 0.15));
-  animation: shrHrtCTAPulse 3s ease-in-out infinite;
+    drop-shadow(0 4px 6px rgba(0, 0, 0, 0.3))
+    drop-shadow(0 0 22px rgba(212, 114, 142, 0.4))
+    drop-shadow(0 0 52px rgba(212, 114, 142, 0.12));
+  animation: shrHrtCTAPulse 3.4s ease-in-out infinite;
 }
 
-/* pill label */
+/* specular highlight on heart top-left */
+.shr-mode-heart-cta__heart::after {
+  content: '';
+  position: absolute;
+  top: 14%;
+  left: 22%;
+  width: 18px;
+  height: 10px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.18);
+  filter: blur(4px);
+  pointer-events: none;
+}
+
+/* pill — animated gradient like "Let's go" button */
 .shr-mode-heart-cta__label {
   position: relative;
   z-index: 2;
@@ -1646,75 +1659,134 @@
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: #fff;
-  background: linear-gradient(135deg, rgba(212, 114, 142, 0.5) 0%, rgba(155, 125, 184, 0.35) 100%);
-  border: 1px solid rgba(212, 114, 142, 0.2);
+  background: linear-gradient(135deg, #e8c4b8, #d4728e, #9b7db8, #d4728e, #e8c4b8);
+  background-size: 300% 100%;
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 999px;
-  padding: 6px 18px;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  padding: 7px 20px;
   box-shadow:
-    0 0 16px rgba(212, 114, 142, 0.12),
-    inset 0 1px 0 rgba(255, 255, 255, 0.08);
-  transition: background 0.3s ease, box-shadow 0.3s ease;
+    0 0 18px rgba(212, 114, 142, 0.14),
+    0 2px 8px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  animation: shrHrtPillShimmer 5s ease-in-out infinite;
+  transition: box-shadow 0.3s ease;
 }
 
-/* tap feedback */
 .shr-mode-heart-cta:active {
   transform: scale(0.93);
 }
 
 .shr-mode-heart-cta:active .shr-mode-heart-cta__label {
-  background: linear-gradient(135deg, rgba(212, 114, 142, 0.65) 0%, rgba(155, 125, 184, 0.45) 100%);
+  box-shadow:
+    0 0 24px rgba(212, 114, 142, 0.22),
+    0 2px 8px rgba(0, 0, 0, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
 }
 
-/* keyframes */
 @keyframes shrHrtCTAPulse {
   0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.08); }
+  50% { transform: scale(1.06); }
 }
 
 @keyframes shrHrtCTAGlow {
-  0%, 100% { opacity: 0.4; transform: translate(-50%, -50%) scale(1); }
-  50% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
+  0%, 100% { opacity: 0.35; transform: translate(-50%, -50%) scale(1); }
+  50% { opacity: 0.9; transform: translate(-50%, -50%) scale(1.08); }
 }
 
 @keyframes shrHrtCTARing {
-  0% { transform: scale(1); opacity: 0.3; }
+  0% { transform: scale(1); opacity: 0.28; }
   100% { transform: scale(2.8); opacity: 0; }
 }
 
-/* hide on desktop */
+@keyframes shrHrtPillShimmer {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
 @media (min-width: 760px) {
   .shr-mode-heart-cta {
     display: none;
   }
 }
 
-/* hover */
 @media (hover: hover) {
   .shr-mode-heart-cta:hover {
     transform: translateY(-2px);
   }
 
   .shr-mode-heart-cta:hover .shr-mode-heart-cta__label {
-    background: linear-gradient(135deg, rgba(212, 114, 142, 0.6) 0%, rgba(155, 125, 184, 0.4) 100%);
     box-shadow:
-      0 0 22px rgba(212, 114, 142, 0.18),
-      inset 0 1px 0 rgba(255, 255, 255, 0.1);
+      0 0 26px rgba(212, 114, 142, 0.2),
+      0 2px 10px rgba(0, 0, 0, 0.22),
+      inset 0 1px 0 rgba(255, 255, 255, 0.14);
   }
 
   .shr-mode-heart-cta:hover .shr-mode-heart-cta__heart {
     filter:
-      drop-shadow(0 0 24px rgba(212, 114, 142, 0.55))
-      drop-shadow(0 0 56px rgba(212, 114, 142, 0.2));
+      drop-shadow(0 4px 8px rgba(0, 0, 0, 0.35))
+      drop-shadow(0 0 28px rgba(212, 114, 142, 0.5))
+      drop-shadow(0 0 60px rgba(212, 114, 142, 0.16));
   }
 }
 
-/* reduced motion */
 @media (prefers-reduced-motion: reduce) {
   .shr-mode-heart-cta__glow,
   .shr-mode-heart-cta__ring,
-  .shr-mode-heart-cta__heart {
+  .shr-mode-heart-cta__heart,
+  .shr-mode-heart-cta__label {
+    animation: none !important;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   FIXED SCROLL-DOWN INDICATOR
+   ═══════════════════════════════════════════════════════════════ */
+.shr-scroll-indicator {
+  position: fixed;
+  bottom: calc(14px + env(safe-area-inset-bottom, 0px));
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 99998;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  animation:
+    shrScrollIndFade 0.6s cubic-bezier(0.16, 1, 0.3, 1) 1.8s both,
+    shrScrollIndBob 2.8s ease-in-out 2.4s infinite;
+}
+
+.shr-scroll-indicator svg {
+  opacity: 0.6;
+}
+
+@keyframes shrScrollIndFade {
+  from { opacity: 0; transform: translateX(-50%) translateY(8px); }
+  to { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+@keyframes shrScrollIndBob {
+  0%, 100% { transform: translateX(-50%) translateY(0); }
+  50% { transform: translateX(-50%) translateY(4px); }
+}
+
+/* hide near bottom of page via JS class or when final CTA is visible */
+.shr-landing:has(.shr-final-cta.is-visible) .shr-scroll-indicator {
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shr-scroll-indicator {
     animation: none !important;
   }
 }
