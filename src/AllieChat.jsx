@@ -342,11 +342,19 @@ function AuthGate({ onSignedIn }) {
   const DISABLE_GUEST_KEY = 'disable_guest_v1';
   const disableGuest = () => { try { localStorage.setItem(DISABLE_GUEST_KEY, '1'); } catch {} };
   const isGuestDisabledUI = () => { try { return localStorage.getItem(DISABLE_GUEST_KEY) === '1'; } catch { return false; } };
+  const onSignedInRef = useRef(onSignedIn);
+
+  useEffect(() => {
+    onSignedInRef.current = onSignedIn;
+  }, [onSignedIn]);
 
   useEffect(() => {
     if (IS_VERCEL_PREVIEW) return;
 
     let cancelled = false;
+    let waitTimer = null;
+    let renderRaf = 0;
+    let revealTimer = 0;
     // Ensure the GIS script exists (if not already added in index.html)
 if (!document.querySelector('script[src*="gsi/client"]')) {
   const s = document.createElement('script');
@@ -361,12 +369,14 @@ if (!document.querySelector('script[src*="gsi/client"]')) {
       new Promise((resolve, reject) => {
         if (window.google?.accounts?.id) return resolve();
         const start = Date.now();
-        const t = setInterval(() => {
+        waitTimer = setInterval(() => {
           if (window.google?.accounts?.id) {
-            clearInterval(t);
+            clearInterval(waitTimer);
+            waitTimer = null;
             resolve();
           } else if (Date.now() - start > 8000) {
-            clearInterval(t);
+            clearInterval(waitTimer);
+            waitTimer = null;
             reject(new Error('GIS load timeout'));
           }
         }, 50);
@@ -394,7 +404,7 @@ if (!document.querySelector('script[src*="gsi/client"]')) {
             // ✅ once Google is used on this device, never show Guest again
       disableGuest();
 
-      onSignedIn({
+      onSignedInRef.current({
         name: p.name || '',
         email: (p.email || '').toLowerCase(),
         sub: p.sub,
@@ -409,11 +419,12 @@ if (!document.querySelector('script[src*="gsi/client"]')) {
   },
 });
 
-        const host = document.querySelector('.gbtn-wrap');
+        const host = document.querySelector('.auth-card .gbtn-wrap');
         const el = document.getElementById('googleSignIn');
         if (el && host) {
           host.classList.remove('ready'); // keep hidden
-          requestAnimationFrame(() => {
+          renderRaf = requestAnimationFrame(() => {
+            if (cancelled) return;
             const w = Math.min(320, Math.max(240, Math.floor((host.clientWidth || host.getBoundingClientRect().width) || 280)));
             el.innerHTML = '';
             window.google.accounts.id.renderButton(el, {
@@ -424,14 +435,32 @@ if (!document.querySelector('script[src*="gsi/client"]')) {
   logo_alignment: 'left',
   width: w,                // let it fill .gbtn-wrap
 });
-            requestAnimationFrame(() => host.classList.add('ready')); // reveal
+            let revealChecks = 0;
+            const revealWhenReady = () => {
+              if (cancelled) return;
+              const hasRenderedButton = !!el.querySelector('iframe, div[role="button"]');
+              if (hasRenderedButton || revealChecks > 45) {
+                requestAnimationFrame(() => {
+                  if (!cancelled) host.classList.add('ready');
+                });
+                return;
+              }
+              revealChecks += 1;
+              revealTimer = window.setTimeout(revealWhenReady, 40);
+            };
+            revealWhenReady();
           });
         }
       })
       .catch((e) => console.error('GIS load failed:', e));
 
-    return () => { cancelled = true; };
-  }, [onSignedIn]);
+    return () => {
+      cancelled = true;
+      if (waitTimer) clearInterval(waitTimer);
+      if (renderRaf) cancelAnimationFrame(renderRaf);
+      if (revealTimer) clearTimeout(revealTimer);
+    };
+  }, []);
 
   return (
     <div className="auth-backdrop">
@@ -441,7 +470,7 @@ if (!document.querySelector('script[src*="gsi/client"]')) {
         <div className="auth-sub">
   {IS_VERCEL_PREVIEW
     ? 'Preview mode — sign-in disabled for this test link'
-    : 'Sign in to chat with a Realistic AI Girlfriend'}
+    : 'Start your Story with Shraddha Today'}
 </div>
 
         {/* Google on its own full-width row */}
