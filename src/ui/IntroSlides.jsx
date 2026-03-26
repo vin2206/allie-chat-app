@@ -34,7 +34,6 @@ function scrollToSection(sectionId) {
 }
 
 export default function IntroSlides({ onDone }) {
-  const [heroScrolled, setHeroScrolled] = useState(false);
 
   useEffect(() => {
     const sections = document.querySelectorAll('.shr-section');
@@ -51,14 +50,8 @@ export default function IntroSlides({ onDone }) {
     sections.forEach((s) => observer.observe(s));
 
     const container = document.querySelector('.shr-landing');
-    const onScroll = () => {
-      if (container) setHeroScrolled(container.scrollTop > 80);
-    };
-    container?.addEventListener('scroll', onScroll, { passive: true });
-
     return () => {
       observer.disconnect();
-      container?.removeEventListener('scroll', onScroll);
     };
   }, []);
 
@@ -197,29 +190,13 @@ export default function IntroSlides({ onDone }) {
             </div>
           </div>
         </div>
-
-                {/* scroll hint */}
-        <div
-          className={`shr-scroll-hint${heroScrolled ? ' is-hidden' : ''}`}
-          onClick={() => scrollToSection('shr-about')}
-          role="button"
-          tabIndex={0}
-          aria-label="Scroll to explore"
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') scrollToSection('shr-about');
-          }}
-        >
-          <span className="shr-scroll-hint__track">
-            <span className="shr-scroll-hint__glow" />
-          </span>
-        </div>
       </section>
 
-      {/* ─── FIXED SCROLL INDICATOR ─── */}
+            {/* ─── FIXED SCROLL INDICATOR ─── */}
       <div className="shr-scroll-indicator" aria-hidden="true">
-        <svg width="16" height="20" viewBox="0 0 16 20" fill="none">
-          <path d="M8 2L8 14" stroke="rgba(255,255,255,0.25)" strokeWidth="1.5" strokeLinecap="round" />
-          <path d="M3 11L8 16L13 11" stroke="rgba(255,255,255,0.25)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+        <svg className="shr-scroll-indicator__chevrons" width="16" height="22" viewBox="0 0 16 22" fill="none">
+          <path d="M3 3L8 8L13 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+          <path d="M3 11L8 16L13 11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" opacity="0.5"/>
         </svg>
       </div>
 
