@@ -198,7 +198,7 @@ export default function IntroSlides({ onDone }) {
           </div>
         </div>
 
-        {/* scroll hint */}
+                {/* scroll hint */}
         <div
           className={`shr-scroll-hint${heroScrolled ? ' is-hidden' : ''}`}
           onClick={() => scrollToSection('shr-about')}
@@ -213,6 +213,15 @@ export default function IntroSlides({ onDone }) {
             <span className="shr-scroll-hint__glow" />
           </span>
         </div>
+      </section>
+
+      {/* ─── FIXED SCROLL INDICATOR ─── */}
+      <div className="shr-scroll-indicator" aria-hidden="true">
+        <svg width="16" height="20" viewBox="0 0 16 20" fill="none">
+          <path d="M8 2L8 14" stroke="rgba(255,255,255,0.25)" strokeWidth="1.5" strokeLinecap="round" />
+          <path d="M3 11L8 16L13 11" stroke="rgba(255,255,255,0.25)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </div>
       </section>
 
       {/* ─── MAIN (unchanged) ─── */}
