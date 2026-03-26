@@ -254,6 +254,38 @@ export default function IntroSlides({ onDone }) {
                 </article>
               );
             })}
+                        {/* ♥ Heart badge CTA — fills the empty 6th cell on mobile */}
+            <button type="button" className="shr-mode-heart-cta" onClick={onDone}>
+              <span className="shr-mode-heart-cta__glow" aria-hidden="true" />
+              <span className="shr-mode-heart-cta__ring shr-mode-heart-cta__ring--1" aria-hidden="true" />
+              <span className="shr-mode-heart-cta__ring shr-mode-heart-cta__ring--2" aria-hidden="true" />
+              <svg
+                className="shr-mode-heart-cta__heart"
+                viewBox="0 0 80 80"
+                fill="none"
+                aria-hidden="true"
+              >
+                <defs>
+                  <linearGradient id="shrHrtFill" x1="10" y1="10" x2="70" y2="70" gradientUnits="userSpaceOnUse">
+                    <stop offset="0%" stopColor="#e8c4b8" />
+                    <stop offset="55%" stopColor="#d4728e" />
+                    <stop offset="100%" stopColor="#9b7db8" />
+                  </linearGradient>
+                  <linearGradient id="shrHrtStroke" x1="10" y1="10" x2="70" y2="70" gradientUnits="userSpaceOnUse">
+                    <stop offset="0%" stopColor="rgba(232,196,184,0.5)" />
+                    <stop offset="100%" stopColor="rgba(155,125,184,0.3)" />
+                  </linearGradient>
+                </defs>
+                <path
+                  d="M40 68C40 68 10 48 10 28C10 18 18 10 28 10C33.5 10 38 14 40 18.5C42 14 46.5 10 52 10C62 10 70 18 70 28C70 48 40 68 40 68Z"
+                  fill="url(#shrHrtFill)"
+                  fillOpacity="0.82"
+                  stroke="url(#shrHrtStroke)"
+                  strokeWidth="1"
+                />
+              </svg>
+              <span className="shr-mode-heart-cta__label">Pick mode</span>
+            </button>
           </div>
         </section>
 
