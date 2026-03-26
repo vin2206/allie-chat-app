@@ -741,50 +741,6 @@
   flex-shrink: 0;
 }
 
-/* ── Scroll Hint ───────────────────────────────────────────── */
-.shr-scroll-hint {
-  position: absolute;
-  left: 50%;
-  bottom: 18px;
-  transform: translateX(-50%);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  cursor: pointer;
-  padding: 8px;
-  opacity: 1;
-  transition: opacity 0.7s ease, transform 0.7s ease;
-  animation: shrFadeUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) 1.3s both;
-  z-index: 3;
-}
-
-.shr-scroll-hint.is-hidden {
-  opacity: 0;
-  transform: translateX(-50%) translateY(14px);
-  pointer-events: none;
-}
-
-.shr-scroll-hint__track {
-  width: 2px;
-  height: 52px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.04);
-  position: relative;
-  overflow: hidden;
-}
-
-.shr-scroll-hint__glow {
-  position: absolute;
-  top: -30%;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 4px;
-  height: 38%;
-  border-radius: 999px;
-  background: linear-gradient(180deg, transparent, var(--accent-rose), transparent);
-  animation: shrScrollGlow 2.4s ease-in-out infinite;
-}
-
 /* ═══════════════════════════════════════════════════════════════
    MAIN & SECTIONS — dimensional upgrade
    ═══════════════════════════════════════════════════════════════ */
@@ -1414,12 +1370,6 @@
   to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
-@keyframes shrScrollGlow {
-  0% { top: -30%; opacity: 0; }
-  25% { opacity: 1; }
-  100% { top: 100%; opacity: 0; }
-}
-
 @keyframes shrHeartPulse {
   0%, 100% { transform: scale(1); }
   50% { transform: scale(1.22); }
@@ -1734,11 +1684,11 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   FIXED SCROLL-DOWN INDICATOR — ghosted glass
+   FIXED SCROLL-DOWN INDICATOR — double-chevron capsule
    ═══════════════════════════════════════════════════════════════ */
 .shr-scroll-indicator {
   position: fixed;
-  bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  bottom: calc(20px + env(safe-area-inset-bottom, 0px));
   left: 50%;
   transform: translateX(-50%);
   z-index: 99998;
@@ -1747,29 +1697,28 @@
   align-items: center;
   justify-content: center;
   width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(255, 255, 255, 0.04);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  height: 56px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.045);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
   box-shadow:
-    0 1px 4px rgba(0, 0, 0, 0.12),
-    inset 0 1px 0 rgba(255, 255, 255, 0.03);
+    0 2px 8px rgba(0, 0, 0, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  color: var(--accent-blush);
   opacity: 0;
-  animation:
-    shrScrollIndAppear 0.8s cubic-bezier(0.16, 1, 0.3, 1) 2s forwards,
-    shrScrollIndFloat 3.2s ease-in-out 2.8s infinite;
+  animation: shrScrollIndAppear 0.8s cubic-bezier(0.16, 1, 0.3, 1) 1.8s forwards;
 }
 
-.shr-scroll-indicator svg {
-  opacity: 0.35;
+.shr-scroll-indicator__chevrons {
+  animation: shrChevDrift 2s ease-in-out infinite;
 }
 
 @keyframes shrScrollIndAppear {
   from {
     opacity: 0;
-    transform: translateX(-50%) translateY(6px);
+    transform: translateX(-50%) translateY(10px);
   }
   to {
     opacity: 1;
@@ -1777,19 +1726,22 @@
   }
 }
 
-@keyframes shrScrollIndFloat {
-  0%, 100% {
-    transform: translateX(-50%) translateY(0);
-    opacity: 1;
+@keyframes shrChevDrift {
+  0% {
+    transform: translateY(-3px);
+    opacity: 0.15;
   }
-  50% {
-    transform: translateX(-50%) translateY(3px);
-    opacity: 0.6;
+  35% {
+    opacity: 0.9;
+  }
+  100% {
+    transform: translateY(6px);
+    opacity: 0;
   }
 }
 
 .shr-landing:has(.shr-final-cta.is-visible) .shr-scroll-indicator {
-  opacity: 0;
+  opacity: 0 !important;
   transition: opacity 0.5s ease;
 }
 
@@ -1797,6 +1749,10 @@
   .shr-scroll-indicator {
     animation: none !important;
     opacity: 0.5 !important;
+  }
+  .shr-scroll-indicator__chevrons {
+    animation: none !important;
+    opacity: 0.6 !important;
   }
 }
 /* ── Reduced Motion ────────────────────────────────────────── */
@@ -1809,7 +1765,6 @@
   .shr-chat-dots span,
   .shr-chat-heart,
   .shr-wave span,
-  .shr-scroll-hint__glow,
   .shr-mic-orb::before,
   .shr-mic-orb::after,
   .shr-btn--primary {
@@ -1818,8 +1773,7 @@
 
   .shr-hero-title__line,
   .shr-landing__hero-copy > p,
-  .shr-hero-chat-wrap,
-  .shr-scroll-hint {
+  .shr-hero-chat-wrap {
     animation: none !important;
     opacity: 1 !important;
     transform: none !important;
