@@ -117,13 +117,7 @@
 }
 
 .shr-landing__hero::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 10%;
-  right: 10%;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.06), transparent);
+  display: none;
 }
 
 .shr-landing__wrap,
@@ -1740,11 +1734,11 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   FIXED SCROLL-DOWN INDICATOR
+   FIXED SCROLL-DOWN INDICATOR — ghosted glass
    ═══════════════════════════════════════════════════════════════ */
 .shr-scroll-indicator {
   position: fixed;
-  bottom: calc(14px + env(safe-area-inset-bottom, 0px));
+  bottom: calc(16px + env(safe-area-inset-bottom, 0px));
   left: 50%;
   transform: translateX(-50%);
   z-index: 99998;
@@ -1752,34 +1746,48 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow:
+    0 1px 4px rgba(0, 0, 0, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.03);
+  opacity: 0;
   animation:
-    shrScrollIndFade 0.6s cubic-bezier(0.16, 1, 0.3, 1) 1.8s both,
-    shrScrollIndBob 2.8s ease-in-out 2.4s infinite;
+    shrScrollIndAppear 0.8s cubic-bezier(0.16, 1, 0.3, 1) 2s forwards,
+    shrScrollIndFloat 3.2s ease-in-out 2.8s infinite;
 }
 
 .shr-scroll-indicator svg {
-  opacity: 0.6;
+  opacity: 0.35;
 }
 
-@keyframes shrScrollIndFade {
-  from { opacity: 0; transform: translateX(-50%) translateY(8px); }
-  to { opacity: 1; transform: translateX(-50%) translateY(0); }
+@keyframes shrScrollIndAppear {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
 }
 
-@keyframes shrScrollIndBob {
-  0%, 100% { transform: translateX(-50%) translateY(0); }
-  50% { transform: translateX(-50%) translateY(4px); }
+@keyframes shrScrollIndFloat {
+  0%, 100% {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+  }
+  50% {
+    transform: translateX(-50%) translateY(3px);
+    opacity: 0.6;
+  }
 }
 
-/* hide near bottom of page via JS class or when final CTA is visible */
 .shr-landing:has(.shr-final-cta.is-visible) .shr-scroll-indicator {
   opacity: 0;
   transition: opacity 0.5s ease;
@@ -1788,6 +1796,7 @@
 @media (prefers-reduced-motion: reduce) {
   .shr-scroll-indicator {
     animation: none !important;
+    opacity: 0.5 !important;
   }
 }
 /* ── Reduced Motion ────────────────────────────────────────── */
