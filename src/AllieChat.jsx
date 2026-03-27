@@ -115,6 +115,56 @@ const authHeaders = (u) => {
 
   return base;
 };
+// --- Guest init dedupe guard (frontend-only hardening; backend remains source of truth) ---
+const GUEST_INIT_DEDUP_MS = 12000;
+let __guestInitInFlight = null;
+let __guestInitInFlightGuestId = '';
+let __guestInitSuccessUntil = 0;
+let __guestInitSuccessGuestId = '';
+
+async function ensureGuestInit(u, { force = false } = {}) {
+  const gid = (u?.guestId || '').trim();
+  if (!gid) return { ok: false, skipped: true, error: 'missing_guest_id' };
+
+  const now = Date.now();
+  if (!force && __guestInitSuccessGuestId === gid && now < __guestInitSuccessUntil) {
+    return { ok: true, deduped: true, status: 200, data: { ok: true } };
+  }
+
+  if (__guestInitInFlight && __guestInitInFlightGuestId === gid) {
+    return __guestInitInFlight;
+  }
+
+  const reqUser = { guest: true, guestId: gid, idToken: '' };
+  __guestInitInFlightGuestId = gid;
+
+  const p = (async () => {
+    try {
+      const r = await fetch(apiUrl('/auth/guest/init'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...authHeaders(reqUser) },
+        credentials: 'include',
+        body: JSON.stringify({})
+      });
+      const data = await r.json().catch(() => ({}));
+      const out = { ok: r.ok, status: r.status, data };
+      if (r.ok) {
+        __guestInitSuccessGuestId = gid;
+        __guestInitSuccessUntil = Date.now() + GUEST_INIT_DEDUP_MS;
+      }
+      return out;
+    } catch (error) {
+      return { ok: false, status: 0, data: {}, error };
+    } finally {
+      if (__guestInitInFlight === p) {
+        __guestInitInFlight = null;
+      }
+    }
+  })();
+
+  __guestInitInFlight = p;
+  return p;
+}
 // --- CSRF header helper ---
 const getCsrf = () => {
   try {
@@ -262,6 +312,7 @@ const USER_KEY = 'user_v1';
 const welcomeKeyFor = (id) => `welcome_${id}_v1`; // id = sub (preferred) or email
 // ✅ NEW: one-time welcome per device (prevents guest + google double claim)
 const WELCOME_DEVICE_KEY = 'welcome_device_claimed_v1';
+const __welcomeClaimInFlight = new Set(); // keyed by userIdFor(user)
 function hasDeviceWelcomeClaimed() {
   try { return localStorage.getItem(WELCOME_DEVICE_KEY) === '1'; } catch { return false; }
 }
@@ -343,6 +394,8 @@ function AuthGate({ onSignedIn }) {
   const disableGuest = () => { try { localStorage.setItem(DISABLE_GUEST_KEY, '1'); } catch {} };
   const isGuestDisabledUI = () => { try { return localStorage.getItem(DISABLE_GUEST_KEY) === '1'; } catch { return false; } };
   const onSignedInRef = useRef(onSignedIn);
+  const [guestSigningIn, setGuestSigningIn] = useState(false);
+  const guestSigningInRef = useRef(false);
 
   useEffect(() => {
     onSignedInRef.current = onSignedIn;
@@ -508,55 +561,60 @@ if (!document.querySelector('script[src*="gsi/client"]')) {
       {!isGuestDisabledUI() && (
         <button
           className="btn"
+          disabled={guestSigningIn}
           onClick={async () => {
-            const GKEY = 'guest_id_v1';
-            let gid = '';
-            try { gid = localStorage.getItem(GKEY) || ''; } catch {}
-
-            if (!gid) {
-              gid =
-                (window.crypto && typeof window.crypto.randomUUID === 'function')
-                  ? window.crypto.randomUUID()
-                  : String(Date.now());
-              try { localStorage.setItem(GKEY, gid); } catch {}
-            }
-
+            if (guestSigningInRef.current) return;
+            guestSigningInRef.current = true;
+            setGuestSigningIn(true);
             try {
-              const tempUser = { guest: true, guestId: gid, idToken: '' };
-              const r = await fetch(apiUrl('/auth/guest/init'), {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', ...authHeaders(tempUser) },
-                credentials: 'include',
-                body: JSON.stringify({})
-              });
 
-              if (r.status === 403) {
-                const d = await r.json().catch(() => ({}));
-                if (d?.error === 'guest_disabled') {
-                  disableGuest();
-                  alert('Guest trial already used on this device. Please continue with Google.');
-                  return;
-                }
+              const GKEY = 'guest_id_v1';
+              let gid = '';
+              try { gid = localStorage.getItem(GKEY) || ''; } catch {}
+
+              if (!gid) {
+                gid =
+                  (window.crypto && typeof window.crypto.randomUUID === 'function')
+                    ? window.crypto.randomUUID()
+                    : String(Date.now());
+                try { localStorage.setItem(GKEY, gid); } catch {}
               }
 
-              if (!r.ok) {
+              try {
+                const tempUser = { guest: true, guestId: gid, idToken: '' };
+                const r = await ensureGuestInit(tempUser, { force: true });
+
+                if (r.status === 403) {
+                  const d = r.data || {};
+                  if (d?.error === 'guest_disabled') {
+                    disableGuest();
+                    alert('Guest trial already used on this device. Please continue with Google.');
+                    return;
+                  }
+                }
+
+                if (!r.ok) {
+                  alert('Could not start guest session. Please continue with Google.');
+                  return;
+                }
+              } catch {
                 alert('Could not start guest session. Please continue with Google.');
                 return;
               }
-            } catch {
-              alert('Could not start guest session. Please continue with Google.');
-              return;
-            }
 
-            onSignedIn({
-              guestId: gid,
-              guest: true,
-              name: 'Guest',
-              email: '',
-              sub: '',
-              picture: '',
-              idToken: ''
-            });
+              onSignedIn({
+                guestId: gid,
+                guest: true,
+                name: 'Guest',
+                email: '',
+                sub: '',
+                picture: '',
+                idToken: ''
+              });
+            } finally {
+              guestSigningInRef.current = false;
+              setGuestSigningIn(false);
+            }
           }}
         >
           Continue as Guest
@@ -624,17 +682,22 @@ function WelcomeClaimModal({ open, onClose, amount = 250 }) {
 
   const [claimed, setClaimed] = React.useState(false);
   const [sparkle, setSparkle] = React.useState(false);
+  const claimInFlightRef = React.useRef(false);
 
     // ✅ background auto-claim (auto, non-blocking, dismiss-anywhere safe)
 const doClaim = async () => {
-  if (claimed) return;
+  if (claimed || claimInFlightRef.current) return;
+  const u = loadUser();
+  const claimKey = userIdFor(u);
+  if (__welcomeClaimInFlight.has(claimKey)) return;
+  claimInFlightRef.current = true;
+  __welcomeClaimInFlight.add(claimKey);
 
     if (IS_UI_PREVIEW) {
   setClaimed(true);
   setSparkle(true);
 
   try {
-    const u = loadUser();
     if (u) {
       saveCachedCoins(u, amount);
       localStorage.setItem(welcomeKeyFor(userIdFor(u)), '1');
@@ -647,6 +710,8 @@ const doClaim = async () => {
   }
 
   setTimeout(() => setSparkle(false), 900);
+  claimInFlightRef.current = false;
+  __welcomeClaimInFlight.delete(claimKey);
   return;
 }
 
@@ -670,7 +735,7 @@ const doClaim = async () => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        ...authHeaders(loadUser()),
+        ...authHeaders(u),
         'X-CSRF-Token': getCsrf()
       },
       credentials: 'include',
@@ -701,7 +766,7 @@ const doClaim = async () => {
     try {
       const w = await fetch(apiUrl('/wallet'), {
         method: 'GET',
-        headers: authHeaders(loadUser()),
+        headers: authHeaders(u),
         credentials: 'include'
       });
       const wd = await w.json().catch(() => ({}));
@@ -727,6 +792,8 @@ const doClaim = async () => {
   } finally {
     clearTimeout(t);
     setTimeout(() => setSparkle(false), 900);
+    claimInFlightRef.current = false;
+    __welcomeClaimInFlight.delete(claimKey);
   }
 };
 
@@ -962,11 +1029,17 @@ const welcomeDecidedRef = useRef(false);
 const [walletReady, setWalletReady] = useState(false);
 // ✅ NEW: blocks /wallet refresh until auth cookies are primed (fixes guest race)
 const [authBooting, setAuthBooting] = useState(false);
+const [postUpgradeMergeSettling, setPostUpgradeMergeSettling] = useState(false);
 // Layout chooser: Android → 'stable' (scrollable, no black band); others → 'fixed'
 const IS_ANDROID = /Android/i.test(navigator.userAgent);
 const [layoutClass] = useState(IS_ANDROID ? 'stable' : 'fixed');
   // Warm Razorpay early so checkout feels instant
 useEffect(() => { if (user) setShowSigninBanner(false); }, [user]);
+useEffect(() => {
+  if (!user || user?.guest || !user?.guestId) {
+    setPostUpgradeMergeSettling(false);
+  }
+}, [user]);
   // --- Server config (single source of truth) ---
 const [roleplayNeedsPremium, setRoleplayNeedsPremium] = useState(true);
 const [trialEnabled, setTrialEnabled] = useState(true);
@@ -1276,22 +1349,23 @@ if (r.status === 401 || r.status === 403) {
   if (user?.guest) {
     try {
       // Prime/restore guest cookie session
-      const gi = await fetch(apiUrl('/auth/guest/init'), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...authHeaders(user) },
-        credentials: 'include',
-        body: JSON.stringify({})
-      });
+      const gi = await ensureGuestInit(user);
 
       // ✅ If backend says guest is disabled now, force Google-only sign-in screen
       if (gi.status === 403) {
-        const gd = await gi.json().catch(() => ({}));
+        const gd = gi.data || {};
         if (gd?.error === 'guest_disabled') {
           try { localStorage.setItem('disable_guest_v1', '1'); } catch {}
           alert('Guest trial already used on this device. Please continue with Google.');
           setUser(null);
           return;
         }
+      }
+
+      if (!gi.ok) {
+        setWalletReady(true);
+        setShowSigninBanner(false);
+        return;
       }
 
       // Retry wallet once
@@ -1309,6 +1383,7 @@ if (r.status === 401 || r.status === 403) {
           const serverCoins = Number(data2.wallet.coins || 0);
           setCoins(serverCoins);
           saveCachedCoins(user, serverCoins);
+          setPostUpgradeMergeSettling(false);
           setWalletReady(true);
           setShowSigninBanner(false);
           return;
@@ -1341,6 +1416,7 @@ if (r.status === 401 || r.status === 403) {
      setCoins(serverCoins);
      saveCachedCoins(user, serverCoins);
 
+      setPostUpgradeMergeSettling(false);
       setWalletReady(true);
     } else {
       setWalletReady(true);
@@ -1389,6 +1465,7 @@ const resetChatUI = React.useCallback((nextUser) => {
   setShowWelcome(false);
   setShowWelcomeClaim(false);
   setPendingClaimCheck(false);
+  setPostUpgradeMergeSettling(false);
 
   // coins UI should not flash old user’s coins
   const cached = nextUser ? loadCachedCoins(nextUser) : null;
@@ -1491,6 +1568,7 @@ useEffect(() => {
 
   if (!user) return;
   if (!walletReady) return;       // ✅ wait for real wallet
+  if (postUpgradeMergeSettling) return;
   if (!trialEnabled) return;
   if (showWelcome) return;        // ✅ never open claim while WelcomeFlow is still open
 
@@ -1514,7 +1592,7 @@ if (localClaimed || deviceClaimed || serverClaimed) {
   setShowWelcomeClaim(true);
   sessionStorage.setItem(WELCOME_CLAIM_SEEN_KEY(user), '1');
   setPendingClaimCheck(false);
-}, [pendingClaimCheck, walletReady, wallet?.welcome_claimed, user, trialEnabled, showWelcome]);
+}, [pendingClaimCheck, walletReady, postUpgradeMergeSettling, wallet?.welcome_claimed, user, trialEnabled, showWelcome]);
   function openClaimIfEligible() {
   try {
     if (!user) return;
@@ -3094,6 +3172,7 @@ if (!user) {
   try { saveCachedCoins(u, previewCoins); } catch {}
   try { localStorage.setItem(welcomeKeyFor(userIdFor(u)), '1'); } catch {}
 
+  setPostUpgradeMergeSettling(false);
   setAuthBooting(false);
   setShowSigninBanner(false);
   setWalletReady(true);
@@ -3109,16 +3188,12 @@ if (!user) {
     setAuthBooting(true);
     setShowSigninBanner(false);
     setWalletReady(false);
+    setPostUpgradeMergeSettling(!!(!u?.guest && u?.guestId));
 
     // ✅ 1) PRIME COOKIES FIRST (critical for Guest)
     try {
       if (u?.guest) {
-        await fetch(apiUrl('/auth/guest/init'), {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', ...authHeaders(u) },
-          credentials: 'include',
-          body: JSON.stringify({})
-        });
+        await ensureGuestInit(u);
       } else {
         // for Google: warm session + wallet fast
         await fetch(apiUrl('/wallet'), {
@@ -3141,7 +3216,7 @@ if (!user) {
 
     // ✅ 4) Boot done → wallet fetch is now safe
     setAuthBooting(false);
-    refreshWallet();
+    // refreshWallet will run from the [user, authBooting] effect once state settles
   }}
 />
   );
