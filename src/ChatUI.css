@@ -948,9 +948,10 @@ html.ime-open .bottom-sentinel {
   margin: 0 auto 4px;
   z-index: 1;
   filter:
-    drop-shadow(0 0 28px rgba(212, 114, 142, .28))
-    drop-shadow(0 0 56px rgba(155, 125, 184, .18))
-    drop-shadow(0 20px 22px rgba(0, 0, 0, .44));
+    drop-shadow(0 0 40px rgba(212, 114, 142, .42))
+    drop-shadow(0 0 80px rgba(155, 125, 184, .30))
+    drop-shadow(0 0 120px rgba(180, 120, 160, .16))
+    drop-shadow(0 22px 24px rgba(0, 0, 0, .48));
 }
 .auth-sub{
   font-size: 14px;
@@ -969,9 +970,9 @@ html.ime-open .bottom-sentinel {
   margin-bottom: 6px;
   background: linear-gradient(
     135deg,
-    rgba(245, 240, 250, .95),
-    rgba(232, 175, 198, .90),
-    rgba(255, 255, 255, .95)
+    #ffffff,
+    #f2c4d6,
+    #ffffff
   );
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
