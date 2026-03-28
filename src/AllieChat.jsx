@@ -3187,7 +3187,6 @@ useEffect(() => {
   if (!vv) return;
 
   let lastDrop = 0;
-  let closedVvHeight = Math.round(vv.height || 0);
 
   const setKbVars = () => {
     const inputFocused = document.activeElement === inputRef.current;
@@ -3195,20 +3194,17 @@ useEffect(() => {
     if (!vvHeight) return;
 
     if (!inputFocused) {
-      if (vvHeight > closedVvHeight) closedVvHeight = vvHeight;
       root.classList.remove('ime-open');
       root.style.setProperty('--kb-h', '0px');
       lastDrop = 0;
       return;
     }
 
-    // Keep a keyboard-closed baseline and compare against it.
-    if (vvHeight > closedVvHeight) closedVvHeight = vvHeight;
+    // Use only layout-vs-visual drop for keyboard lift.
+    // This avoids double-lifting on browsers that already resize viewport on focus.
     const layoutH =
-      Math.max(window.innerHeight || 0, document.documentElement.clientHeight || 0, closedVvHeight);
-    const dropFromBaseline = Math.max(0, Math.round(closedVvHeight - vvHeight));
-    const dropFromLayout = Math.max(0, Math.round(layoutH - vvHeight));
-    const drop = Math.max(dropFromBaseline, dropFromLayout); // px
+      Math.max(window.innerHeight || 0, document.documentElement.clientHeight || 0);
+    const drop = Math.max(0, Math.round(layoutH - vvHeight)); // px (overlay keyboard signal)
 
     const isOpen = root.classList.contains('ime-open');
     const OPEN_THRESHOLD = 72;
