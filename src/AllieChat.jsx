@@ -1033,6 +1033,7 @@ const [postUpgradeMergeSettling, setPostUpgradeMergeSettling] = useState(false);
 // Layout chooser: Android → 'stable' (scrollable, no black band); others → 'fixed'
 const IS_ANDROID = /Android/i.test(navigator.userAgent);
 const [layoutClass] = useState(IS_ANDROID ? 'stable' : 'fixed');
+const chatShellVisible = !showIntro && !!user;
   // Warm Razorpay early so checkout feels instant
 useEffect(() => { if (user) setShowSigninBanner(false); }, [user]);
 useEffect(() => {
@@ -1161,6 +1162,8 @@ const [inputValue, setInputValue] = useState(() => {
   const u = loadUser();
   return u ? loadDraft(u, initialRole.mode, initialRole.type) : '';
 });
+const headerRef = useRef(null);
+const footerRef = useRef(null);
   const bottomRef = useRef(null);
   // NEW: track if we should auto-stick to bottom (strict, WhatsApp-like)
 const scrollerRef = useRef(null);
@@ -1181,12 +1184,15 @@ const scrollToBottomNow = (force = false) => {
   // Let the browser scroll the *active* container (inner or page)
   anchor.scrollIntoView({ block: 'end', inline: 'nearest', behavior: 'auto' });
 };
-  // ✅ First mount: chase bottom a few times (fixes “first render sits high” on some Android/Chrome)
+  // ✅ When real chat shell becomes visible, chase bottom a few times.
 useEffect(() => {
+  if (!chatShellVisible) return;
+  readingUpRef.current = false;
+  stickToBottomRef.current = true;
   const bumps = [0, 80, 180, 320];
-  bumps.forEach(ms => setTimeout(() => scrollToBottomNow(true), ms));
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-}, []);
+  const timers = bumps.map(ms => setTimeout(() => scrollToBottomNow(true), ms));
+  return () => timers.forEach(t => clearTimeout(t));
+}, [chatShellVisible]);
   // persist thread on changes (debounced)
 useEffect(() => {
   if (!user) return;
@@ -2901,14 +2907,20 @@ if (closeBtn && typeof closeBtn.focus === 'function') closeBtn.focus();
   // --- Measure header/footer (both layouts; drives pinned scroller) ---
 // ✅ useLayoutEffect runs before paint → fixes “first paint wrong vars”
 useLayoutEffect(() => {
+  if (!chatShellVisible) return;
+
+  const headerEl = headerRef.current;
+  const footerEl = footerRef.current;
+  if (!headerEl || !footerEl) return;
+
   const root = document.documentElement;
 
   const setVars = () => {
-    const headerEl = document.querySelector('.header');
-    const footerEl = document.querySelector('.footer');
+    const hdrEl = headerRef.current;
+    const ftrEl = footerRef.current;
 
-    let hdr = headerEl ? Math.round(headerEl.getBoundingClientRect().height) : 80;
-    let ftr = footerEl ? Math.round(footerEl.getBoundingClientRect().height) : 90;
+    let hdr = hdrEl ? Math.round(hdrEl.getBoundingClientRect().height) : 80;
+    let ftr = ftrEl ? Math.round(ftrEl.getBoundingClientRect().height) : 90;
 
     // clamp weird first-paint values
     if (hdr < 40 || hdr > 180) hdr = 80;
@@ -2930,10 +2942,15 @@ useLayoutEffect(() => {
     : null;
 
   // Observe header/footer whenever size changes
-  const headerEl = document.querySelector('.header');
-  const footerEl = document.querySelector('.footer');
   if (ro && headerEl) ro.observe(headerEl);
   if (ro && footerEl) ro.observe(footerEl);
+
+  // Reliable post-measure bottom lock once chat shell is truly mounted.
+  const settleScrollTimer = setTimeout(() => {
+    readingUpRef.current = false;
+    stickToBottomRef.current = true;
+    scrollToBottomNow(true);
+  }, 180);
 
   const vv = window.visualViewport;
   if (vv) vv.addEventListener('resize', setVars);
@@ -2947,12 +2964,13 @@ useLayoutEffect(() => {
 
   return () => {
     timers.forEach(t => clearTimeout(t));
+    clearTimeout(settleScrollTimer);
     if (ro) ro.disconnect();
     if (vv) vv.removeEventListener('resize', setVars);
     window.removeEventListener('resize', setVars);
     window.removeEventListener('orientationchange', setVars);
   };
-}, [layoutClass]);
+}, [layoutClass, chatShellVisible]);
 
   // Legacy header compact mode: ONLY on old Android WebViews + real overflow
 useEffect(() => {
@@ -3256,7 +3274,7 @@ if (!user) {
         </div>
       </div>
     )}
-      <div className="header">
+      <div className="header" ref={headerRef}>
         <div className="profile-pic">
           <img
   src={getAvatarSrc(roleMode, roleType)}
@@ -3710,7 +3728,7 @@ if (!user) {
   </div>
 )}
       
-      <div className="footer">
+      <div className="footer" ref={footerRef}>
         {/* Input + tiny emoji inside (like WhatsApp) */}
         <div className="input-wrap">
           <input
