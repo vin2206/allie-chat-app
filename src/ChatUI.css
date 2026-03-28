@@ -1053,12 +1053,23 @@ html.ime-open .bottom-sentinel {
 }
 
 .App.stable {
-  /* keep a stable viewport; do NOT use dvh here */
-  height: 100vh;
-  min-height: 100vh;
+  /* JS writes --app-h to smooth Chromium first-open toolbar jitter */
+  height: var(--app-h, 100vh);
+  min-height: var(--app-h, 100vh);
   display: flex;
   flex-direction: column;
   overflow: visible;
+}
+
+/* First paint settle: make footer/chat glass less "under-settled" on Chromium */
+html.first-open-settling .footer {
+  background: rgba(50, 20, 60, 0.24) !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+html.first-open-settling .chat-container::before {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
 }
 
 /* Header fixed on top (Android stable) */
@@ -1126,7 +1137,7 @@ html:not(.ime-open) .App.stable .footer .mic-btn {
 }
 
 /* Legacy/very small screens */
-@media (max-width: 380px), (max-height: 640px) {
+@media (max-width: 380px) {
   .App.stable .footer { padding: 8px 10px; gap: 8px; }
   .App.stable .footer input { min-height: 34px; font-size: 16px; min-width: 0; }
   .App.stable .footer .send-btn,
@@ -1169,7 +1180,7 @@ html:not(.ime-open) .App.stable .footer .mic-btn {
 }
 
 /* ==== Realme 1 / legacy-Android sizing — header stays on one line ==== */
-@media (max-width: 380px), (max-height: 640px) {
+@media (max-width: 380px) {
   .header { padding: 8px 10px; }
   .profile-pic { width: 42px; height: 42px; margin-right: 8px; }
 
@@ -1182,7 +1193,7 @@ html:not(.ime-open) .App.stable .footer .mic-btn {
 }
 
 /* ==== Realme 1 / legacy-Android sizing — footer compact & safe ==== */
-@media (max-width: 380px), (max-height: 640px) {
+@media (max-width: 380px) {
   .App.stable .footer { padding: 8px 10px; gap: 8px; }
   .App.stable .footer input { min-height: 34px; font-size: 16px; min-width: 0; }
 

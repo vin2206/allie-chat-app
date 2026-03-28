@@ -1034,8 +1034,33 @@ const [postUpgradeMergeSettling, setPostUpgradeMergeSettling] = useState(false);
 const IS_ANDROID = /Android/i.test(navigator.userAgent);
 const [layoutClass] = useState(IS_ANDROID ? 'stable' : 'fixed');
 const chatShellVisible = !showIntro && !!user;
+const FIRST_OPEN_SETTLE_MS = 900;
+const FIRST_OPEN_SETTLE_CLASS = 'first-open-settling';
   // Warm Razorpay early so checkout feels instant
 useEffect(() => { if (user) setShowSigninBanner(false); }, [user]);
+useEffect(() => {
+  if (!chatShellVisible) return;
+  const root = document.documentElement;
+  let cleaned = false;
+
+  const settleDone = () => {
+    if (cleaned) return;
+    cleaned = true;
+    root.classList.remove(FIRST_OPEN_SETTLE_CLASS);
+    window.removeEventListener('pointerdown', settleDone);
+    window.removeEventListener('keydown', settleDone);
+  };
+
+  root.classList.add(FIRST_OPEN_SETTLE_CLASS);
+  const t = setTimeout(settleDone, FIRST_OPEN_SETTLE_MS);
+  window.addEventListener('pointerdown', settleDone, { passive: true });
+  window.addEventListener('keydown', settleDone);
+
+  return () => {
+    clearTimeout(t);
+    settleDone();
+  };
+}, [chatShellVisible]);
 useEffect(() => {
   if (!user || user?.guest || !user?.guestId) {
     setPostUpgradeMergeSettling(false);
@@ -2979,6 +3004,12 @@ useEffect(() => {
   if (!header || !container) return;
 
   const apply = () => {
+    if (document.documentElement.classList.contains(FIRST_OPEN_SETTLE_CLASS)) {
+      document.documentElement.classList.remove('legacy-zoom');
+      header.style.removeProperty('--hz-scale');
+      return;
+    }
+
     // check real overflow (allow a few px of jitter)
     const overflowPx = container.scrollWidth - container.clientWidth;
     const overflowing = overflowPx > 2;
@@ -3000,6 +3031,7 @@ useEffect(() => {
 
   // run once and whenever sizes change
   apply();
+  const settleTimer = setTimeout(apply, FIRST_OPEN_SETTLE_MS + 80);
 
   const ro = (typeof ResizeObserver !== 'undefined') ? new ResizeObserver(apply) : null;
   if (ro) {
@@ -3010,6 +3042,7 @@ useEffect(() => {
   window.addEventListener('orientationchange', apply);
 
   return () => {
+    clearTimeout(settleTimer);
     if (ro) ro.disconnect();
     window.removeEventListener('resize', apply);
     window.removeEventListener('orientationchange', apply);
@@ -3025,6 +3058,11 @@ useEffect(() => {
   if (!header || !container) return;
 
     const clamp = () => {
+    if (document.documentElement.classList.contains(FIRST_OPEN_SETTLE_CLASS)) {
+      header.classList.remove('narrow', 'tiny');
+      return;
+    }
+
     header.classList.remove('narrow', 'tiny');
     const dist = container.scrollWidth - container.clientWidth; // + = over, - = tight but fits
     // If it’s even a little tight, go “narrow”; if clearly over, go “tiny”
@@ -3035,6 +3073,7 @@ useEffect(() => {
   };
 
   clamp();
+  const settleTimer = setTimeout(clamp, FIRST_OPEN_SETTLE_MS + 80);
   const ro = typeof window.ResizeObserver !== 'undefined'
   ? new window.ResizeObserver(clamp)
   : null;
@@ -3045,6 +3084,7 @@ if (ro) {
   window.addEventListener('resize', clamp);
 
   return () => {
+  clearTimeout(settleTimer);
   if (ro) ro.disconnect();             // <-- null-guard fixes CI crash
   window.removeEventListener('resize', clamp);
 };
@@ -3080,6 +3120,65 @@ useEffect(() => {
   };
 }, [layoutClass]);
 
+  // Android: stabilize first-open viewport height to avoid toolbar-gap jumps
+useEffect(() => {
+  if (layoutClass !== 'stable') return;
+  const root = document.documentElement;
+  const vv = window.visualViewport;
+  let baseline = 0;
+
+  const readVh = () => Math.round(
+    (vv && vv.height) ||
+    window.innerHeight ||
+    document.documentElement.clientHeight ||
+    0
+  );
+
+  const setStableAppH = () => {
+    const raw = readVh();
+    if (!raw) return;
+
+    const inputFocused = document.activeElement === inputRef.current;
+    const settling = root.classList.contains(FIRST_OPEN_SETTLE_CLASS);
+
+    if (!baseline) baseline = raw;
+
+    // Freeze during first paint to avoid Chrome toolbar jitter.
+    if (settling && !inputFocused) {
+      root.style.setProperty('--app-h', `${baseline}px`);
+      return;
+    }
+
+    // Ignore tiny chrome/address-bar jitters when keyboard is closed.
+    if (!inputFocused && Math.abs(raw - baseline) < 24) {
+      root.style.setProperty('--app-h', `${baseline}px`);
+      return;
+    }
+
+    baseline = raw;
+    root.style.setProperty('--app-h', `${baseline}px`);
+  };
+
+  setStableAppH();
+  const bumps = [80, 180, 360].map(ms => setTimeout(setStableAppH, ms));
+  const onResize = debounce(setStableAppH, 50);
+
+  if (vv) vv.addEventListener('resize', onResize);
+  if (vv) vv.addEventListener('geometrychange', onResize);
+  window.addEventListener('resize', onResize);
+  window.addEventListener('orientationchange', setStableAppH);
+  window.addEventListener('pageshow', setStableAppH);
+
+  return () => {
+    bumps.forEach(t => clearTimeout(t));
+    if (vv) vv.removeEventListener('resize', onResize);
+    if (vv) vv.removeEventListener('geometrychange', onResize);
+    window.removeEventListener('resize', onResize);
+    window.removeEventListener('orientationchange', setStableAppH);
+    window.removeEventListener('pageshow', setStableAppH);
+  };
+}, [layoutClass]);
+
   // Android: flag when the keyboard (IME) is open + expose height to CSS
 useEffect(() => {
   if (layoutClass !== 'stable') return; // Android only
@@ -3088,27 +3187,47 @@ useEffect(() => {
   if (!vv) return;
 
   let lastDrop = 0;
+  let closedVvHeight = Math.round(vv.height || 0);
 
   const setKbVars = () => {
-    // Measure keyboard by comparing the layout viewport vs visual viewport
-    const layoutH =
-      Math.max(window.innerHeight || 0, document.documentElement.clientHeight || 0);
-    const drop = Math.max(0, Math.round(layoutH - vv.height)); // px
+    const inputFocused = document.activeElement === inputRef.current;
+    const vvHeight = Math.round(vv.height || 0);
+    if (!vvHeight) return;
 
-   // Lower threshold so we react as soon as the keyboard starts moving
-    const OPEN_THRESHOLD = 24; // px (was 80)
-    if (drop > OPEN_THRESHOLD) root.classList.add('ime-open');
+    if (!inputFocused) {
+      if (vvHeight > closedVvHeight) closedVvHeight = vvHeight;
+      root.classList.remove('ime-open');
+      root.style.setProperty('--kb-h', '0px');
+      lastDrop = 0;
+      return;
+    }
+
+    // Keep a keyboard-closed baseline and compare against it.
+    if (vvHeight > closedVvHeight) closedVvHeight = vvHeight;
+    const layoutH =
+      Math.max(window.innerHeight || 0, document.documentElement.clientHeight || 0, closedVvHeight);
+    const dropFromBaseline = Math.max(0, Math.round(closedVvHeight - vvHeight));
+    const dropFromLayout = Math.max(0, Math.round(layoutH - vvHeight));
+    const drop = Math.max(dropFromBaseline, dropFromLayout); // px
+
+    const isOpen = root.classList.contains('ime-open');
+    const OPEN_THRESHOLD = 72;
+    const CLOSE_THRESHOLD = 44;
+    const nextOpen = isOpen ? (drop > CLOSE_THRESHOLD) : (drop > OPEN_THRESHOLD);
+
+    if (nextOpen) root.classList.add('ime-open');
     else root.classList.remove('ime-open');
 
-    root.style.setProperty('--kb-h', drop ? `${drop}px` : '0px');
+    const kbDrop = nextOpen ? drop : 0;
+    root.style.setProperty('--kb-h', kbDrop ? `${kbDrop}px` : '0px');
 
-    if (drop !== lastDrop) {
+    if (kbDrop !== lastDrop) {
   readingUpRef.current = false;   // don't lock auto-stick
   imeLockRef.current = true;      // ignore synthetic scrolls briefly
   setTimeout(() => { imeLockRef.current = false; }, 380);
 
   // keep view pinned to last bubble while typing
-  if (document.activeElement === inputRef.current) {
+  if (nextOpen && inputFocused) {
     // immediate nudge and a short follow-up
     requestAnimationFrame(() => scrollToBottomNow(true));
     setTimeout(() => {
@@ -3131,7 +3250,7 @@ useEffect(() => {
   if (stickToBottomRef.current) scrollToBottomNow(true);
 }, 50);
   }
-  lastDrop = drop;
+  lastDrop = kbDrop;
 }
   };
 
@@ -3140,6 +3259,11 @@ useEffect(() => {
   // Fires more reliably during IME animation on newer Chromium
   vv.addEventListener('geometrychange', onResize);
   window.addEventListener('orientationchange', setKbVars);
+  const inputEl = inputRef.current;
+  if (inputEl) {
+    inputEl.addEventListener('focus', setKbVars);
+    inputEl.addEventListener('blur', setKbVars);
+  }
 
   // initial pass
   setKbVars();
@@ -3148,6 +3272,10 @@ useEffect(() => {
   vv.removeEventListener('resize', onResize);
   vv.removeEventListener('geometrychange', onResize);
   window.removeEventListener('orientationchange', setKbVars);
+  if (inputEl) {
+    inputEl.removeEventListener('focus', setKbVars);
+    inputEl.removeEventListener('blur', setKbVars);
+  }
   if (kbChaseTimerRef.current) {
     clearInterval(kbChaseTimerRef.current);
     kbChaseTimerRef.current = null;
