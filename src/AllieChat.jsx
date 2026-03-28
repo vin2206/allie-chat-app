@@ -1198,7 +1198,7 @@ const walletReqIdRef = useRef(0); // last-write-wins guard for /wallet fetches
 const stickToBottomRef = useRef(true); // true only when truly at bottom
 const readingUpRef = useRef(false);    // true when user scrolled up (locks auto-scroll)
 const imeLockRef = useRef(false); // ignore scroll logic during IME open/close animation
-const kbChaseTimerRef = useRef(null); // NEW: keep-last-bubble-visible during IME animation
+const imeUnlockTimerRef = useRef(null); // release imeLock after transition settles
 const isFallback = () =>
   document.documentElement.classList.contains('page-scroll-fallback');
 
@@ -2941,6 +2941,14 @@ useLayoutEffect(() => {
   const root = document.documentElement;
 
   const setVars = () => {
+    // During Android IME transitions, avoid extra forced re-measure passes.
+    if (
+      layoutClass === 'stable' &&
+      (document.activeElement === inputRef.current || root.classList.contains('ime-open') || imeLockRef.current)
+    ) {
+      return;
+    }
+
     const hdrEl = headerRef.current;
     const ftrEl = footerRef.current;
 
@@ -2978,7 +2986,7 @@ useLayoutEffect(() => {
   }, 180);
 
   const vv = window.visualViewport;
-  if (vv) vv.addEventListener('resize', setVars);
+  if (vv && layoutClass === 'fixed') vv.addEventListener('resize', setVars);
   window.addEventListener('resize', setVars);
   window.addEventListener('orientationchange', setVars);
 
@@ -2991,7 +2999,7 @@ useLayoutEffect(() => {
     timers.forEach(t => clearTimeout(t));
     clearTimeout(settleScrollTimer);
     if (ro) ro.disconnect();
-    if (vv) vv.removeEventListener('resize', setVars);
+    if (vv && layoutClass === 'fixed') vv.removeEventListener('resize', setVars);
     window.removeEventListener('resize', setVars);
     window.removeEventListener('orientationchange', setVars);
   };
@@ -3139,9 +3147,13 @@ useEffect(() => {
     if (!raw) return;
 
     const inputFocused = document.activeElement === inputRef.current;
+    const imeActive = inputFocused || root.classList.contains('ime-open') || imeLockRef.current;
     const settling = root.classList.contains(FIRST_OPEN_SETTLE_CLASS);
 
     if (!baseline) baseline = raw;
+
+    // Freeze app viewport var during IME transitions to avoid competing layout drivers.
+    if (imeActive) return;
 
     // Freeze during first paint to avoid Chrome toolbar jitter.
     if (settling && !inputFocused) {
@@ -3187,6 +3199,7 @@ useEffect(() => {
   if (!vv) return;
 
   let lastDrop = 0;
+  let rafId = 0;
 
   const setKbVars = () => {
     const inputFocused = document.activeElement === inputRef.current;
@@ -3218,47 +3231,42 @@ useEffect(() => {
     root.style.setProperty('--kb-h', kbDrop ? `${kbDrop}px` : '0px');
 
     if (kbDrop !== lastDrop) {
-  readingUpRef.current = false;   // don't lock auto-stick
-  imeLockRef.current = true;      // ignore synthetic scrolls briefly
-  setTimeout(() => { imeLockRef.current = false; }, 380);
+      readingUpRef.current = false;   // don't lock auto-stick
+      imeLockRef.current = true;      // ignore synthetic scrolls during IME motion
+      if (imeUnlockTimerRef.current) clearTimeout(imeUnlockTimerRef.current);
+      imeUnlockTimerRef.current = setTimeout(() => {
+        imeLockRef.current = false;
+        imeUnlockTimerRef.current = null;
+      }, 180);
 
-  // keep view pinned to last bubble while typing
-  if (nextOpen && inputFocused) {
-    // immediate nudge and a short follow-up
-    requestAnimationFrame(() => scrollToBottomNow(true));
-    setTimeout(() => {
-      if (stickToBottomRef.current) scrollToBottomNow(true);
-    }, 140);
-
-    // NEW: chase the IME animation so the last bubble never sinks under the bar
-    if (kbChaseTimerRef.current) {
-      clearInterval(kbChaseTimerRef.current);
-      kbChaseTimerRef.current = null;
+      // Keep last bubble visible with one immediate + one short fallback nudge.
+      if (nextOpen && inputFocused && stickToBottomRef.current) {
+        requestAnimationFrame(() => scrollToBottomNow(true));
+        setTimeout(() => {
+          if (stickToBottomRef.current && document.activeElement === inputRef.current) {
+            scrollToBottomNow(true);
+          }
+        }, 100);
+      }
+      lastDrop = kbDrop;
     }
-    const started = Date.now();
-    kbChaseTimerRef.current = setInterval(() => {
-  // stop after ~1200ms or if the input lost focus
-  if (Date.now() - started > 1200 || document.activeElement !== inputRef.current) {
-    clearInterval(kbChaseTimerRef.current);
-    kbChaseTimerRef.current = null;
-    return;
-  }
-  if (stickToBottomRef.current) scrollToBottomNow(true);
-}, 50);
-  }
-  lastDrop = kbDrop;
-}
   };
 
-  const onResize = debounce(setKbVars, 60);
+  const onResize = () => {
+    if (rafId) return;
+    rafId = requestAnimationFrame(() => {
+      rafId = 0;
+      setKbVars();
+    });
+  };
   vv.addEventListener('resize', onResize);
   // Fires more reliably during IME animation on newer Chromium
   vv.addEventListener('geometrychange', onResize);
-  window.addEventListener('orientationchange', setKbVars);
+  window.addEventListener('orientationchange', onResize);
   const inputEl = inputRef.current;
   if (inputEl) {
-    inputEl.addEventListener('focus', setKbVars);
-    inputEl.addEventListener('blur', setKbVars);
+    inputEl.addEventListener('focus', onResize);
+    inputEl.addEventListener('blur', onResize);
   }
 
   // initial pass
@@ -3267,14 +3275,18 @@ useEffect(() => {
   return () => {
   vv.removeEventListener('resize', onResize);
   vv.removeEventListener('geometrychange', onResize);
-  window.removeEventListener('orientationchange', setKbVars);
+  window.removeEventListener('orientationchange', onResize);
   if (inputEl) {
-    inputEl.removeEventListener('focus', setKbVars);
-    inputEl.removeEventListener('blur', setKbVars);
+    inputEl.removeEventListener('focus', onResize);
+    inputEl.removeEventListener('blur', onResize);
   }
-  if (kbChaseTimerRef.current) {
-    clearInterval(kbChaseTimerRef.current);
-    kbChaseTimerRef.current = null;
+  if (rafId) {
+    cancelAnimationFrame(rafId);
+    rafId = 0;
+  }
+  if (imeUnlockTimerRef.current) {
+    clearTimeout(imeUnlockTimerRef.current);
+    imeUnlockTimerRef.current = null;
   }
   root.classList.remove('ime-open');
   root.style.removeProperty('--kb-h');
@@ -3874,7 +3886,7 @@ if (!user) {
     lastActionRef.current = 'focused_input';
     setShowEmoji(false);
     setShowCharPopup(false);
-    const bumps = [0, 120, 260, 520];
+    const bumps = [0, 120];
     bumps.forEach(ms => setTimeout(() => scrollToBottomNow(true), ms));
   }}
 />
