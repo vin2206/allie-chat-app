@@ -580,28 +580,6 @@ if (!document.querySelector('script[src*="gsi/client"]')) {
                 try { localStorage.setItem(GKEY, gid); } catch {}
               }
 
-              try {
-                const tempUser = { guest: true, guestId: gid, idToken: '' };
-                const r = await ensureGuestInit(tempUser, { force: true });
-
-                if (r.status === 403) {
-                  const d = r.data || {};
-                  if (d?.error === 'guest_disabled') {
-                    disableGuest();
-                    alert('Guest trial already used on this device. Please continue with Google.');
-                    return;
-                  }
-                }
-
-                if (!r.ok) {
-                  alert('Could not start guest session. Please continue with Google.');
-                  return;
-                }
-              } catch {
-                alert('Could not start guest session. Please continue with Google.');
-                return;
-              }
-
               onSignedIn({
                 guestId: gid,
                 guest: true,
@@ -617,7 +595,7 @@ if (!document.querySelector('script[src*="gsi/client"]')) {
             }
           }}
         >
-          Continue as Guest
+          {guestSigningIn ? 'Starting…' : 'Continue as Guest'}
         </button>
       )}
 
@@ -1195,6 +1173,7 @@ const scrollerRef = useRef(null);
 const lastActionRef = useRef('');
  // ADD BELOW your other refs/state in AllieChat()
 const walletReqIdRef = useRef(0); // last-write-wins guard for /wallet fetches 
+const authBootReqIdRef = useRef(0); // guards overlapping auth bootstrap runs
 const stickToBottomRef = useRef(true); // true only when truly at bottom
 const readingUpRef = useRef(false);    // true when user scrolled up (locks auto-scroll)
 const imeLockRef = useRef(false); // ignore scroll logic during IME open/close animation
@@ -3336,37 +3315,47 @@ if (!user) {
 }
 
     setAuthBooting(true);
+    const bootReqId = ++authBootReqIdRef.current;
     setShowSigninBanner(false);
     setWalletReady(false);
     setPostUpgradeMergeSettling(!!(!u?.guest && u?.guestId));
 
-    // ✅ 1) PRIME COOKIES FIRST (critical for Guest)
-    try {
-      if (u?.guest) {
-        await ensureGuestInit(u);
-      } else {
-        // for Google: warm session + wallet fast
-        await fetch(apiUrl('/wallet'), {
-          method: 'GET',
-          headers: authHeaders(u),
-          credentials: 'include'
-        });
-      }
-    } catch (e) {
-      console.warn('Cookie priming failed (non-blocking):', e?.message || e);
-    }
-
-    // ✅ 2) NOW save + set user (wallet refresh won’t run until authBooting=false)
+    // Show chat shell immediately after auth success.
     saveUser(u);
     setUser(u);
-
-    // ✅ 3) Reset visible UI safely
     resetChatUI(u);
     try { sessionStorage.removeItem(ROLE_KEY(u)); } catch {}
 
-    // ✅ 4) Boot done → wallet fetch is now safe
-    setAuthBooting(false);
-    // refreshWallet will run from the [user, authBooting] effect once state settles
+    // Prime cookies/session in background; send is already guarded by walletReady/authBooting.
+    (async () => {
+      try {
+        if (u?.guest) {
+          const gi = await ensureGuestInit(u);
+          if (gi.status === 403) {
+            const gd = gi.data || {};
+            if (gd?.error === 'guest_disabled') {
+              try { localStorage.setItem('disable_guest_v1', '1'); } catch {}
+              try { localStorage.removeItem(USER_KEY); } catch {}
+              if (bootReqId === authBootReqIdRef.current) setUser(null);
+              alert('Guest trial already used on this device. Please continue with Google.');
+              return;
+            }
+          }
+        } else {
+          // Warm session for Google so wallet refresh can succeed quickly.
+          await fetch(apiUrl('/wallet'), {
+            method: 'GET',
+            headers: authHeaders(u),
+            credentials: 'include'
+          });
+        }
+      } catch (e) {
+        console.warn('Cookie priming failed (non-blocking):', e?.message || e);
+      } finally {
+        // refreshWallet will run from the [user, authBooting] effect once this flips false
+        if (bootReqId === authBootReqIdRef.current) setAuthBooting(false);
+      }
+    })();
   }}
 />
   );
