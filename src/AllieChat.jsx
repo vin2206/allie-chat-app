@@ -1287,6 +1287,7 @@ function dismissChromeBar() {
 const [showEmoji, setShowEmoji] = useState(false);
 const emojiPanelRef = useRef(null);
 const inputRef = useRef(null);
+const COMPOSER_MAX_LINES = 4;
 
 const EMOJIS = [
   "🙂","😊","😄","😁","😅","😂","🤣",
@@ -1310,6 +1311,53 @@ function insertEmoji(emo) {
     el.setSelectionRange(pos, pos);
   });
 }
+
+function isMobileKeyboardLayout() {
+  const ua = navigator.userAgent || '';
+  const coarse = window.matchMedia?.('(pointer: coarse)')?.matches;
+  const narrow = window.matchMedia?.('(max-width: 1024px)')?.matches;
+  return /Android|iPhone|iPad|iPod|Mobile/i.test(ua) || (!!coarse && !!narrow);
+}
+
+function syncComposerHeight() {
+  const el = inputRef.current;
+  if (!el) return;
+
+  el.style.height = 'auto';
+
+  const styles = window.getComputedStyle(el);
+  const lineHeight = parseFloat(styles.lineHeight) || 20;
+  const paddingY =
+    (parseFloat(styles.paddingTop) || 0) +
+    (parseFloat(styles.paddingBottom) || 0);
+  const borderY =
+    (parseFloat(styles.borderTopWidth) || 0) +
+    (parseFloat(styles.borderBottomWidth) || 0);
+  const maxHeight = Math.round((lineHeight * COMPOSER_MAX_LINES) + paddingY + borderY);
+  const nextHeight = Math.min(el.scrollHeight, maxHeight);
+
+  el.style.height = `${nextHeight}px`;
+  el.style.overflowY = el.scrollHeight > maxHeight ? 'auto' : 'hidden';
+
+  if (document.activeElement === el && stickToBottomRef.current) {
+    scrollToBottomNow(true);
+  }
+}
+
+useLayoutEffect(() => {
+  syncComposerHeight();
+}, [inputValue]);
+
+useEffect(() => {
+  const onResize = () => syncComposerHeight();
+  const vv = window.visualViewport;
+  window.addEventListener('resize', onResize);
+  if (vv) vv.addEventListener('resize', onResize);
+  return () => {
+    window.removeEventListener('resize', onResize);
+    if (vv) vv.removeEventListener('resize', onResize);
+  };
+}, []);
 
 // close picker on outside click / ESC
 useEffect(() => {
@@ -3852,9 +3900,9 @@ if (!user) {
       <div className="footer" ref={footerRef}>
         {/* Input + tiny emoji inside (like WhatsApp) */}
         <div className="input-wrap">
-          <input
+          <textarea
   ref={inputRef}
-  type="text"
+  className="chat-composer"
   name="chat_message"
   id="chat_message"
   autoComplete="off"
@@ -3862,11 +3910,20 @@ if (!user) {
   autoCapitalize="none"
   spellCheck={false}
   inputMode="text"
-  enterKeyHint="send"
+  enterKeyHint="enter"
+  rows={1}
+  wrap="soft"
   placeholder="Type a message..."
   value={inputValue}
   onChange={(e) => setInputValue(e.target.value)}
-  onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+  onKeyDown={(e) => {
+    if (e.key !== 'Enter') return;
+    if (e.nativeEvent?.isComposing) return;
+    const forceSend = e.ctrlKey || e.metaKey;
+    if (!forceSend && (e.shiftKey || isMobileKeyboardLayout())) return;
+    e.preventDefault();
+    handleSend();
+  }}
   onFocus={() => {
     lastActionRef.current = 'focused_input';
     setShowEmoji(false);

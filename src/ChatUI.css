@@ -298,7 +298,7 @@ html.ime-open .bottom-sentinel {
     /* keep safe-area if any */
     padding-bottom: calc(10px + env(safe-area-inset-bottom));
   }
-  .App.fixed .footer input {
+  .App.fixed .footer .chat-composer {
     min-height: 38px;
     font-size: 15px;
     min-width: 0;
@@ -311,9 +311,10 @@ html.ime-open .bottom-sentinel {
   }
 }
 
-.footer input {
+.footer .chat-composer {
   flex: 1;
-  padding: 15px 20px;
+  width: 100%;
+  padding: 11px 20px;
   border-radius: 30px;
   background-color: #ffffff;
   color: #222;
@@ -321,7 +322,13 @@ html.ime-open .bottom-sentinel {
   outline: none;
   font-size: 16px;
   min-height: 44px;              /* NEW: prevents autosize collapse */
-  line-height: 1.2;              /* NEW: stable vertical rhythm */
+  line-height: 1.35;
+  resize: none;
+  overflow-x: hidden;
+  overflow-y: hidden;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .footer > button {
@@ -349,7 +356,7 @@ html.ime-open .bottom-sentinel {
   min-width: 0;
   display: flex;
 }
-.footer .input-wrap input { width: 100%; padding-left: 60px; }
+.footer .input-wrap .chat-composer { padding-left: 60px; }
 
 /* tiny emoji button inside the input */
 .footer .emoji-inside {
@@ -380,7 +387,7 @@ html.ime-open .bottom-sentinel {
 /* compact on very small screens */
 @media (max-width: 360px) {
   .footer .emoji-inside { left: 12px; width: 28px; height: 28px; }
-  .footer .input-wrap input { padding-left: 58px; }
+  .footer .input-wrap .chat-composer { padding-left: 58px; }
 }
 
 /* —— Emoji panel that drops above the input —— */
@@ -1115,7 +1122,7 @@ html.ime-open .App.stable .chat-container {
 /* Smaller, non-shifting controls on Android pinned layout */
 .App.stable .footer .send-btn,
 .App.stable .footer .mic-btn { width: 52px; height: 52px; transform: none; }
-.App.stable .footer input { min-height: 42px; }
+.App.stable .footer .chat-composer { min-height: 42px; }
 
 /* keep last items comfortably above the footer */
 .message,
@@ -1127,7 +1134,7 @@ html.ime-open .App.stable .chat-container {
   .App.stable .footer { padding: 10px 12px; }
   .App.stable .footer .send-btn,
   .App.stable .footer .mic-btn { width: 46px; height: 46px; }
-  .App.stable .footer input { min-height: 38px; font-size: 15px; }
+  .App.stable .footer .chat-composer { min-height: 38px; font-size: 15px; }
 }
 /* Closed-keyboard sizing so the circles don't look stretched */
 html:not(.ime-open) .App.stable .footer .send-btn,
@@ -1139,7 +1146,7 @@ html:not(.ime-open) .App.stable .footer .mic-btn {
 /* Legacy/very small screens */
 @media (max-width: 380px) {
   .App.stable .footer { padding: 8px 10px; gap: 8px; }
-  .App.stable .footer input { min-height: 34px; font-size: 16px; min-width: 0; }
+  .App.stable .footer .chat-composer { min-height: 34px; font-size: 16px; min-width: 0; }
   .App.stable .footer .send-btn,
   .App.stable .footer .mic-btn { width: 50px; height: 50px; transform: none; }
 }
@@ -1155,7 +1162,7 @@ html:not(.ime-open) .App.stable .footer .mic-btn {
   .App.stable .footer { padding: 10px 12px; }
   .App.stable .footer .send-btn,
   .App.stable .footer .mic-btn { width: 46px; height: 46px; }
-  .App.stable .footer input { min-height: 38px; font-size: 16px; }
+  .App.stable .footer .chat-composer { min-height: 38px; font-size: 16px; }
 }
 /* ==== ANDROID SMALL SCREENS — FORCE COMPACT HEADER (SAFE) ==== */
 @media (max-width: 380px) {
@@ -1195,7 +1202,7 @@ html:not(.ime-open) .App.stable .footer .mic-btn {
 /* ==== Realme 1 / legacy-Android sizing — footer compact & safe ==== */
 @media (max-width: 380px) {
   .App.stable .footer { padding: 8px 10px; gap: 8px; }
-  .App.stable .footer input { min-height: 34px; font-size: 16px; min-width: 0; }
+  .App.stable .footer .chat-composer { min-height: 34px; font-size: 16px; min-width: 0; }
 
   /* shrink mic/send just for tiny/short screens */
   .App.stable .footer .send-btn,
@@ -1663,12 +1670,12 @@ html[data-theme="dark"] .typing-bounce span{
 }
 
 /* input */
-html[data-theme="dark"] .footer input{
+html[data-theme="dark"] .footer .chat-composer{
   background: rgba(255,255,255,.10);
   color: rgba(255,255,255,.92);
 }
 
-html[data-theme="dark"] .footer input::placeholder{
+html[data-theme="dark"] .footer .chat-composer::placeholder{
   color: rgba(255,255,255,.55);
 }
 
