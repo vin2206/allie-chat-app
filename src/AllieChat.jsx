@@ -2729,28 +2729,32 @@ if (used >= cap) {
     const currentTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     lastActionRef.current = 'sent_text';
     const newMessage = { text: inputValue, sender: 'user', time: currentTime, seen: false };
+    const hadPriorUserTurn = messages.some((m) => m.sender === 'user');
+    const isFirstRealUserTurn = !hadPriorUserTurn;
     const updatedMessages = [...messages, newMessage];
     setMessages(updatedMessages);
     scrollToBottomNow(true); // user expects to be at bottom after sending
     setInputValue('');
     setIsTyping(true);
 
+    // Keep first turn payload unambiguous: don't send seeded opener/current turn in history.
+    const historySource = isFirstRealUserTurn ? [] : updatedMessages;
+    const formattedHistory = historySource.map((msg) => ({
+      role: msg.sender === 'user' ? 'user' : 'assistant',
+      content: msg.text ?? (msg.audioUrl ? '🔊 (voice reply sent)' : '')
+    }));
+
+    const MAX_MSG = 12;
+    const trimmedHistory = formattedHistory.slice(-MAX_MSG);
+
     const startedAt = Date.now();
     try {
-      const formattedHistory = updatedMessages.map((msg) => ({
-        role: msg.sender === 'user' ? 'user' : 'assistant',
-        content: msg.text ?? (msg.audioUrl ? '🔊 (voice reply sent)' : '')
-      }));
-
-      const MAX_MSG = 12;
-      const trimmed = formattedHistory.slice(-MAX_MSG);
-
       const now = new Date();
 
 // IMPORTANT: use the same trimmed history you already build
 const fetchBody = {
-  message: inputValue,          // <-- the current user text
-  history: trimmed,             // <-- same trimmed history array
+  message: newMessage.text,     // <-- the current user text
+  history: trimmedHistory,      // <-- same trimmed history array
   clientTime: now.toLocaleTimeString('en-US', { hour12: false }),
   clientDate: now.toLocaleDateString('en-GB'),
   userEmail: (user?.email || '').toLowerCase(),
@@ -2828,18 +2832,10 @@ bumpVoiceUsed(true, user); // (optional UI counter)
 
   // one-shot retry (cleaned)
   try {
-    const formattedHistory = updatedMessages.map((msg) => ({
-      role: msg.sender === 'user' ? 'user' : 'assistant',
-      content: msg.text ?? (msg.audioUrl ? '🔊 (voice reply sent)' : '')
-    }));
-
-    const MAX_MSG = 12;
-    const trimmed = formattedHistory.slice(-MAX_MSG);
-
     const now = new Date();
     const fetchRetryBody = {
   message: newMessage.text,     // ✅ same schema as main call
-  history: trimmed,             // ✅ not "messages"
+  history: trimmedHistory,      // ✅ not "messages"
   clientTime: now.toLocaleTimeString('en-US', { hour12: false }),
   clientDate: now.toLocaleDateString('en-GB'),
   userEmail: (user?.email || '').toLowerCase(),
