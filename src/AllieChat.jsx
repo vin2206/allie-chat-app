@@ -1339,6 +1339,15 @@ function syncComposerHeight() {
   el.style.height = `${nextHeight}px`;
   el.style.overflowY = el.scrollHeight > maxHeight ? 'auto' : 'hidden';
 
+  // Keep chat inset in sync with live footer growth so messages never sit behind the composer.
+  const footerEl = footerRef.current;
+  if (footerEl) {
+    const liveFooterHeight = Math.round(footerEl.getBoundingClientRect().height);
+    if (liveFooterHeight >= 40 && liveFooterHeight <= 260) {
+      document.documentElement.style.setProperty('--ftr-h', `${liveFooterHeight}px`);
+    }
+  }
+
   if (document.activeElement === el && stickToBottomRef.current) {
     scrollToBottomNow(true);
   }

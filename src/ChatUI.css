@@ -1133,9 +1133,9 @@ html.first-open-settling .chat-container::before {
   left: 0; right: 0;
 }
 
-/* Keep honoring the taller of footer vs keyboard when IME opens */
+/* Reserve both the lifted footer and keyboard height when IME is open. */
 html.ime-open .App.stable .chat-container {
-  bottom: calc(max(var(--ftr-h, 90px), var(--kb-h, 0px)));
+  bottom: calc(var(--ftr-h, 90px) + var(--kb-h, 0px));
 }
 
 /* Tiny cushion so the last item never kisses the bar */
