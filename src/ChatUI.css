@@ -7,28 +7,30 @@ html, body, #root {
   width: 100%;
   height: 100%;
   min-height: 100%;
-  overflow-x: hidden;
+  overflow-x: hidden; /* keep only horizontal lock */
 }
 
+/* stop browser pull-to-refresh; our chat scroller will handle it */
 html, body { overscroll-behavior-y: none; background: #000 !important; }
 
-:root { --hdr-h: 80px; --ftr-h: 90px; --kb-h: 0px; }
+:root { --hdr-h: 80px; --ftr-h: 90px; --kb-h: 0px; }  /* measured at runtime; kb set at runtime */
 
 html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 
 .App {
   display: flex;
   flex-direction: column;
-  overflow: visible;
-  position: relative;
+  overflow: visible; /* let the middle scroller receive gestures */
+  position: relative; 
 }
 
+/* Only the fixed layout is height-locked (iOS/desktop) */
 .App.fixed {
   height: var(--app-h, 100dvh);
   min-height: var(--app-h, 100dvh);
 }
 
-/* === Main chat scroller === */
+/* === Main chat scroller (both .fixed and .stable) === */
 .chat-container {
   position: absolute;
   top: var(--hdr-h, 80px);
@@ -36,98 +38,93 @@ html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
   left: 0; right: 0;
 
   display: flex;
-  flex-direction: column;
+  flex-direction: column;   /* enables align-self on bubbles */
   gap: 6px;
 
   overflow-y: auto;
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
+/* make scrollIntoView stop above the footer */
   scroll-padding-bottom: 16px;
 
   padding: 14px 12px;
   padding-bottom: 6px;
-  isolation: isolate;
-
-  /* ★ PREMIUM POLISH — thin scrollbar (Firefox) */
-  scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+    /* Premium glass surface */
+  isolation: isolate; /* ensures ::before stays behind messages */
 }
-
-/* ★ PREMIUM POLISH — thin scrollbar (Chrome/Safari/Edge) */
-.chat-container::-webkit-scrollbar {
-  width: 3px;
-}
-.chat-container::-webkit-scrollbar-track {
-  background: transparent;
-}
-.chat-container::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.15);
-  border-radius: 10px;
-}
-.chat-container::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.25);
-}
-
-/* ★ PREMIUM POLISH — Glass panel toned WAY down (was 0.10 → now 0.04) */
-.chat-container::before {
-  content: "";
+/* Glass panel behind messages (reversible, no layout impact) */
+.chat-container::before{
+  content:"";
   position: fixed;
-  top: calc(var(--hdr-h, 80px) + 2px);
+
+  /* cover almost the full chat lane */
+  top:  calc(var(--hdr-h, 80px) + 2px);
   bottom: calc(var(--ftr-h, 90px) + 2px);
   left: 8px;
   right: 8px;
+
   border-radius: 18px;
+  background: rgba(255,255,255,0.10);
+  box-shadow: 0 18px 55px rgba(0,0,0,0.16);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-
-  pointer-events: none;
+  pointer-events:none;
   z-index: 0;
 }
 
-html.ime-open .chat-container::before {
+/* When keyboard opens, keep glass stopping ABOVE footer+keyboard */
+html.ime-open .chat-container::before{
   bottom: calc(var(--ftr-h, 90px) + var(--kb-h, 0px) + 2px);
 }
 
-.chat-container > * {
+/* Keep actual chat content above the glass + prevent shrink */
+.chat-container > *{
   position: relative;
   z-index: 1;
   flex: 0 0 auto;
 }
+/* Real spacer element that grows when chat is short */
 .chat-pad { flex: 1 1 0; min-height: 0; order: -1; }
 
+/* small cushion so scrollTo/anchors stop above the footer */
 .message,
 .typing-bounce { scroll-margin-block-end: 8px; }
 
+/* one permanent anchor at the very end */
 .bottom-sentinel {
   height: 1px;
   overflow-anchor: auto;
 }
 
+/* Android: when IME opens, clamp the chat area between header and whichever is taller at the bottom */
 html.ime-open .chat-container {
+  /* footer is lifted by kb-h, so chat must stop above (footer + kb) */
   bottom: calc(var(--ftr-h, 90px) + var(--kb-h, 0px));
   scroll-padding-bottom: 16px;
   padding-bottom: 2px;
 }
+/* Lift footer above keyboard — removes white strip/gap flicker */
 html.ime-open .App.stable .footer,
 html.ime-open .App.fixed .footer {
   bottom: var(--kb-h, 0px);
 }
 
+/* While keyboard is up, give extra cushion so the last bubble never hides */
 html.ime-open .message,
 html.ime-open .typing-bounce,
 html.ime-open .bottom-sentinel {
   scroll-margin-block-end: 32px;
 }
 
+/* Also make the sentinel itself thicker during IME */
 html.ime-open .bottom-sentinel {
-  height: 28px;
+  height: 28px; /* was 1px */
 }
 
-/* 2) State-specific backgrounds */
+/* 2) State-specific backgrounds (fixes the flicker) */
+
+/* Sign-in screen background (dark premium, matches landing mood) */
 .App.auth {
   background:
     radial-gradient(90% 56% at 18% 0%, rgba(212, 114, 142, 0.16), rgba(255, 255, 255, 0) 70%),
@@ -135,76 +132,45 @@ html.ime-open .bottom-sentinel {
     linear-gradient(180deg, #07060b 0%, #0b0913 54%, #120d1b 100%);
 }
 
-.App.signed-in {
+/* Chat screen background — gradient + waves directly on the app */
+.App.signed-in{
   background:
     linear-gradient(to bottom, #ff99cc, #cc66cc, #9966cc),
     url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"><path fill="%23ff99cc" fill-opacity="0.3" d="M0,64L60,80C120,96,240,128,360,138.7C480,149,600,139,720,133.3C840,128,960,128,1080,117.3C1200,107,1320,85,1380,74.7L1440,64L1440,320L1380,320C1320,320,1200,320,1080,320C960,320,840,320,720,320C600,320,480,320,360,320C240,320,120,320,60,320L0,320Z"/></svg>');
   background-repeat: no-repeat, no-repeat;
-  background-size: auto, cover;
-  background-position: center, center;
+  background-size: auto, cover;       /* gradient auto; wave covers */
+  background-position: center, center; /* optional: keep centered */
 }
-
-/* ★ PREMIUM POLISH — Header: added border-bottom separator */
+/* Header (glassmorphism style) */
 .header {
-  background: rgba(255, 105, 180, 0.12);
+  background: rgba(255, 105, 180, 0.15);      /* no blur on Android/stable */
   display: flex;
   align-items: center;
   padding: 12px 20px;
   padding-top: calc(12px + env(safe-area-inset-top));
   z-index: 100;
   flex-wrap: nowrap;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.10);
 }
 .App.fixed .header {
   position: fixed; top: 0; left: 0; right: 0;
-  -webkit-backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);        /* blur only for FIXED layout */
   backdrop-filter: blur(10px);
 }
 
-/* ★ PREMIUM POLISH — Profile pic: overflow visible + relative for online dot */
 .profile-pic {
   width: 50px;
   height: 50px;
   border-radius: 50%;
-  overflow: visible;
+  overflow: hidden;
   margin-right: 15px;
-  position: relative;
-  flex-shrink: 0;
 }
 
-/* ★ PREMIUM POLISH — Profile pic img: glow ring */
 .profile-pic img {
   width: 100%;
   height: 100%;
   border-radius: 50%;
   object-fit: cover;
   transform: scale(1.05);
-  border: 2px solid rgba(255, 255, 255, 0.50);
-  box-shadow:
-    0 0 0 2px rgba(255, 105, 180, 0.25),
-    0 4px 14px rgba(0, 0, 0, 0.20);
-}
-
-/* ★ PREMIUM POLISH — Green "Online" dot */
-.profile-pic::after {
-  content: "";
-  position: absolute;
-  bottom: 2px;
-  right: 2px;
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  background: #22c55e;
-  border: 2.5px solid rgba(255, 105, 180, 0.35);
-  box-shadow: 0 0 8px rgba(34, 197, 94, 0.50);
-  z-index: 2;
-  animation: onlinePulse 3s ease-in-out infinite;
-}
-
-/* ★ PREMIUM POLISH — Online dot pulse animation */
-@keyframes onlinePulse {
-  0%, 100% { box-shadow: 0 0 6px rgba(34, 197, 94, 0.40); }
-  50%      { box-shadow: 0 0 12px rgba(34, 197, 94, 0.65); }
 }
 
 .username-container {
@@ -214,31 +180,31 @@ html.ime-open .bottom-sentinel {
   gap: 6px;
   flex: 1;
   justify-content: flex-start;
-  flex-wrap: nowrap;
-  min-width: 0;
+  flex-wrap: nowrap;   /* NEW */
+  min-width: 0;        /* NEW - allow ellipsis */
+  /* Make sure every child sits on the same vertical center */
 }
+/* Make sure every child sits on the same vertical center */
 .username-container > * { align-self: center; }
 
 .name-wrap {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 6px;        /* keeps badge next to name */
   min-width: 0;
 }
 
-/* ★ PREMIUM POLISH — Username: Inter font, tighter tracking */
 .username {
-  font-weight: 800;
-  font-size: 21px;
+  font-weight: 700;
+  font-size: 22px;
   color: white;
-  font-family: 'Inter', 'Manrope', 'SF Pro Display', 'Segoe UI', sans-serif;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.30);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 46vw;
-  line-height: 1.15;
-  letter-spacing: -0.3px;
+  font-family: 'Lobster', cursive;
+  text-shadow: 0 1px 2px rgba(0,0,0,.45);
+  white-space: nowrap;          /* NEW */
+  overflow: hidden;             /* NEW */
+  text-overflow: ellipsis;      /* NEW */
+  max-width: 46vw;              /* NEW: keeps pills on the row */
+  line-height: 1.15;            /* NEW: stable height */
 }
 
 .role-badge {
@@ -252,57 +218,30 @@ html.ime-open .bottom-sentinel {
   text-transform: capitalize;
   box-shadow: 0 2px 6px rgba(0,0,0,.18);
 }
-
-/* ★ PREMIUM POLISH — Smoother message entrance animation */
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(8px) scale(0.98);
-    filter: blur(2px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-    filter: blur(0);
-  }
-}
-
-/* ★ PREMIUM POLISH — Message base with refined animation */
+/* Message bubble layout */
 .message {
   max-width: min(85%, 560px);
   font-size: 16px;
   word-break: break-word;
   margin-bottom: 2px;
   margin-top: 0;
-  animation: fadeIn 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+  animation: fadeIn 0.4s ease;
+  transition: all 0.2s ease;
   animation-fill-mode: both;
-  transition: transform 0.15s ease;
 }
 
-/* ★ PREMIUM POLISH — Desktop hover lift on bubbles */
-@media (hover: hover) {
-  .message:hover .bubble-content {
-    transform: translateY(-1px);
-    box-shadow:
-      0 8px 24px rgba(0, 0, 0, 0.10),
-      0 2px 6px rgba(0, 0, 0, 0.06);
-    transition: transform 0.15s ease, box-shadow 0.2s ease;
-  }
-}
-
-/* ★ PREMIUM POLISH — Timestamp + read receipts */
-.meta-info {
+/* time follows message text with a small clean gap */
+.meta-info{
   position: static;
   display: inline-flex;
-  align-items: center;
-  justify-content: flex-end;
+  align-items: baseline;
+  justify-content: flex-start;
   font-size: 10px;
-  opacity: 0.55;
-  margin: 0 0 0 8px;
+  opacity: .72;
+  margin: 0 0 0 6px;
   line-height: 1;
   pointer-events: none;
   vertical-align: baseline;
-  gap: 3px;
 }
 .meta-info .time {
   display: inline-block;
@@ -310,36 +249,30 @@ html.ime-open .bottom-sentinel {
   line-height: 1;
 }
 
-/* ★ PREMIUM POLISH — Read receipt tick styles (add ✓✓ in JSX if desired) */
-.meta-info .read-ticks {
-  font-size: 12px;
-  letter-spacing: -2px;
-  color: inherit;
-  opacity: 0.7;
-}
-.meta-info .read-ticks.seen {
-  color: #38bdf8;
-  opacity: 1;
-}
-
-.msg-text {
+/* natural text width with no fixed time reserve strip */
+.msg-text{
   display: inline;
   margin: 0;
   padding-right: 0;
 }
 .meta-info span { margin-right: 0; }
 
-.user-message {
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.user-message{
   align-self: flex-end;
-  margin: 3px 2px 3px 18px;
+  margin: 3px 2px 3px 18px;   /* top right bottom left */
 }
 
-.allie-message {
+.allie-message{
   align-self: flex-start;
-  margin: 3px 22px 3px 2px;
+  margin: 3px 22px 3px 2px;   /* top right bottom left */
 }
 
-/* Footer */
+/* Footer (glassmorphism style) */
 .footer {
   background: transparent;
   display: flex;
@@ -358,10 +291,12 @@ html.ime-open .bottom-sentinel {
   backdrop-filter: none;
 }
 
+/* === Legacy/tiny screens: keep fixed layout but make footer compact === */
 @media (max-width: 380px), (max-height: 640px) {
   .App.fixed .footer {
     padding: 10px 12px;
     gap: 8px;
+    /* keep safe-area if any */
     padding-bottom: calc(10px + env(safe-area-inset-bottom));
   }
   .App.fixed .footer .chat-composer {
@@ -373,21 +308,18 @@ html.ime-open .bottom-sentinel {
   .App.fixed .footer .mic-btn {
     width: 46px;
     height: 46px;
-    transform: none;
+    transform: none; /* avoids any visual crop on old webviews */
   }
 }
 
-/* ★ PREMIUM POLISH — Footer input: frosted glass + refined shadow */
 .footer .chat-composer {
   flex: 1;
   width: 100%;
   padding: 11px 20px;
   border-radius: 30px;
-  background-color: rgba(255, 255, 255, 0.92);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  background-color: rgba(255, 255, 255, 0.95);
   color: #1b2230;
-  border: 1px solid rgba(255, 255, 255, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.68);
   outline: none;
   font-size: 16px;
   font-family: 'Inter', 'Manrope', 'Avenir Next', 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
@@ -395,7 +327,7 @@ html.ime-open .bottom-sentinel {
   letter-spacing: normal;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
-  min-height: 44px;
+  min-height: 44px;              /* NEW: prevents autosize collapse */
   line-height: 1.35;
   resize: none;
   overflow-x: hidden;
@@ -404,8 +336,8 @@ html.ime-open .bottom-sentinel {
   overflow-wrap: anywhere;
   word-break: break-word;
   box-shadow:
-    0 8px 22px rgba(23, 10, 36, 0.12),
-    inset 0 1px 0 rgba(255, 255, 255, 0.70);
+    0 10px 24px rgba(23, 10, 36, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.62);
   transition: border-color .18s ease, box-shadow .2s ease, background-color .2s ease;
 }
 
@@ -415,12 +347,11 @@ html.ime-open .bottom-sentinel {
   letter-spacing: normal;
 }
 
-/* ★ PREMIUM POLISH — Focus glow: branded pink ring */
 .footer .chat-composer:focus {
-  border-color: rgba(255, 255, 255, 0.80);
+  border-color: rgba(255, 255, 255, 0.84);
   box-shadow:
-    0 12px 26px rgba(23, 10, 36, 0.16),
-    0 0 0 2px rgba(255, 110, 196, 0.18),
+    0 12px 26px rgba(23, 10, 36, 0.2),
+    0 0 0 1px rgba(120, 94, 248, 0.2),
     inset 0 1px 0 rgba(255, 255, 255, 0.72);
 }
 
@@ -438,11 +369,11 @@ html.ime-open .bottom-sentinel {
   cursor: pointer;
   box-shadow: 0 8px 18px rgba(0,0,0,0.4);
   transition: transform 0.15s ease;
-  transform: none;
+  transform: none;                           /* was translateY(-2px) */
 }
 .footer > button:active { transform: scale(0.95); }
 
-/* WhatsApp-like tiny emoji inside the input */
+/* —— WhatsApp-like tiny emoji inside the input —— */
 .footer .input-wrap {
   position: relative;
   flex: 1 1 auto;
@@ -451,6 +382,7 @@ html.ime-open .bottom-sentinel {
 }
 .footer .input-wrap .chat-composer { padding-left: 52px; }
 
+/* tiny emoji button inside the input */
 .footer .emoji-inside {
   position: absolute;
   left: 10px;
@@ -460,15 +392,16 @@ html.ime-open .bottom-sentinel {
   border: 0;
   width: 32px;
   height: 32px;
-  font-size: 0;
+  font-size: 0;        /* using SVG, no text metrics */
   line-height: 1;
-  color: #8e95a4;
+  color: #8e95a4;      /* neutral icon tint */
   box-shadow: none;
   cursor: pointer;
   display: grid;
   place-items: center;
   touch-action: manipulation;
 }
+/* Enlarge the drawing inside the button without changing button size */
 .footer .emoji-inside svg {
   width: 22px;
   height: 22px;
@@ -478,13 +411,14 @@ html.ime-open .bottom-sentinel {
 }
 .footer .emoji-inside:active { transform: translateY(-50%) scale(0.96); }
 
+/* compact on very small screens */
 @media (max-width: 360px) {
   .footer .emoji-inside { left: 9px; width: 30px; height: 30px; }
   .footer .emoji-inside svg { width: 20px; height: 20px; }
   .footer .input-wrap .chat-composer { padding-left: 50px; }
 }
 
-/* Emoji panel */
+/* —— Emoji panel that drops above the input —— */
 .emoji-panel {
   position: absolute;
   left: 0; right: 0;
@@ -495,7 +429,7 @@ html.ime-open .bottom-sentinel {
   padding: 8px;
   max-height: 220px;
   overflow-y: auto;
-  z-index: 1201;
+  z-index: 1201;                 /* above sticky footer */
 }
 
 .emoji-grid {
@@ -534,18 +468,18 @@ html.ime-open .bottom-sentinel {
 
 .modal-content {
   background: #fff;
-  padding: 24px 22px;
+  padding: 24px 22px;              /* a bit more vertical space */
   border-radius: 18px;
   text-align: center;
-  width: min(96vw, 520px);
+  width: min(96vw, 520px);         /* slightly wider cap */
   max-width: 520px;
   box-shadow: 0 18px 60px rgba(0,0,0,0.28);
 }
-.modal-content .close-modal {
+.modal-content .close-modal{
   display: block;
   width: 100%;
   padding: 12px 14px;
-  margin: 8px 0 6px;
+  margin: 8px 0 6px;          /* hugs Weekly; leaves a little room for Razorpay */
   background: #f1f1f4 !important;
   color: #333 !important;
   border: 0;
@@ -557,16 +491,15 @@ html.ime-open .bottom-sentinel {
   display: flex;
   align-items: center;
   margin: 6px 0 4px 10px;
-  min-height: 32px;
+  min-height: 32px;          /* was: height: 28px; → use min-height so it can grow */
 }
 
-/* ★ PREMIUM POLISH — Typing dots: gradient colored */
 .typing-bounce span {
   display: inline-block;
   width: 7px;
   height: 7px;
   margin-right: 7px;
-  background: linear-gradient(135deg, #ff6ec4, #7873f5);
+  background: #cc66cc;
   border-radius: 50%;
   opacity: 0.8;
   animation: bounce 1.2s infinite;
@@ -580,21 +513,18 @@ html.ime-open .bottom-sentinel {
   animation-delay: 0.4s;
 }
 
-/* ★ PREMIUM POLISH — Typing bubble: softer shadow + inner highlight */
 .allie-message.typing-bounce {
   background: linear-gradient(135deg, #ffe3e3, #c2f0fc);
   padding: 12px 16px;
-  border-radius: 24px 24px 24px 4px;
-  box-shadow:
-    0 4px 16px rgba(0, 0, 0, 0.08),
-    inset 0 1px 0 rgba(255, 255, 255, 0.50);
+  border-radius: 24px 24px 24px 4px;   /* TL TR BR BL  ← small at top-left */
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.17);
   display: flex;
   align-items: center;
   margin: 10px 40px 10px 1px;
   height: 28px;
-  width: auto !important;
+  width: auto !important;        /* <-- Force bubble to be only as wide as needed */
   min-width: 0 !important;
-  max-width: fit-content;
+  max-width: fit-content;        /* <-- Just to be sure */
 }
 
 @keyframes bounce {
@@ -608,7 +538,7 @@ html.ime-open .bottom-sentinel {
   }
 }
 
-/* Bubble content base */
+/* Neutral default — specific .allie-message/.user-message rules set the tilt */
 .bubble-content {
   display: block;
   padding: 9px 12px 22px 12px;
@@ -620,63 +550,26 @@ html.ime-open .bottom-sentinel {
   min-width: 0;
   word-break: break-word;
   position: relative;
-  text-align: left;
+  text-align: left;           /* <- Important! */
 }
-.bubble-content.has-audio {
-  display: block;
+.bubble-content.has-audio{
+  display: block;   /* keep audio layout safe */
 }
 
-/* ★ PREMIUM POLISH — AI bubble: refined shadow + inner highlight */
 .allie-message .bubble-content {
   background: linear-gradient(135deg, #ffe3e3, #c2f0fc);
   color: #222;
   border-radius: 18px 18px 18px 6px;
-  padding: 10px 14px 8px 14px;
-  box-shadow:
-    0 4px 16px rgba(0, 0, 0, 0.06),
-    0 1px 4px rgba(0, 0, 0, 0.04),
-    inset 0 1px 0 rgba(255, 255, 255, 0.60);
+  padding: 8px 12px 6px 12px;
 }
-
-/* ★ PREMIUM POLISH — User bubble: refined shadow + inner highlight */
 .user-message .bubble-content {
   background: linear-gradient(135deg, #ff99cc, #b388eb, #80d0f1);
   color: #fff;
   border-radius: 18px 18px 6px 18px;
-  padding: 10px 14px 8px 14px;
-  box-shadow:
-    0 6px 20px rgba(179, 136, 235, 0.20),
-    0 2px 6px rgba(0, 0, 0, 0.08),
-    inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  padding: 8px 12px 6px 13px;
 }
 
-/* ★ PREMIUM POLISH — AI bubble tail (bottom-left) */
-.allie-message .bubble-content::before {
-  content: "";
-  position: absolute;
-  bottom: 0;
-  left: -6px;
-  width: 16px;
-  height: 16px;
-  background: inherit;
-  clip-path: polygon(100% 0%, 100% 100%, 0% 100%);
-  border-radius: 0 0 0 4px;
-}
-
-/* ★ PREMIUM POLISH — User bubble tail (bottom-right) */
-.user-message .bubble-content::before {
-  content: "";
-  position: absolute;
-  bottom: 0;
-  right: -6px;
-  width: 16px;
-  height: 16px;
-  background: inherit;
-  clip-path: polygon(0% 0%, 100% 100%, 0% 100%);
-  border-radius: 0 0 4px 0;
-}
-
-/* Send + Mic button base */
+/* Make sure generic .footer button rule doesn't force same look on both */
 .footer .send-btn,
 .footer .mic-btn {
   border: 0;
@@ -687,44 +580,30 @@ html.ime-open .bottom-sentinel {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0;
-  box-shadow: 0 12px 26px rgba(14, 8, 24, 0.25);
+  padding: 0; /* important for true centering */
+  box-shadow:
+    0 12px 26px rgba(14, 8, 24, 0.25);
   transition: transform .12s ease, box-shadow .2s ease, background .2s ease;
   -webkit-tap-highlight-color: transparent;
 }
 
-/* ★ PREMIUM POLISH — Send button: breathing glow */
+/* Send keeps gradient */
 .footer .send-btn {
   background: linear-gradient(135deg, #ff6ec4, #7873f5);
   color: #ffffff;
-  box-shadow:
-    0 8px 22px rgba(120, 115, 245, 0.30),
-    0 0 18px rgba(255, 110, 196, 0.15);
-  animation: sendGlow 3s ease-in-out infinite;
+  box-shadow: 0 14px 28px rgba(41, 21, 82, 0.30);
 }
 
-/* ★ PREMIUM POLISH — Send button glow animation */
-@keyframes sendGlow {
-  0%, 100% {
-    box-shadow:
-      0 8px 22px rgba(120, 115, 245, 0.25),
-      0 0 14px rgba(255, 110, 196, 0.10);
-  }
-  50% {
-    box-shadow:
-      0 10px 28px rgba(120, 115, 245, 0.35),
-      0 0 22px rgba(255, 110, 196, 0.20);
-  }
-}
-
+/* SVG sizing for send */
 .footer .send-btn svg {
   display: block;
   width: 22px;
   height: 22px;
   flex: 0 0 22px;
-  transform: translateX(0.5px);
+  transform: translateX(0.5px); /* tiny visual centering tweak */
 }
 
+/* Mic default */
 .footer .mic-btn {
   background: rgba(255, 255, 255, 0.94);
   color: #5a46f2;
@@ -753,13 +632,15 @@ html.ime-open .bottom-sentinel {
   100% { transform: scale(1);    }
 }
 
-/* Audio rendering */
+/* --- Audio rendering fixes --- */
+/* --- Audio bubble layout (make room for real controls) --- */
+/* --- Audio bubble layout (no :has()) --- */
 .audio-wrapper { width: 100%; }
 
 .audio-player {
   display: block;
   width: 100%;
-  height: 40px;
+  height: 40px;               /* tall enough so Android shows controls */
   position: relative;
   z-index: 1;
   outline: none;
@@ -771,33 +652,33 @@ html.ime-open .bottom-sentinel {
 .bubble-content.has-audio {
   min-width: 240px;
   max-width: 80vw;
-  padding-right: 14px;
+  padding-right: 14px;   /* normal padding now */
   overflow: visible;
 }
+/* Fallback link only if the <audio> fails to have a src */
 .audio-fallback { margin-top: 4px; font-size: 12px; }
 .audio-player[src] + .audio-fallback { display: none; }
 
-/* Confirm dialog */
-.confirm-backdrop {
+/* --- custom confirm dialog --- */
+.confirm-backdrop{
   position: fixed; inset: 0; background: rgba(0,0,0,.45);
   display:flex; align-items:center; justify-content:center; z-index: 2000;
   backdrop-filter: blur(2px);
 }
-.confirm-modal {
+.confirm-modal{
   width:min(92vw,420px); background:#fff; color:#222; border-radius:16px;
   box-shadow:0 20px 60px rgba(0,0,0,.25); padding:20px;
   animation: pop .15s ease-out;
 }
-.confirm-modal h3 { margin:0 0 8px; font-size:18px; font-weight:800; }
-.confirm-modal p { margin:0 0 16px; line-height:1.4; color:#444; }
-.confirm-buttons { display:flex; gap:10px; justify-content:flex-end; }
-.btn-primary {
+.confirm-modal h3{ margin:0 0 8px; font-size:18px; font-weight:800; }
+.confirm-modal p{ margin:0 0 16px; line-height:1.4; color:#444; }
+.confirm-buttons{ display:flex; gap:10px; justify-content:flex-end; }
+.btn-primary{
   padding:10px 14px; border:none; border-radius:10px; cursor:pointer;
   background: linear-gradient(135deg,#ff7ac2,#7a7aff); color:#fff; font-weight:700;
 }
-
-/* --- Modes Modal --- */
-.role-modal {
+/* --- Modes Modal — Premium Surface --- */
+.role-modal{
   position: fixed;
   inset: 0;
   display: flex;
@@ -811,7 +692,8 @@ html.ime-open .bottom-sentinel {
   z-index: 1200;
 }
 
-.role-card {
+/* ── Popup card surface ── */
+.role-card{
   width: min(94vw, 410px);
   max-width: 100%;
   margin-top: calc(var(--hdr-h, 80px) + 8px);
@@ -838,7 +720,8 @@ html.ime-open .bottom-sentinel {
   to   { transform: scale(1)   translateY(0);   opacity: 1;   }
 }
 
-.role-card::before {
+/* Top gloss on popup */
+.role-card::before{
   content: "";
   position: absolute;
   left: 0; right: 0; top: 0;
@@ -848,7 +731,8 @@ html.ime-open .bottom-sentinel {
   border-radius: 24px 24px 0 0;
 }
 
-.role-card-header {
+/* ── Header row ── */
+.role-card-header{
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -858,7 +742,7 @@ html.ime-open .bottom-sentinel {
   z-index: 1;
 }
 
-.role-card-title {
+.role-card-title{
   font-size: 21px;
   font-weight: 900;
   letter-spacing: .4px;
@@ -868,7 +752,7 @@ html.ime-open .bottom-sentinel {
   background-clip: text;
 }
 
-.role-close {
+.role-close{
   appearance: none;
   border: 1px solid rgba(175, 158, 168, .20);
   background: rgba(255,255,255,.55);
@@ -883,16 +767,17 @@ html.ime-open .bottom-sentinel {
   transition: background .16s ease, border-color .16s ease, transform .12s ease;
   box-shadow: 0 2px 8px rgba(0,0,0,.05);
 }
-@media (hover:hover) {
-  .role-close:hover {
+@media (hover:hover){
+  .role-close:hover{
     background: rgba(255,255,255,.88);
     border-color: rgba(175, 158, 168, .34);
     transform: scale(1.04);
   }
 }
 
-.role-section { margin: 4px 0 10px; }
-.role-section-title {
+/* ── Section labels ── */
+.role-section{ margin: 4px 0 10px; }
+.role-section-title{
   font-weight: 800;
   color: #7d6e8a;
   margin: 8px 0 9px 2px;
@@ -903,7 +788,8 @@ html.ime-open .bottom-sentinel {
   z-index: 1;
 }
 
-.role-grid {
+/* ── 2-column grid ── */
+.role-grid{
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
@@ -912,8 +798,9 @@ html.ime-open .bottom-sentinel {
   width: 100%;
 }
 
+/* ── Shared card base ── */
 .role-row,
-.role-chip {
+.role-chip{
   width: 100%;
   max-width: 100%;
   min-width: 0;
@@ -934,12 +821,17 @@ html.ime-open .bottom-sentinel {
   isolation: isolate;
 }
 
-/* STRANGER card */
-.role-row.role-card-default {
+/* ═══════ STRANGER — Premium Brushed Silver ═══════ */
+.role-row.role-card-default{
   min-height: 68px;
   background: linear-gradient(152deg,
-    #f5f7fa 0%, #e4e9f0 18%, #eff2f6 36%,
-    #d9e0e9 54%, #eaeff4 72%, #f7f8fb 100%);
+    #f5f7fa 0%,
+    #e4e9f0 18%,
+    #eff2f6 36%,
+    #d9e0e9 54%,
+    #eaeff4 72%,
+    #f7f8fb 100%
+  );
   border: 1px solid rgba(155, 172, 195, .38);
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,.94),
@@ -948,7 +840,8 @@ html.ime-open .bottom-sentinel {
     0 1px 3px rgba(45, 60, 82, .06);
 }
 
-.role-row.role-card-default::before {
+/* Silver gloss overlay */
+.role-row.role-card-default::before{
   content: "";
   position: absolute;
   inset: 0;
@@ -956,32 +849,45 @@ html.ime-open .bottom-sentinel {
   pointer-events: none;
   z-index: 0;
   background: linear-gradient(168deg,
-    rgba(255,255,255,.62) 0%, rgba(255,255,255,.08) 38%,
-    rgba(195,208,225,.06) 58%, rgba(255,255,255,.22) 100%);
+    rgba(255,255,255,.62) 0%,
+    rgba(255,255,255,.08) 38%,
+    rgba(195,208,225,.06) 58%,
+    rgba(255,255,255,.22) 100%
+  );
 }
 
-.role-row.role-card-default::after {
+/* Silver shimmer sweep */
+.role-row.role-card-default::after{
   content: "";
   position: absolute;
   top: 0;
   left: -100%;
   width: 55%;
   height: 100%;
-  background: linear-gradient(108deg,
-    transparent 0%, rgba(255,255,255,0) 36%,
-    rgba(255,255,255,.14) 50%, rgba(255,255,255,0) 64%,
-    transparent 100%);
+  background: linear-gradient(
+    108deg,
+    transparent 0%,
+    rgba(255,255,255,0) 36%,
+    rgba(255,255,255,.14) 50%,
+    rgba(255,255,255,0) 64%,
+    transparent 100%
+  );
   pointer-events: none;
   z-index: 0;
   animation: sheenSweep 8s ease-in-out 2s infinite;
 }
 
-/* ROLE CARDS — Gold */
-.role-chip {
+/* ═══════ ROLE CARDS — Premium Gold / Rose-Gold ═══════ */
+.role-chip{
   min-height: 68px;
   background: linear-gradient(148deg,
-    #fcf0da 0%, #f0d8b4 18%, #f7e4c4 36%,
-    #e6c89e 54%, #f3ddb8 72%, #faf0de 100%);
+    #fcf0da 0%,
+    #f0d8b4 18%,
+    #f7e4c4 36%,
+    #e6c89e 54%,
+    #f3ddb8 72%,
+    #faf0de 100%
+  );
   border: 1px solid rgba(195, 158, 95, .34);
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,.86),
@@ -990,11 +896,12 @@ html.ime-open .bottom-sentinel {
     0 1px 3px rgba(115, 78, 30, .06);
 }
 
-.role-chip.role-card-role {
+.role-chip.role-card-role{
   min-height: 68px;
 }
 
-.role-chip.role-card-role::before {
+/* Gold gloss overlay */
+.role-chip.role-card-role::before{
   content: "";
   position: absolute;
   inset: 0;
@@ -1002,26 +909,35 @@ html.ime-open .bottom-sentinel {
   pointer-events: none;
   z-index: 0;
   background: linear-gradient(168deg,
-    rgba(255,255,255,.50) 0%, rgba(255,255,255,.06) 38%,
-    rgba(210,178,128,.05) 58%, rgba(255,255,255,.18) 100%);
+    rgba(255,255,255,.50) 0%,
+    rgba(255,255,255,.06) 38%,
+    rgba(210,178,128,.05) 58%,
+    rgba(255,255,255,.18) 100%
+  );
 }
 
-.role-chip.role-card-role::after {
+/* Gold shimmer sweep */
+.role-chip.role-card-role::after{
   content: "";
   position: absolute;
   top: 0;
   left: -100%;
   width: 55%;
   height: 100%;
-  background: linear-gradient(108deg,
-    transparent 0%, rgba(255,248,225,0) 36%,
-    rgba(255,248,225,.16) 50%, rgba(255,248,225,0) 64%,
-    transparent 100%);
+  background: linear-gradient(
+    108deg,
+    transparent 0%,
+    rgba(255,248,225,0) 36%,
+    rgba(255,248,225,.16) 50%,
+    rgba(255,248,225,0) 64%,
+    transparent 100%
+  );
   pointer-events: none;
   z-index: 0;
   animation: sheenSweep 8s ease-in-out 3.5s infinite;
 }
 
+/* Shimmer keyframes — shared by silver + gold */
 @keyframes sheenSweep {
   0%, 28% { left: -100%; opacity: 0; }
   33%     { opacity: 1; }
@@ -1030,7 +946,8 @@ html.ime-open .bottom-sentinel {
   100%    { left: 200%;  opacity: 0; }
 }
 
-.role-card-avatar {
+/* ── Avatar ── */
+.role-card-avatar{
   width: 34px;
   height: 34px;
   flex: 0 0 34px;
@@ -1043,14 +960,15 @@ html.ime-open .bottom-sentinel {
   position: relative;
   z-index: 1;
 }
-.role-card-avatar img {
+.role-card-avatar img{
   width: 100%;
   height: 100%;
   object-fit: cover;
   display: block;
 }
 
-.role-card-copy {
+/* ── Card copy ── */
+.role-card-copy{
   min-width: 0;
   flex: 1;
   display: flex;
@@ -1059,30 +977,33 @@ html.ime-open .bottom-sentinel {
   position: relative;
   z-index: 1;
 }
-.role-card-name {
+.role-card-name{
   font-size: 14px;
   line-height: 1.2;
   font-weight: 800;
   letter-spacing: .15px;
 }
-.role-card-subtitle {
+.role-card-subtitle{
   font-size: 10.5px;
   line-height: 1.4;
   font-weight: 500;
   color: #6f637f;
+  /* fully visible — no truncation */
   white-space: normal;
   overflow: visible;
   text-overflow: unset;
 }
 
-.role-row.role-card-default .role-card-subtitle {
+/* subtitle tint per card type */
+.role-row.role-card-default .role-card-subtitle{
   color: #68788c;
 }
-.role-chip.role-card-role .role-card-subtitle {
+.role-chip.role-card-role .role-card-subtitle{
   color: #8a7252;
 }
 
-.role-card-active {
+/* ── Selection indicator ── */
+.role-card-active{
   width: 18px;
   height: 18px;
   flex: 0 0 18px;
@@ -1096,7 +1017,7 @@ html.ime-open .bottom-sentinel {
   position: relative;
   z-index: 1;
 }
-.role-card-active::after {
+.role-card-active::after{
   content: "";
   display: block;
   width: 6px;
@@ -1106,8 +1027,9 @@ html.ime-open .bottom-sentinel {
   background: rgba(255,255,255,.97);
 }
 
+/* ═══════ Selected state — Elegant glow ═══════ */
 .role-row.is-active,
-.role-chip.is-active {
+.role-chip.is-active{
   border-color: rgba(185, 48, 115, .50);
   box-shadow:
     0 0 0 1px rgba(185, 48, 115, .10),
@@ -1115,7 +1037,7 @@ html.ime-open .bottom-sentinel {
     inset 0 0 0 1px rgba(255,255,255,.25);
 }
 .role-row.is-active .role-card-active,
-.role-chip.is-active .role-card-active {
+.role-chip.is-active .role-card-active{
   opacity: 1;
   transform: scale(1);
   border-color: transparent;
@@ -1124,10 +1046,10 @@ html.ime-open .bottom-sentinel {
 }
 
 .role-row:active,
-.role-chip:active { transform: translateY(1px) scale(.99); }
-@media (hover:hover) {
+.role-chip:active{ transform: translateY(1px) scale(.99); }
+@media (hover:hover){
   .role-row:hover,
-  .role-chip:hover {
+  .role-chip:hover{
     border-color: rgba(185, 48, 115, .30);
     box-shadow:
       0 8px 20px rgba(85,42,72,.10),
@@ -1136,12 +1058,13 @@ html.ime-open .bottom-sentinel {
   }
 }
 
-.role-actions {
+/* ═══════ Quick Actions — belongs to premium surface ═══════ */
+.role-actions{
   margin-top: 14px;
   padding-top: 12px;
   border-top: 1px solid rgba(175, 155, 165, .14);
 }
-.role-action-row {
+.role-action-row{
   min-height: 44px;
   margin-top: 8px;
   border-radius: 14px;
@@ -1156,18 +1079,18 @@ html.ime-open .bottom-sentinel {
   letter-spacing: .1px;
   transition: background .14s ease, border-color .14s ease;
 }
-@media (hover:hover) {
-  .role-action-row:hover {
+@media (hover:hover){
+  .role-action-row:hover{
     background: linear-gradient(180deg, rgba(255,255,255,.95) 0%, rgba(252,250,255,.95) 100%);
     border-color: rgba(175, 168, 188, .32);
   }
 }
-.role-action-danger {
+.role-action-danger{
   color: #b42d48;
   font-weight: 800;
 }
 
-.role-upsell {
+.role-upsell{
   margin-top: 12px;
   font-size: 11.5px;
   color: #8a7a90;
@@ -1176,85 +1099,67 @@ html.ime-open .bottom-sentinel {
   letter-spacing: .2px;
 }
 
-@media (max-width: 360px) {
-  .role-card { padding: 14px 12px 12px; border-radius: 22px; }
-  .role-grid { gap: 8px; }
-  .role-chip, .role-row { padding: 10px 9px; }
-  .role-card-avatar { width: 30px; height: 30px; flex-basis: 30px; }
-  .role-card-name { font-size: 13px; }
-  .role-card-subtitle { font-size: 10px; }
+/* tiny screens */
+@media (max-width: 360px){
+  .role-card{ padding: 14px 12px 12px; border-radius: 22px; }
+  .role-grid{ gap: 8px; }
+  .role-chip, .role-row{ padding: 10px 9px; }
+  .role-card-avatar{ width: 30px; height: 30px; flex-basis: 30px; }
+  .role-card-name{ font-size: 13px; }
+  .role-card-subtitle{ font-size: 10px; }
 }
-@media (max-width: 340px) {
-  .role-grid { grid-template-columns: 1fr; }
+@media (max-width: 340px){
+  .role-grid{ grid-template-columns: 1fr; }
 }
 
-.btn-secondary {
+.btn-secondary{
   padding:10px 14px; border:none; border-radius:10px; cursor:pointer;
   background:#f1f1f4; color:#333; font-weight:600;
 }
-@keyframes pop { from { transform:scale(.97); opacity:.6 } to { transform:scale(1); opacity:1 } }
-
-/* ★ PREMIUM POLISH — Coin pill: refined glass + inner highlight */
-.coin-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.14);
-  color: #fff;
-  font-weight: 800;
-  font-size: 12px;
-  line-height: 1;
-  box-shadow:
-    0 4px 12px rgba(0, 0, 0, 0.15),
-    inset 0 1px 0 rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  cursor: pointer;
-  margin-left: auto;
-  margin-right: 8px;
-  transition: background 0.15s ease, transform 0.12s ease;
+@keyframes pop{ from{ transform:scale(.97); opacity:.6 } to{ transform:scale(1); opacity:1 } }
+/* ——— header “Coins” pill ——— */
+.coin-pill{
+  display:inline-flex; align-items:center; gap:6px;
+  padding:6px 12px; border:1px solid rgba(255,255,255,.35);
+  border-radius:999px; background:rgba(255,255,255,.22); color:#fff;
+  font-weight:800; font-size:12px; line-height:1;
+  box-shadow:0 6px 16px rgba(0,0,0,.25); backdrop-filter: blur(6px);
+  cursor:pointer; margin-left:auto; margin-right:8px;
 }
-.coin-pill:active { transform: translateY(1px); }
-
+.coin-pill:active{ transform: translateY(1px); }
+/* NEW — prevent header badges from shrinking on tiny/older WebViews */
 .username-container > .coin-pill,
 .username-container > .role-btn {
   flex-shrink: 0;
 }
-@media (hover:hover) { .coin-pill:hover { background: rgba(255,255,255,.32); } }
-
-/* ★ PREMIUM POLISH — Mode pill: refined glass + inner highlight */
-.role-btn {
+@media (hover:hover){ .coin-pill:hover{ background: rgba(255,255,255,.32); } }
+/* ——— header “Modes” pill ——— */
+.role-btn{
   position: relative;
   display: inline-flex;
   align-items: center;
   gap: 6px;
   padding: 6px 10px;
-  border: 1px solid rgba(255, 255, 255, 0.22);
+  border: 1px solid rgba(255,255,255,.35);
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.14);
+  background: rgba(255,255,255,.22);
   color: #fff;
   font-weight: 700;
   font-size: 12px;
   line-height: 1;
-  box-shadow:
-    0 4px 12px rgba(0, 0, 0, 0.15),
-    inset 0 1px 0 rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 0 6px 16px rgba(0,0,0,.25);
+  backdrop-filter: blur(6px);
   cursor: pointer;
-  margin-left: 8px;
-  transition: background 0.15s ease, transform 0.12s ease;
+  margin-left: 8px;            /* was auto */
 }
 .role-btn:active { transform: translateY(1px); }
-@media (hover:hover) { .role-btn:hover { background: rgba(255,255,255,.32); } }
+@media (hover:hover){ .role-btn:hover{ background: rgba(255,255,255,.32); } }
 
-.role-btn-icon { font-size: 14px; line-height: 1; }
-.role-btn-text { letter-spacing: .2px; }
+.role-btn-icon{ font-size: 14px; line-height: 1; }
+.role-btn-text{ letter-spacing: .2px; }
 
-.role-btn::after {
+/* subtle attention ping (runs twice) */
+.role-btn::after{
   content: "";
   position: absolute; inset: -4px;
   border-radius: 999px;
@@ -1262,99 +1167,97 @@ html.ime-open .bottom-sentinel {
   animation: rolepulse 2.1s ease-out 2;
   pointer-events: none;
 }
-@keyframes rolepulse {
+@keyframes rolepulse{
   0%   { box-shadow: 0 0 0 0 rgba(255,255,255,.55); }
   100% { box-shadow: 0 0 0 14px rgba(255,255,255,0); }
 }
-
-/* ★ PREMIUM POLISH — Stranger badge: rose gradient instead of harsh red */
 .role-badge-stranger {
-  background: linear-gradient(135deg, #f472b6, #e879a8);
-  box-shadow:
-    0 2px 8px rgba(244, 114, 182, 0.30),
-    inset 0 1px 0 rgba(255, 255, 255, 0.20);
-  font-weight: 700;
-  letter-spacing: 0.3px;
+  background: #f43f5e;          /* Rose-500: deeper than before, not too dark */
+  /* no border so it matches Wife/GF/Bhabhi/Cousin pills */
+  box-shadow: 0 2px 6px rgba(0,0,0,.18); /* same depth as the main .role-badge */
 }
-
-/* Auto-compact header */
+/* Auto-compact header when content would wrap */
 .header.narrow .username { font-size: 19px; max-width: 38.5vw; }
 .header.tiny   .username { font-size: 17.5px; max-width: 36vw; }
 
+/* pills stay small (same as before) */
 .header.narrow .coin-pill,
 .header.narrow .role-btn { padding: 4px 7px; font-size: 11px; }
 
 .header.tiny .coin-pill,
 .header.tiny .role-btn { padding: 4px 7px; font-size: 10px; }
 
+/* “Stranger” pill just a hair smaller */
 .header.narrow .role-badge { font-size: 11px; padding: 2px 6px; }
 .header.tiny   .role-badge { font-size: 10px; padding: 1px 6px; }
 
+/* NEW: reserve a slightly bigger gap before coins when tight */
 .header.narrow .name-wrap,
 .header.tiny  .name-wrap { margin-right: 20px; }
 
+/* NEW: micro-shrink DP only when tight (does not affect normal phones) */
 .header.narrow .profile-pic { width: 48px; height: 48px; margin-right: 10px; }
 .header.tiny   .profile-pic { width: 46px; height: 46px; margin-right: 9px; }
 
+/* keep multi-row alignment neat if a wrap ever happens */
 .header .username-container { align-content: center; }
-
-/* Coins popup */
-.coins-modal-title {
+/* —— Coins popup polishing —— */
+.coins-modal-title{
   margin: 0 0 4px;
   font-size: 22px;
   font-weight: 900;
   color: #ff0a85;
 }
-.coins-sub {
+.coins-sub{
   margin: 2px 0 10px;
   font-size: 13px;
   color: #666;
 }
-.rate-chips {
+.rate-chips{
   display:flex; gap:8px; justify-content:center; margin: 6px 0 12px;
 }
-.rate-chip {
+.rate-chip{
   font-size:12px; font-weight:700; color:#7c7c7c;
   padding:4px 8px; border-radius:999px; background:#f4f4f7;
   border:1px solid #eee;
 }
-.packs {
+.packs{
   display:flex; flex-direction:column; gap:12px; margin-top:8px;
 }
 .pack-btn,
-.pack-btn.secondary {
+.pack-btn.secondary{
   display:flex; align-items:center; justify-content:space-between;
   width:100%; padding:16px 16px; border:none; border-radius:16px;
-  background: linear-gradient(135deg,#ff6ec4,#7873f5);
+  background: linear-gradient(135deg,#ff6ec4,#7873f5); /* chat theme */
   color:#fff; cursor:pointer; box-shadow:0 14px 28px rgba(0,0,0,.20);
 }
-.pack-left { text-align:left; flex:1 1 auto; min-width:0; }
-.pack-title { font-size:16px; font-weight:900; letter-spacing:.2px; }
-.pack-sub { font-size:12px; opacity:.95; margin-top:2px; }
-.pack-right {
+.pack-left{ text-align:left; flex:1 1 auto; min-width:0; }
+.pack-title{ font-size:16px; font-weight:900; letter-spacing:.2px; }
+.pack-sub{ font-size:12px; opacity:.95; margin-top:2px; }
+.pack-right{
   display:flex; align-items:center; justify-content:flex-end; gap:10px;
-  flex:0 0 128px;
-  position: relative;
+  flex:0 0 128px;                 /* fixed right block = perfect alignment */
+  position: relative;             /* for the tiny “Best value” chip */
 }
-.pack-btn.secondary .pack-right::before {
+/* Tiny yellow Best value chip just above Weekly Buy */
+.pack-btn.secondary .pack-right::before{
   content:"Best value";
   position:absolute; right:0; bottom: calc(100% + 6px);
   padding:2px 8px; border-radius:999px;
   font-size:11px; font-weight:800; letter-spacing:.1px;
   background:#ffd166; color:#2b2b2b; box-shadow:0 3px 10px rgba(0,0,0,.18);
 }
-.pack-price { font-size:18px; font-weight:900; color:#fff; }
-.pack-cta {
+.pack-price{ font-size:18px; font-weight:900; color:#fff; }
+.pack-cta{
   padding:6px 12px; min-width:64px; text-align:center;
   border-radius:999px; background:#fff; color:#111; font-weight:800;
   box-shadow:0 8px 18px rgba(0,0,0,.20);
 }
-.renew-note {
+.renew-note{
   font-size:11px; color:#777; margin-top:10px;
 }
-
-/* Auth gate */
-.auth-backdrop {
+/* --- Auth gate (premium landing continuation) --- */
+.auth-backdrop{
   position: fixed;
   inset: 0;
   overflow: hidden;
@@ -1373,11 +1276,11 @@ html.ime-open .bottom-sentinel {
 }
 
 .auth-backdrop::before,
-.auth-backdrop::after {
+.auth-backdrop::after{
   content: none;
 }
 
-.auth-card {
+.auth-card{
   position: relative;
   --auth-row-w: min(320px, 100%);
   width: min(92vw, 420px);
@@ -1414,7 +1317,7 @@ html.ime-open .bottom-sentinel {
   to   { opacity: 1; transform: translateY(0); }
 }
 
-.auth-card::before {
+.auth-card::before{
   content: "";
   position: absolute;
   top: 0;
@@ -1430,7 +1333,7 @@ html.ime-open .bottom-sentinel {
   z-index: 0;
 }
 
-.auth-logo {
+.auth-logo{
   position: relative;
   width: 172px;
   height: 172px;
@@ -1444,7 +1347,7 @@ html.ime-open .bottom-sentinel {
     drop-shadow(0 0 120px rgba(180, 120, 160, .16))
     drop-shadow(0 22px 24px rgba(0, 0, 0, .48));
 }
-.auth-sub {
+.auth-sub{
   font-size: 14px;
   font-weight: 500;
   line-height: 1.5;
@@ -1453,38 +1356,42 @@ html.ime-open .bottom-sentinel {
   max-width: 300px;
 }
 
-.auth-title {
+.auth-title{
   font-size: 20px;
   font-weight: 800;
   letter-spacing: 0.3px;
   line-height: 1.4;
   margin-bottom: 6px;
-  background: linear-gradient(135deg, #ffffff, #f2c4d6, #ffffff);
+  background: linear-gradient(
+    135deg,
+    #ffffff,
+    #f2c4d6,
+    #ffffff
+  );
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
-.auth-input {
+.auth-input{
   width:100%; padding:12px 14px; border-radius:12px; border:1px solid #eee; outline:none;
   margin:6px 0; font-size:14px; background:#fafafa;
 }
-.auth-btn {
+.auth-btn{
   width:100%; padding:12px 14px; border:none; border-radius:12px; cursor:pointer;
   background: linear-gradient(135deg,#c98c84,#a77e91); color:#fff; font-weight:900;
   margin-top:8px; box-shadow:0 12px 28px rgba(137,101,112,.24);
 }
-.auth-btn:disabled { opacity:.6; cursor:not-allowed; }
-.auth-foot { margin-top:10px; font-size:12px; color:#777; }
-
-/* Sign-in prompt */
-.signin-overlay {
+.auth-btn:disabled{ opacity:.6; cursor:not-allowed; }
+.auth-foot{ margin-top:10px; font-size:12px; color:#777; }
+/* --- Centered sign-in prompt (presentation only) --- */
+.signin-overlay{
   position: fixed; inset: 0;
   display: flex; align-items: center; justify-content: center;
   background: rgba(135, 105, 101, .2);
-  z-index: 1400;
+  z-index: 1400;               /* above header/role/charpop; below Coins & Welcome */
   padding: 16px;
 }
-.signin-card {
+.signin-card{
   width: min(92vw, 420px);
   background: linear-gradient(158deg, rgba(255, 255, 255, .92), rgba(252, 245, 239, .94));
   color: #2d2326;
@@ -1494,15 +1401,14 @@ html.ime-open .bottom-sentinel {
   padding: 14px;
   display: flex; gap: 10px; align-items: center;
 }
-.signin-text { flex: 1; font-size: 14px; }
-.signin-actions { display: flex; gap: 8px; align-items: center; }
-.signin-close {
+.signin-text{ flex: 1; font-size: 14px; }
+.signin-actions{ display: flex; gap: 8px; align-items: center; }
+.signin-close{
   background: transparent; border: none; font-size: 18px; line-height: 1;
   color: rgba(97, 72, 79, .9);
   padding: 6px; cursor: pointer;
 }
-
-/* Google Sign-In button */
+/* Center the Google Sign-In button */
 .google-row {
   width: 100%;
   display: flex;
@@ -1511,6 +1417,7 @@ html.ime-open .bottom-sentinel {
   min-height: 44px;
 }
 
+/* Reserve space so GIS can mount without layout jump */
 .gbtn-wrap {
   width: var(--auth-row-w);
   max-width: 320px;
@@ -1549,6 +1456,7 @@ html.ime-open .bottom-sentinel {
 }
 
 .App.stable {
+  /* JS writes --app-h to smooth Chromium first-open toolbar jitter */
   height: var(--app-h, 100vh);
   min-height: var(--app-h, 100vh);
   display: flex;
@@ -1556,6 +1464,7 @@ html.ime-open .bottom-sentinel {
   overflow: visible;
 }
 
+/* First paint settle: make footer/chat glass less "under-settled" on Chromium */
 html.first-open-settling .footer {
   background: transparent !important;
   -webkit-backdrop-filter: none !important;
@@ -1566,17 +1475,17 @@ html.first-open-settling .chat-container::before {
   backdrop-filter: none;
 }
 
-/* ★ PREMIUM POLISH — Stable header: border-bottom added */
+/* Header fixed on top (Android stable) */
 .App.stable .header {
   position: fixed;
   top: 0; left: 0; right: 0;
   z-index: 100;
   padding: 12px 20px;
   padding-top: calc(12px + env(safe-area-inset-top));
-  background: rgba(255, 105, 180, 0.12);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.10);
+  background: rgba(255, 105, 180, 0.15);
 }
 
+/* Footer fixed at bottom (Android stable) */
 .App.stable .footer {
   position: fixed;
   bottom: 0; left: 0; right: 0;
@@ -1586,101 +1495,129 @@ html.first-open-settling .chat-container::before {
   background: transparent;
 }
 
+/* NEW — Android stable: scroller fixed between header and footer */
 .App.stable .chat-container {
-  position: fixed;
+  position: fixed;                 /* was absolute via the generic rule */
   top: var(--hdr-h, 80px);
   bottom: var(--ftr-h, 90px);
   left: 0; right: 0;
 }
 
+/* Reserve both the lifted footer and keyboard height when IME is open. */
 html.ime-open .App.stable .chat-container {
   bottom: calc(var(--ftr-h, 90px) + var(--kb-h, 0px));
 }
 
+/* Tiny cushion so the last item never kisses the bar */
 .App.stable .message,
 .App.stable .typing-bounce,
 .App.stable .bottom-sentinel {
   scroll-margin-block-end: 12px;
 }
 
+/* Smaller, non-shifting controls on Android pinned layout */
 .App.stable .footer .send-btn,
 .App.stable .footer .mic-btn { width: 52px; height: 52px; transform: none; }
 .App.stable .footer .chat-composer { min-height: 42px; }
 
+/* keep last items comfortably above the footer */
 .message,
 .typing-bounce,
 .App.stable .chat-container > div:last-child { scroll-margin-block-end: 16px; }
 
+/* Tiny/short screens */
 @media (max-width: 360px) {
   .App.stable .footer { padding: 10px 12px; }
   .App.stable .footer .send-btn,
   .App.stable .footer .mic-btn { width: 46px; height: 46px; }
   .App.stable .footer .chat-composer { min-height: 38px; font-size: 15px; }
 }
-
+/* Closed-keyboard sizing so the circles don't look stretched */
 html:not(.ime-open) .App.stable .footer .send-btn,
 html:not(.ime-open) .App.stable .footer .mic-btn {
   width: 48px;
   height: 48px;
 }
 
+/* Legacy/very small screens */
 @media (max-width: 380px) {
   .App.stable .footer { padding: 8px 10px; gap: 8px; }
   .App.stable .footer .chat-composer { min-height: 34px; font-size: 16px; min-width: 0; }
   .App.stable .footer .send-btn,
   .App.stable .footer .mic-btn { width: 50px; height: 50px; transform: none; }
 }
-
+/* Tiny devices – keep everything on ONE line, just shrink */
 @media (max-width: 360px) {
   .App.stable .username-container { flex-wrap: nowrap; }
-  .App.stable .name-wrap { flex: 1 1 100%; max-width: 100%; }
-  .username { max-width: 100%; font-size: clamp(17px, 5.2vw, 19px); }
-  .coin-pill, .role-btn, .validity-ttl { margin-top: 6px; }
-  .coin-pill, .role-btn { padding: 4px 7px; font-size: 10px; }
+.App.stable .name-wrap { flex: 1 1 100%; max-width: 100%; }
+.username { max-width: 100%; font-size: clamp(17px, 5.2vw, 19px); }
+.coin-pill, .role-btn, .validity-ttl { margin-top: 6px; }
+.coin-pill, .role-btn { padding: 4px 7px; font-size: 10px; }
 
+  /* Footer tightening (this is the bit you asked about) */
   .App.stable .footer { padding: 10px 12px; }
   .App.stable .footer .send-btn,
   .App.stable .footer .mic-btn { width: 46px; height: 46px; }
   .App.stable .footer .chat-composer { min-height: 38px; font-size: 16px; }
 }
-
+/* ==== ANDROID SMALL SCREENS — FORCE COMPACT HEADER (SAFE) ==== */
 @media (max-width: 380px) {
+  /* Header shell a bit tighter */
   .App.stable .header { padding: 9px 10px; }
+
+  /* DP smaller */
   .App.stable .profile-pic { width: 40px; height: 40px; margin-right: 8px; }
+
+  /* Name smaller + shorter max width */
   .App.stable .username { font-size: 18px; max-width: 36vw; }
+
+  /* “Stranger” pill smaller */
   .App.stable .role-badge { font-size: 10px; line-height: 16px; padding: 1px 6px; }
+
+  /* Coins + Modes smaller */
   .App.stable .coin-pill,
   .App.stable .role-btn { font-size: 10px; padding: 4px 7px; }
+
+  /* Add space between Stranger pill (in name-wrap) and Coins */
   .App.stable .name-wrap { margin-right: 12px; }
 }
 
+/* ==== Realme 1 / legacy-Android sizing — header stays on one line ==== */
 @media (max-width: 380px) {
   .header { padding: 8px 10px; }
   .profile-pic { width: 42px; height: 42px; margin-right: 8px; }
+
+  /* let name give up space first so Stranger/Coins/Mode never wrap */
   .name-wrap { flex: 0 1 auto; min-width: 0; }
-  .username { font-size: 18px; max-width: 32vw; }
+  .username   { font-size: 18px; max-width: 32vw; }
+
   .coin-pill, .role-btn { padding: 3px 7px; font-size: 10px; }
   .role-btn { padding: 3px 7px; font-size: 10px; }
 }
 
+/* ==== Realme 1 / legacy-Android sizing — footer compact & safe ==== */
 @media (max-width: 380px) {
   .App.stable .footer { padding: 8px 10px; gap: 8px; }
   .App.stable .footer .chat-composer { min-height: 34px; font-size: 16px; min-width: 0; }
+
+  /* shrink mic/send just for tiny/short screens */
   .App.stable .footer .send-btn,
   .App.stable .footer .mic-btn {
     width: 50px;
     height: 50px;
-    transform: none;
-  }
+    transform: none; /* prevents any visual crop on old webviews */
+  } 
+
+  /* micro-align header pills on legacy Android WebViews */
   .username-container > .coin-pill,
   .username-container > .role-btn {
     position: relative;
-    top: -1.5px;
+    top: -1.5px;   /* try -2px if Realme still shows a tiny drop */
   }
 }
 
-/* Instructions content */
-.instr-title {
+/* --- Instructions content inside the welcome card --- */
+.instr-title{
   font-size: clamp(20px, 5vw, 22px);
   font-weight: 800;
   line-height: 1.2;
@@ -1688,7 +1625,7 @@ html:not(.ime-open) .App.stable .footer .mic-btn {
   margin: 2px 0 8px;
   color: #191824;
 }
-.instr-sub {
+.instr-sub{
   font-size: 13.5px;
   line-height: 1.45;
   color: rgba(33, 33, 43, .74);
@@ -1696,40 +1633,40 @@ html:not(.ime-open) .App.stable .footer .mic-btn {
   max-width: 36ch;
 }
 
-.instr-list, .tips-list {
+.instr-list, .tips-list{
   text-align: left;
   margin: 10px 2px 0;
   padding-left: 18px;
 }
-.instr-list {
+.instr-list{
   margin-top: 8px;
   margin-bottom: 0;
 }
-.tips-list {
+.tips-list{
   margin-top: 8px;
   margin-bottom: 2px;
 }
-.instr-list li {
+.instr-list li{
   margin: 10px 0;
   line-height: 1.5;
   color: #2a2b35;
 }
-.tips-list li {
+.tips-list li{
   margin: 8px 0;
   line-height: 1.45;
   color: #2f313d;
 }
 .instr-list li b,
-.tips-list li b {
+.tips-list li b{
   font-weight: 700;
   color: #1f1f2b;
 }
 .instr-list li::marker,
-.tips-list li::marker {
+.tips-list li::marker{
   color: rgba(56,58,74,.7);
 }
 
-.instr-quick {
+.instr-quick{
   margin-top: 14px;
   padding-top: 12px;
   border-top: 1px solid rgba(17,24,39,.10);
@@ -1739,11 +1676,11 @@ html:not(.ime-open) .App.stable .footer .mic-btn {
   color: #343644;
 }
 
-.instr-quick + .tips-list + .welcome-btn {
+.instr-quick + .tips-list + .welcome-btn{
   margin-top: 16px;
 }
 
-.welcome-backdrop {
+.welcome-backdrop{
   position: fixed; inset: 0;
   background: rgba(0,0,0,.55);
   display: flex; align-items: center; justify-content: center;
@@ -1753,62 +1690,73 @@ html:not(.ime-open) .App.stable .footer .mic-btn {
   z-index: 20000;
   pointer-events: auto;
 }
-.welcome-card {
+.welcome-card{
   width: min(92vw, 520px);
   max-height: 86vh; overflow: auto;
   background: #fff; color: #222;
   border-radius: 18px;
   box-shadow: 0 18px 60px rgba(0,0,0,.28);
   padding: 20px 18px; text-align: center;
-  display: flex;
-  flex-direction: column;
 }
-.welcome-burst { font-size: 44px; line-height: 1; }
-.welcome-amount { font-size: 28px; font-weight: 800; margin: 10px 0 6px; color: #ff2e93; }
-.welcome-btn {
+.welcome-burst{ font-size: 44px; line-height: 1; }
+.welcome-amount{ font-size: 28px; font-weight: 800; margin: 10px 0 6px; color: #ff2e93; }
+.welcome-btn{
   margin-top: 12px; width: 100%;
   border: 0; border-radius: 12px; padding: 12px 14px;
   font-weight: 700; color: #fff;
   background: linear-gradient(135deg, #ff6ec4, #7873f5);
   box-shadow: 0 10px 22px rgba(0,0,0,.18);
+}
+.welcome-note{ margin-top: 8px; font-size: 12px; opacity: .75; }
+/* Keep the CTA visible while the instructions scroll */
+.welcome-card {
+  /* already has max-height + overflow; this just ensures nice layout */
+  display: flex;
+  flex-direction: column;
+}
+
+.welcome-btn {
   position: sticky;
   bottom: 0;
   z-index: 1;
+  /* small buffer so the sticky button doesn't cover last lines */
+  margin-top: 12px;
 }
-.welcome-note { margin-top: 8px; font-size: 12px; opacity: .75; }
-
+/* subtle fade behind the sticky button for readability */
 .welcome-card::after {
   content: "";
   position: sticky;
-  bottom: 48px;
+  bottom: 48px;           /* roughly the button’s height */
   display: block;
-  height: 0;
+  height: 0;              /* only draws the shadow */
   box-shadow: 0 -12px 20px rgba(255,255,255,0.9);
 }
-
+/* Short/tiny screens: make the instructions a touch denser */
 @media (max-height: 700px), (max-width: 360px) {
   .welcome-card { padding: 16px 16px; }
   .welcome-burst { font-size: 36px; }
   .welcome-amount { font-size: 24px; }
+
   .instr-title { font-size: 18px; margin: 0 0 6px; }
   .instr-sub   { font-size: 12px; line-height: 1.4; margin-bottom: 10px; max-width: 34ch; }
   .instr-list li,
   .tips-list  li { font-size: 13px; line-height: 1.38; margin: 7px 0; }
   .instr-quick { margin-top: 12px; padding-top: 10px; font-size: 12px; }
   .instr-quick + .tips-list + .welcome-btn { margin-top: 14px; }
-  .welcome-btn { padding: 10px 12px; }
+
+  .welcome-btn { padding: 10px 12px; } /* slightly shorter button */
 }
 
-/* Character Insight popup */
-.charpop-overlay {
-  position: fixed; inset: 0; z-index: 1202;
-  background: transparent;
+/* === Character Insight popup === */
+.charpop-overlay{
+  position: fixed; inset: 0; z-index: 1202;      /* above header/footer, below coins modal */
+  background: transparent;                        /* invisible click-catcher */
 }
 
-.character-popup {
+.character-popup{
   position: fixed;
   left: 10px; right: 10px;
-  top: calc(var(--hdr-h, 80px) + 8px);
+  top: calc(var(--hdr-h, 80px) + 8px);            /* sits just under the header */
   padding: 10px 12px;
   border-radius: 14px;
   background: rgba(255,255,255,0.55);
@@ -1819,7 +1767,7 @@ html:not(.ime-open) .App.stable .footer .mic-btn {
   box-shadow: 0 12px 32px rgba(0,0,0,.22);
 }
 
-.charpop-title {
+.charpop-title{
   font-weight: 900;
   font-size: 13px;
   color: #5b45ff;
@@ -1827,26 +1775,26 @@ html:not(.ime-open) .App.stable .footer .mic-btn {
   margin-bottom: 2px;
 }
 
-.charpop-body {
+.charpop-body{
   font-size: 13px;
   line-height: 1.25;
   color: #222;
 }
 
-/* DP lightbox */
-.dp-lightbox {
+/* === DP full-image lightbox === */
+.dp-lightbox{
   position: fixed;
   inset: 0;
-  z-index: 1300;
+  z-index: 1300;                 /* above header/footer & role modal; below coins modal (9999) */
   background: rgba(0,0,0,.80);
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 16px;
-  touch-action: none;
+  touch-action: none;            /* prevents pinch-zoom inside overlay */
   cursor: zoom-out;
 }
-.dp-lightbox img {
+.dp-lightbox img{
   max-width: min(75vw, 720px);
   max-height: 75vh;
   width: auto;
@@ -1857,20 +1805,22 @@ html:not(.ime-open) .App.stable .footer .mic-btn {
   cursor: default;
   transform: translateY(-4vh);
 }
-.rzp-foot {
+.rzp-foot{
   margin-top: 8px;
   font-size: 12px;
-  color: #6b7280;
+  color: #6b7280;                  /* calm grey */
   text-align: right;
 }
 
-/* Legacy Android */
+/* ==== Legacy Android (Realme/MIUI) compact header — gated by <html>.legacy-zoom ==== */
 html.legacy-zoom .header {
+  /* neutralize aggressive text autosizing just for the header row */
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
-  padding: 10px 12px;
+  padding: 10px 12px; /* a touch tighter only when gated */
 }
 
+/* keep proportions but slightly smaller bits */
 html.legacy-zoom .header .profile-pic { width: 44px; height: 44px; margin-right: 10px; }
 html.legacy-zoom .username           { font-size: 19px; max-width: 40vw; }
 html.legacy-zoom .role-badge         { font-size: 11px; padding: 2px 7px; }
@@ -1878,29 +1828,30 @@ html.legacy-zoom .coin-pill,
 html.legacy-zoom .role-btn           { padding: 4px 8px; font-size: 11px; }
 html.legacy-zoom .username-container { gap: 6px; }
 
+/* last resort: uniform scale for the WHOLE header row if still tight */
 html.legacy-zoom .username-container {
   transform: scale(var(--hz-scale, 1));
   transform-origin: 0 50%;
 }
 
-/* Toast */
-.bb-toast-wrap {
+/* === BuddyBy Toast === */
+.bb-toast-wrap{
   position: fixed; left: 50%; bottom: calc(var(--ftr-h,90px) + 16px);
   transform: translateX(-50%);
   z-index: 2200; pointer-events: none;
 }
-.bb-toast {
+.bb-toast{
   display: inline-flex; align-items: center; gap: 10px;
   padding: 12px 16px; border-radius: 999px;
   background: linear-gradient(135deg, #ff6ec4, #7873f5);
   color: #fff; font-weight: 800; box-shadow: 0 16px 40px rgba(0,0,0,.25);
   animation: bb-toast-in .18s ease-out;
 }
-.bb-toast small { font-weight: 600; opacity: .95; }
-@keyframes bb-toast-in { from { transform: translate(-50%,8px); opacity:.2 } to { transform: translate(-50%,0); opacity:1 } }
+.bb-toast small{ font-weight: 600; opacity: .95; }
+@keyframes bb-toast-in{ from{ transform: translate(-50%,8px); opacity:.2 } to{ transform: translate(-50%,0); opacity:1 } }
 
-/* Auth actions */
-.auth-actions {
+/* --- Auth actions row + disabled buttons (Apple / Email) --- */
+.auth-actions{
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -1908,34 +1859,38 @@ html.legacy-zoom .username-container {
   margin-top: 4px;
 }
 
-@media (max-width: 360px) {
-  .auth-actions { gap: 8px; }
-  .auth-card .btn { height: 46px; font-size: 13px; }
+/* keep layout tidy on tiny screens */
+@media (max-width: 360px){
+  .auth-actions{ gap: 8px; }
+  .auth-card .btn{ height: 46px; font-size: 13px; }
 }
 
-.auth-card .btn:focus-visible {
+/* nicer keyboard focus for accessibility */
+.auth-card .btn:focus-visible{
   outline: 2px solid rgba(232, 196, 184, .9);
   outline-offset: 2px;
 }
-.auth-card .btn--disabled[disabled]:focus-visible {
+.auth-card .btn--disabled[disabled]:focus-visible{
   outline: none;
 }
 
-.auth-card .google-row { order: 30; }
-.auth-card .auth-actions { order: 40; }
+/* Keep Google row before actions */
+.auth-card .google-row{ order: 30; }
+.auth-card .auth-actions{ order: 40; }
 
-.auth-card .google-row {
+.auth-card .google-row{
   width: 100%;
   display: flex;
   justify-content: center;
 }
-.auth-card .google-row .gbtn-wrap {
+.auth-card .google-row .gbtn-wrap{
   width: var(--auth-row-w);
   max-width: none;
   height: 44px;
 }
 
-.auth-card .btn {
+/* Guest/Preview + Apple button shell */
+.auth-card .btn{
   all: unset;
   position: relative;
   display: flex;
@@ -1953,14 +1908,14 @@ html.legacy-zoom .username-container {
   transition: none;
 }
 
-.auth-card .auth-actions .btn:not(.btn--disabled) {
+.auth-card .auth-actions .btn:not(.btn--disabled){
   border: 1px solid rgba(232, 196, 184, .42);
   color: #fff;
   background: linear-gradient(135deg, rgba(232, 196, 184, .34), rgba(212, 114, 142, .74), rgba(155, 125, 184, .76));
   box-shadow: 0 16px 34px rgba(9, 6, 16, .54);
 }
 
-.auth-card .btn--disabled[disabled] {
+.auth-card .btn--disabled[disabled]{
   opacity: 1;
   cursor: not-allowed;
   background: rgba(255, 255, 255, .06);
@@ -1968,11 +1923,11 @@ html.legacy-zoom .username-container {
   border: 1px solid rgba(255, 255, 255, .14);
   box-shadow: none;
 }
-.auth-card .btn--disabled[disabled] .btn-ico {
+.auth-card .btn--disabled[disabled] .btn-ico{
   color: rgba(238, 226, 244, .46);
 }
 
-.auth-card .btn-ico {
+.auth-card .btn-ico{
   position: absolute;
   left: 14px;
   display: inline-flex;
@@ -1986,18 +1941,18 @@ html.legacy-zoom .username-container {
   border: 0;
 }
 
-.auth-card .btn-ico.apple {
+.auth-card .btn-ico.apple{
   width: 20px;
   height: 20px;
 }
-.auth-card .btn--disabled[disabled]::after {
+.auth-card .btn--disabled[disabled]::after{
   content: "";
   position: absolute;
   right: 14px;
   width: 20px;
   height: 20px;
 }
-.auth-card .btn-ico.apple::before {
+.auth-card .btn-ico.apple::before{
   content:"";
   display:block;
   width:100%; height:100%;
@@ -2006,56 +1961,64 @@ html.legacy-zoom .username-container {
           mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 384 512'><path d='M318.7 268.7c-.6-62.5 50.9-92.5 53.2-93.9-29-42.3-74.2-48.1-90.2-48.7-38.4-3.9-74.9 22.6-94.3 22.6-19.1 0-49.6-22-81.6-21.4-41.9 .6-80.5 24.4-102.1 61.9-43.5 75.5-11.1 187.2 31.3 248.4 20.7 29.8 45.3 63.3 77.8 62 31.1-1.2 42.8-20.1 80.3-20.1s48.2 20.1 81.6 19.5c33.7-.6 55-30.4 75.9-60.3 23.9-35 33.7-68.9 34.3-70.6-.7-.3-66.1-25.4-67.1-99.4ZM259.1 83.4c17.2-20.8 28.8-49.8 25.6-78.4-24.7 1-54.9 16.5-72.9 37.3-16 18.5-29.9 48.2-26.2 76.4 27.8 2.1 56.3-14.1 73.5-35.3Z'/></svg>") center/contain no-repeat;
 }
 
-/* Intro images */
+/* === Intro images (public/intro/*) — subtle, non-odd entry effect === */
 img[src*="/intro/"],
-img[src*="intro/"] {
+img[src*="intro/"]{
   display: block;
   width: 100%;
   height: auto;
+
+  /* keeps it looking premium inside a phone frame */
   border-radius: 16px;
   box-shadow: 0 14px 34px rgba(0,0,0,.18);
+
+  /* performance / no layout shift */
   transform: translateZ(0);
   will-change: transform, opacity;
 }
 
-@media (prefers-reduced-motion: no-preference) {
+/* Respect reduced-motion users */
+@media (prefers-reduced-motion: no-preference){
   img[src*="/intro/"],
-  img[src*="intro/"] {
+  img[src*="intro/"]{
     animation: introSoftIn 520ms ease-out both,
                introSoftZoom 7.5s ease-out both;
   }
 }
 
-@keyframes introSoftIn {
+/* Smooth “intro card appears” */
+@keyframes introSoftIn{
   from { opacity: 0; transform: translateY(8px) scale(1.005); }
   to   { opacity: 1; transform: translateY(0)  scale(1.005); }
 }
 
-@keyframes introSoftZoom {
+/* Tiny zoom that feels natural (NOT noticeable / not odd) */
+@keyframes introSoftZoom{
   from { transform: scale(1.005); }
   to   { transform: scale(1.02); }
 }
 
-@media (hover: hover) {
+/* Optional: on desktop only, a tiny hover lift (doesn't affect mobile) */
+@media (hover: hover){
   img[src*="/intro/"]:hover,
-  img[src*="intro/"]:hover {
+  img[src*="intro/"]:hover{
     transform: scale(1.025);
     transition: transform 160ms ease;
   }
 }
-
 /* =========================================================
-   THEMES
+   THEMES (PAINT-ONLY) — safe for keyboard/stable/fixed layout
+   Requires: document.documentElement.setAttribute('data-theme', theme)
    ========================================================= */
 
-/* ---------- DEFAULT ---------- */
+/* ---------- DEFAULT (your current look, re-declared so it always wins) ---------- */
 html[data-theme="default"],
 html[data-theme="default"] body {
   background:
     linear-gradient(to bottom, #ff99cc, #cc66cc, #9966cc);
 }
 
-html[data-theme="default"] .App.signed-in {
+html[data-theme="default"] .App.signed-in{
   background:
     linear-gradient(to bottom, #ff99cc, #cc66cc, #9966cc),
     url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"><path fill="%23ff99cc" fill-opacity="0.3" d="M0,64L60,80C120,96,240,128,360,138.7C480,149,600,139,720,133.3C840,128,960,128,1080,117.3C1200,107,1320,85,1380,74.7L1440,64L1440,320L1380,320C1320,320,1200,320,1080,320C960,320,840,320,720,320C600,320,480,320,360,320C240,320,120,320,60,320L0,320Z"/></svg>');
@@ -2064,82 +2027,89 @@ html[data-theme="default"] .App.signed-in {
   background-position: center, center;
 }
 
-html[data-theme="default"] .header {
-  background: rgba(255, 105, 180, 0.12);
+html[data-theme="default"] .header{
+  background: rgba(255, 105, 180, 0.15);
 }
 
-html[data-theme="default"] .footer {
+html[data-theme="default"] .footer{
   background: transparent;
 }
 
-html[data-theme="default"] .allie-message .bubble-content {
+html[data-theme="default"] .allie-message .bubble-content{
   background: linear-gradient(135deg, #ffe3e3, #c2f0fc);
   color: #222;
 }
 
-html[data-theme="default"] .user-message .bubble-content {
+html[data-theme="default"] .user-message .bubble-content{
   background: linear-gradient(135deg, #ff99cc, #b388eb, #80d0f1);
   color: #fff;
 }
 
 
-/* ---------- DARK ---------- */
+/* ---------- DARK (WhatsApp-ish premium dark) ---------- */
 html[data-theme="dark"],
-html[data-theme="dark"] body {
+html[data-theme="dark"] body{
   background: #0b0b10;
 }
 
-html[data-theme="dark"] .App.signed-in {
+/* main chat canvas (Dark) — same base + Telegram doodle pattern (paint-only) */
+html[data-theme="dark"] .App.signed-in{
   background:
+    /* 1) doodle wallpaper (very low contrast) */
     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='260' viewBox='0 0 260 260'%3E%3Cg fill='none' stroke='%23ffffff' stroke-opacity='0.06' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M56 62c-6-10-22-7-22 6 0 14 22 24 22 24s22-10 22-24c0-13-16-16-22-6z'/%3E%3Cpath d='M178 58c-6-10-22-7-22 6 0 14 22 24 22 24s22-10 22-24c0-13-16-16-22-6z'/%3E%3Cpath d='M72 178c-6-10-22-7-22 6 0 14 22 24 22 24s22-10 22-24c0-13-16-16-22-6z'/%3E%3Cpath d='M186 170c-6-10-22-7-22 6 0 14 22 24 22 24s22-10 22-24c0-13-16-16-22-6z'/%3E%3Cpath d='M126 108c-7-12-26-8-26 7 0 17 26 29 26 29s26-12 26-29c0-15-19-19-26-7z'/%3E%3Cpath d='M34 132q14 10 28 0'/%3E%3Cpath d='M198 120q14 10 28 0'/%3E%3Cpath d='M120 32l6 10 10 6-10 6-6 10-6-10-10-6 10-6z'/%3E%3Cpath d='M214 214l5 8 8 5-8 5-5 8-5-8-8-5 8-5z'/%3E%3Cpath d='M46 216l4 7 7 4-7 4-4 7-4-7-7-4 7-4z'/%3E%3C/g%3E%3Cg fill='none' stroke='%23ffffff' stroke-opacity='0.035' stroke-width='2'%3E%3Cpath d='M92 116q10 6 20 0'/%3E%3Cpath d='M148 196q10 6 20 0'/%3E%3C/g%3E%3C/svg%3E"),
+    /* 2) your existing premium dark glow (UNCHANGED) */
     radial-gradient(900px 500px at 10% 0%, rgba(167,139,250,.18), rgba(0,0,0,0) 60%),
     radial-gradient(900px 500px at 90% 100%, rgba(34,211,238,.10), rgba(0,0,0,0) 55%),
     linear-gradient(180deg, #0b0b10 0%, #0a0a12 100%);
+
   background-size: 260px 260px, auto, auto, auto;
   background-position: 0 0, center, center, center;
   background-repeat: repeat, no-repeat, no-repeat, no-repeat;
 }
 
+/* glass bars */
 html[data-theme="dark"] .header,
-html[data-theme="dark"] .App.stable .header {
+html[data-theme="dark"] .App.stable .header{
   background: rgba(15, 23, 42, 0.55);
-  /* ★ PREMIUM POLISH — dark theme header border */
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 html[data-theme="dark"] .footer,
-html[data-theme="dark"] .App.stable .footer {
+html[data-theme="dark"] .App.stable .footer{
   background: transparent;
   border-top-color: transparent;
 }
 
+/* header pills */
 html[data-theme="dark"] .coin-pill,
-html[data-theme="dark"] .role-btn {
+html[data-theme="dark"] .role-btn{
   border-color: rgba(255,255,255,.18);
   background: rgba(255,255,255,.10);
   color: #fff;
 }
 
-html[data-theme="dark"] .allie-message .bubble-content {
+/* bubbles */
+html[data-theme="dark"] .allie-message .bubble-content{
   background: linear-gradient(135deg, rgba(30,41,59,.96), rgba(15,23,42,.96));
   color: rgba(255,255,255,.92);
   box-shadow: 0 10px 28px rgba(0,0,0,.35);
 }
 
-html[data-theme="dark"] .user-message .bubble-content {
+html[data-theme="dark"] .user-message .bubble-content{
   background: linear-gradient(135deg, rgba(99,102,241,.95), rgba(168,85,247,.90));
   color: #fff;
   box-shadow: 0 10px 28px rgba(0,0,0,.35);
 }
 
-html[data-theme="dark"] .allie-message.typing-bounce {
+/* typing bubble + dots */
+html[data-theme="dark"] .allie-message.typing-bounce{
   background: linear-gradient(135deg, rgba(30,41,59,.95), rgba(15,23,42,.96));
 }
-html[data-theme="dark"] .typing-bounce span {
+html[data-theme="dark"] .typing-bounce span{
   background: rgba(205,216,232,.84);
 }
 
-html[data-theme="dark"] .footer .chat-composer {
+/* input */
+html[data-theme="dark"] .footer .chat-composer{
   background: rgba(15, 23, 42, 0.7);
   color: rgba(255,255,255,.92);
   border-color: rgba(148, 163, 184, 0.34);
@@ -2148,11 +2118,11 @@ html[data-theme="dark"] .footer .chat-composer {
     inset 0 1px 0 rgba(148, 163, 184, 0.22);
 }
 
-html[data-theme="dark"] .footer .chat-composer::placeholder {
+html[data-theme="dark"] .footer .chat-composer::placeholder{
   color: rgba(226,232,240,.56);
 }
 
-html[data-theme="dark"] .footer .chat-composer:focus {
+html[data-theme="dark"] .footer .chat-composer:focus{
   border-color: rgba(129, 140, 248, 0.5);
   box-shadow:
     0 14px 26px rgba(2, 6, 23, 0.46),
@@ -2161,30 +2131,32 @@ html[data-theme="dark"] .footer .chat-composer:focus {
 }
 
 html[data-theme="dark"] .footer .send-btn,
-html[data-theme="dark"] .footer .mic-btn {
+html[data-theme="dark"] .footer .mic-btn{
   box-shadow: 0 12px 26px rgba(2, 6, 23, 0.42);
 }
 
-html[data-theme="dark"] .footer .mic-btn {
+html[data-theme="dark"] .footer .mic-btn{
   background: rgba(30, 41, 59, 0.94);
   color: rgba(226, 232, 240, 0.96);
 }
 
-html[data-theme="dark"] .emoji-panel {
+/* emoji panel */
+html[data-theme="dark"] .emoji-panel{
   background: rgba(15,23,42,.96);
   color: rgba(255,255,255,.9);
   box-shadow: 0 18px 48px rgba(0,0,0,.55);
 }
 
-html[data-theme="dark"] .emoji-item:active {
+html[data-theme="dark"] .emoji-item:active{
   background: rgba(255,255,255,.10);
 }
 
+/* surface modals (coins/modes/confirm/welcome/auth) */
 html[data-theme="dark"] .modal-content,
 html[data-theme="dark"] .role-card,
 html[data-theme="dark"] .confirm-modal,
 html[data-theme="dark"] .welcome-card,
-html[data-theme="dark"] .signin-card {
+html[data-theme="dark"] .signin-card{
   background: rgba(15,23,42,.96);
   color: rgba(255,255,255,.92);
   border: 1px solid rgba(255,255,255,.10);
@@ -2195,103 +2167,100 @@ html[data-theme="dark"] .coins-sub,
 html[data-theme="dark"] .welcome-note,
 html[data-theme="dark"] .auth-sub,
 html[data-theme="dark"] .auth-foot,
-html[data-theme="dark"] .signin-text {
+html[data-theme="dark"] .signin-text{
   color: rgba(255,255,255,.70);
 }
 
+/* buttons that were light */
 html[data-theme="dark"] .btn-secondary,
-html[data-theme="dark"] .modal-content .close-modal {
+html[data-theme="dark"] .modal-content .close-modal{
   background: rgba(255,255,255,.10) !important;
   color: rgba(255,255,255,.90) !important;
 }
 
-html[data-theme="dark"] .role-chip {
+html[data-theme="dark"] .role-chip{
   background: linear-gradient(148deg, rgba(200,160,80,.14) 0%, rgba(180,120,50,.10) 100%);
   border-color: rgba(255,220,140,.14);
   color: rgba(255,255,255,.92);
 }
 
-html[data-theme="dark"] .role-row {
+html[data-theme="dark"] .role-row{
   background: rgba(255,255,255,.06);
   border-color: rgba(255,255,255,.10);
   color: rgba(255,255,255,.92);
 }
 
-html[data-theme="dark"] .role-card-title {
+html[data-theme="dark"] .role-card-title{
   background: linear-gradient(135deg, #fb71c4 0%, #e85da8 45%, #ff8ad4 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
-html[data-theme="dark"] .role-section-title { color: rgba(255,255,255,.62); }
-html[data-theme="dark"] .role-card-name { color: rgba(255,255,255,.94); }
-html[data-theme="dark"] .role-card-subtitle { color: rgba(255,255,255,.60); }
-html[data-theme="dark"] .role-card-avatar {
+html[data-theme="dark"] .role-section-title{ color: rgba(255,255,255,.62); }
+html[data-theme="dark"] .role-card-name{ color: rgba(255,255,255,.94); }
+html[data-theme="dark"] .role-card-subtitle{ color: rgba(255,255,255,.60); }
+html[data-theme="dark"] .role-card-avatar{
   border-color: rgba(255,255,255,.18);
   box-shadow: 0 4px 12px rgba(0,0,0,.40);
 }
-html[data-theme="dark"] .role-row.role-card-default {
+html[data-theme="dark"] .role-row.role-card-default{
   background: linear-gradient(152deg,
-    rgba(95,110,135,.32) 0%, rgba(70,85,108,.28) 36%,
-    rgba(90,105,128,.30) 72%, rgba(75,90,112,.26) 100%);
+    rgba(95,110,135,.32) 0%,
+    rgba(70,85,108,.28) 36%,
+    rgba(90,105,128,.30) 72%,
+    rgba(75,90,112,.26) 100%
+  );
   border-color: rgba(148,163,184,.28);
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,.07),
     0 6px 18px rgba(0,0,0,.28);
 }
-html[data-theme="dark"] .role-chip.role-card-role {
+html[data-theme="dark"] .role-chip.role-card-role{
   background: linear-gradient(148deg,
-    rgba(180,130,50,.22) 0%, rgba(160,90,30,.18) 36%,
-    rgba(170,110,40,.20) 72%, rgba(150,80,25,.16) 100%);
+    rgba(180,130,50,.22) 0%,
+    rgba(160,90,30,.18) 36%,
+    rgba(170,110,40,.20) 72%,
+    rgba(150,80,25,.16) 100%
+  );
   border-color: rgba(251,191,36,.26);
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,.05),
     0 6px 18px rgba(0,0,0,.28);
 }
 
+/* Reduce shimmer visibility in dark mode */
 html[data-theme="dark"] .role-row.role-card-default::after,
-html[data-theme="dark"] .role-chip.role-card-role::after {
+html[data-theme="dark"] .role-chip.role-card-role::after{
   opacity: .35;
 }
 
-html[data-theme="dark"] .role-actions { border-top-color: rgba(255,255,255,.10); }
-html[data-theme="dark"] .role-action-row {
+html[data-theme="dark"] .role-actions{ border-top-color: rgba(255,255,255,.10); }
+html[data-theme="dark"] .role-action-row{
   background: rgba(255,255,255,.06);
   border-color: rgba(255,255,255,.10);
   color: rgba(255,255,255,.88);
 }
-html[data-theme="dark"] .role-action-danger { color: #ff9cb0; }
+html[data-theme="dark"] .role-action-danger{ color: #ff9cb0; }
 
-html[data-theme="dark"] .character-popup {
+/* optional: DP popup reads well on dark */
+html[data-theme="dark"] .character-popup{
   background: rgba(15,23,42,.72);
   border-color: rgba(255,255,255,.14);
   color: rgba(255,255,255,.92);
 }
 
-html[data-theme="dark"] .charpop-title { color: rgba(167,139,250,.95); }
-html[data-theme="dark"] .charpop-body { color: rgba(255,255,255,.80); }
-
-/* ★ PREMIUM POLISH — Dark theme: profile pic adaptations */
-html[data-theme="dark"] .profile-pic img {
-  border-color: rgba(148, 163, 184, 0.30);
-  box-shadow:
-    0 0 0 2px rgba(99, 102, 241, 0.20),
-    0 4px 14px rgba(0, 0, 0, 0.40);
-}
-
-html[data-theme="dark"] .profile-pic::after {
-  border-color: rgba(15, 23, 42, 0.60);
-}
+html[data-theme="dark"] .charpop-title{ color: rgba(167,139,250,.95); }
+html[data-theme="dark"] .charpop-body{ color: rgba(255,255,255,.80); }
 
 
-/* ---------- OCEAN ---------- */
+/* ---------- OCEAN (cool teal/blue vibe) ---------- */
 html[data-theme="ocean"],
-html[data-theme="ocean"] body {
+html[data-theme="ocean"] body{
   background: linear-gradient(180deg, #0ea5e9 0%, #14b8a6 55%, #0f172a 100%);
 }
 
-html[data-theme="ocean"] .App.signed-in {
+html[data-theme="ocean"] .App.signed-in{
   background:
     radial-gradient(900px 520px at 10% 0%, rgba(34,211,238,.22), rgba(0,0,0,0) 60%),
     radial-gradient(900px 520px at 90% 100%, rgba(20,184,166,.18), rgba(0,0,0,0) 55%),
@@ -2299,23 +2268,21 @@ html[data-theme="ocean"] .App.signed-in {
 }
 
 html[data-theme="ocean"] .header,
-html[data-theme="ocean"] .App.stable .header {
+html[data-theme="ocean"] .App.stable .header{
   background: rgba(2, 132, 199, 0.18);
-  /* ★ PREMIUM POLISH — ocean theme header border */
-  border-bottom: 1px solid rgba(255, 255, 255, 0.10);
 }
 
 html[data-theme="ocean"] .footer,
-html[data-theme="ocean"] .App.stable .footer {
+html[data-theme="ocean"] .App.stable .footer{
   background: transparent;
 }
 
-html[data-theme="ocean"] .allie-message .bubble-content {
+html[data-theme="ocean"] .allie-message .bubble-content{
   background: linear-gradient(135deg, #d9f7ff, #c7fff0);
   color: #0b1220;
 }
 
-html[data-theme="ocean"] .user-message .bubble-content {
+html[data-theme="ocean"] .user-message .bubble-content{
   background: linear-gradient(135deg, #38bdf8, #22c55e);
   color: #ffffff;
 }
@@ -2324,19 +2291,7 @@ html[data-theme="ocean"] .modal-content,
 html[data-theme="ocean"] .role-card,
 html[data-theme="ocean"] .confirm-modal,
 html[data-theme="ocean"] .welcome-card,
-html[data-theme="ocean"] .signin-card {
+html[data-theme="ocean"] .signin-card{
   background: rgba(255,255,255,.96);
   color: #0b1220;
-}
-
-/* ★ PREMIUM POLISH — Ocean theme: profile pic adaptations */
-html[data-theme="ocean"] .profile-pic img {
-  border-color: rgba(255, 255, 255, 0.40);
-  box-shadow:
-    0 0 0 2px rgba(34, 211, 238, 0.25),
-    0 4px 14px rgba(0, 0, 0, 0.20);
-}
-
-html[data-theme="ocean"] .profile-pic::after {
-  border-color: rgba(2, 132, 199, 0.40);
 }
