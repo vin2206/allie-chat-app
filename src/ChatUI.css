@@ -1618,29 +1618,66 @@ html:not(.ime-open) .App.stable .footer .mic-btn {
 
 /* --- Instructions content inside the welcome card --- */
 .instr-title{
-  font-size: 20px;
+  font-size: clamp(20px, 5vw, 22px);
   font-weight: 800;
-  margin: 2px 0 6px;
-  color: #1a1a1a;
+  line-height: 1.2;
+  letter-spacing: .1px;
+  margin: 2px 0 8px;
+  color: #191824;
 }
 .instr-sub{
-  font-size: 14px;
-  opacity: 0.85;
-  margin-bottom: 10px;
+  font-size: 13.5px;
+  line-height: 1.45;
+  color: rgba(33, 33, 43, .74);
+  margin: 0 auto 12px;
+  max-width: 36ch;
 }
 
 .instr-list, .tips-list{
   text-align: left;
-  margin: 10px 4px;
+  margin: 10px 2px 0;
   padding-left: 18px;
 }
-.instr-list li{ margin: 8px 0; line-height: 1.35; }
-.tips-list li{  margin: 6px 0; line-height: 1.35; }
+.instr-list{
+  margin-top: 8px;
+  margin-bottom: 0;
+}
+.tips-list{
+  margin-top: 8px;
+  margin-bottom: 2px;
+}
+.instr-list li{
+  margin: 10px 0;
+  line-height: 1.5;
+  color: #2a2b35;
+}
+.tips-list li{
+  margin: 8px 0;
+  line-height: 1.45;
+  color: #2f313d;
+}
+.instr-list li b,
+.tips-list li b{
+  font-weight: 700;
+  color: #1f1f2b;
+}
+.instr-list li::marker,
+.tips-list li::marker{
+  color: rgba(56,58,74,.7);
+}
 
 .instr-quick{
-  margin-top: 10px;
-  font-weight: 800;
-  color: #333;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(17,24,39,.10);
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: .25px;
+  color: #343644;
+}
+
+.instr-quick + .tips-list + .welcome-btn{
+  margin-top: 16px;
 }
 
 .welcome-backdrop{
@@ -1701,9 +1738,11 @@ html:not(.ime-open) .App.stable .footer .mic-btn {
   .welcome-amount { font-size: 24px; }
 
   .instr-title { font-size: 18px; margin: 0 0 6px; }
-  .instr-sub   { font-size: 12px; margin-bottom: 8px; }
+  .instr-sub   { font-size: 12px; line-height: 1.4; margin-bottom: 10px; max-width: 34ch; }
   .instr-list li,
-  .tips-list  li { font-size: 13px; line-height: 1.30; margin: 6px 0; }
+  .tips-list  li { font-size: 13px; line-height: 1.38; margin: 7px 0; }
+  .instr-quick { margin-top: 12px; padding-top: 10px; font-size: 12px; }
+  .instr-quick + .tips-list + .welcome-btn { margin-top: 14px; }
 
   .welcome-btn { padding: 10px 12px; } /* slightly shorter button */
 }
