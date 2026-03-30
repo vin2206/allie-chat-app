@@ -1174,6 +1174,7 @@ const lastActionRef = useRef('');
  // ADD BELOW your other refs/state in AllieChat()
 const walletReqIdRef = useRef(0); // last-write-wins guard for /wallet fetches 
 const authBootReqIdRef = useRef(0); // guards overlapping auth bootstrap runs
+const signOutInFlightRef = useRef(false); // prevents duplicate sign-out races
 const stickToBottomRef = useRef(true); // true only when truly at bottom
 const readingUpRef = useRef(false);    // true when user scrolled up (locks auto-scroll)
 const imeLockRef = useRef(false); // ignore scroll logic during IME open/close animation
@@ -2118,19 +2119,18 @@ const openNotice = React.useCallback((title, message, after, okText = 'OK') => {
 // - clears sessionStorage chat UI data (so next person doesn’t see chats)
 // - does NOT delete guest_id_v1 or welcome keys (prevents “new user free coins” abuse)
 async function signOutEverywhere() {
-  // 1) clear backend cookie session
-  try {
-    await fetch(apiUrl('/auth/logout'), {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...authHeaders(user),
-        'X-CSRF-Token': getCsrf()
-      },
-      credentials: 'include',
-      body: JSON.stringify({})
-    });
-  } catch {}
+  if (signOutInFlightRef.current) return;
+  signOutInFlightRef.current = true;
+
+  // Snapshot user now so logout request stays valid even after UI state is cleared.
+  const currentUser = user;
+
+  // 1) reset UI/state first so sign-out feels immediate
+  setShowSigninBanner(false);
+  resetChatUI(null);
+  setAuthBooting(false);
+  setWalletReady(false);
+  authBootReqIdRef.current += 1; // cancel any in-flight auth bootstrap side-effects
 
   // 2) prevent Google from auto-selecting last account silently
   try {
@@ -2140,7 +2140,7 @@ async function signOutEverywhere() {
 
   // 3) clear ONLY login + per-tab UI state (keep guest_id_v1 and welcome markers)
   try { localStorage.removeItem('user_v1'); } catch {}
-
+  try { localStorage.removeItem('chat_session_id'); } catch {}
   try {
     const killPrefixes = ['thread_v3_', 'draft_v1_', 'role_sel_v1_', 'welcome_seen_v2_'];
     Object.keys(sessionStorage).forEach((k) => {
@@ -2148,14 +2148,25 @@ async function signOutEverywhere() {
     });
   } catch {}
 
-  // 4) reset UI immediately (so no old chat flashes)
-setShowSigninBanner(false);
-resetChatUI(null);
+  // 4) switch shell immediately
+  setUser(null);
 
-// kill legacy shared session id too (old versions)
-try { localStorage.removeItem('chat_session_id'); } catch {}
-
-setUser(null);
+  // 5) best-effort backend logout (non-blocking for UX, still executed for session safety)
+  try {
+    await fetch(apiUrl('/auth/logout'), {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...authHeaders(currentUser),
+        'X-CSRF-Token': getCsrf()
+      },
+      credentials: 'include',
+      body: JSON.stringify({})
+    });
+  } catch {}
+  finally {
+    signOutInFlightRef.current = false;
+  }
 }
 // ✅ Always open Data & Privacy cleanly (no leftover ConfirmDialog on top)
 const openPrivacyModal = () => {

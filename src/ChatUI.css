@@ -1271,6 +1271,8 @@ html.ime-open .bottom-sentinel {
     linear-gradient(180deg, #07060b 0%, #0b0913 52%, #120d1b 100%);
   background-size: 100% 100%, 100% 100%, 100% 100%;
   z-index: 10000;
+  opacity: 0;
+  animation: auth-backdrop-in .16s ease-out forwards;
 }
 
 .auth-backdrop::before,
@@ -1299,6 +1301,20 @@ html.ime-open .bottom-sentinel {
   align-items:center;
   gap: 10px;
   font-family: 'Manrope', 'Avenir Next', 'Segoe UI', sans-serif;
+  opacity: 0;
+  transform: translateY(6px);
+  animation: auth-card-in .2s ease-out .02s forwards;
+  will-change: opacity, transform;
+}
+
+@keyframes auth-backdrop-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes auth-card-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 .auth-card::before{
@@ -1320,10 +1336,11 @@ html.ime-open .bottom-sentinel {
 .auth-logo{
   position: relative;
   width: 172px;
-  height: auto;
+  height: 172px;
   display: block;
   margin: 0 auto 4px;
   z-index: 1;
+  object-fit: contain;
   filter:
     drop-shadow(0 0 40px rgba(212, 114, 142, .42))
     drop-shadow(0 0 80px rgba(155, 125, 184, .30))
@@ -1400,7 +1417,7 @@ html.ime-open .bottom-sentinel {
   min-height: 44px;
 }
 
-/* Reserve space + hide until GIS paints */
+/* Reserve space so GIS can mount without layout jump */
 .gbtn-wrap {
   width: var(--auth-row-w);
   max-width: 320px;
@@ -1409,16 +1426,19 @@ html.ime-open .bottom-sentinel {
   display: flex;
   align-items: center;
   justify-content: center;
-  visibility: hidden;
-  opacity: 0;
+  visibility: visible;
+  opacity: 1;
   border-radius: 999px;
   overflow: hidden;
   contain: layout paint;
+  background: rgba(255,255,255,.08);
+  border: 1px solid rgba(255,255,255,.16);
+  transition: background-color .18s ease, border-color .18s ease;
 }
 
 .gbtn-wrap.ready {
-  visibility: visible;
-  opacity: 1;
+  background: transparent;
+  border-color: transparent;
 }
 
 #googleSignIn {
@@ -1427,6 +1447,12 @@ html.ime-open .bottom-sentinel {
   display: flex;
   align-items: center;
   justify-content: center;
+  opacity: 0;
+  transition: opacity .18s ease;
+}
+
+.gbtn-wrap.ready #googleSignIn {
+  opacity: 1;
 }
 
 .App.stable {
