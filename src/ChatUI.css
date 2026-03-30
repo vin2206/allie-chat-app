@@ -64,10 +64,17 @@ html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
   right: 8px;
 
   border-radius: 18px;
-  background: rgba(255,255,255,0.10);
-  box-shadow: 0 18px 55px rgba(0,0,0,0.16);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0.11) 36%, rgba(255,255,255,0.08) 100%),
+    radial-gradient(120% 65% at 50% 0%, rgba(255,255,255,0.20), rgba(255,255,255,0) 58%);
+  border: 1px solid rgba(255,255,255,0.28);
+  box-shadow:
+    0 22px 58px rgba(20, 9, 37, 0.2),
+    0 4px 14px rgba(20, 9, 37, 0.12),
+    inset 0 1px 0 rgba(255,255,255,0.44),
+    inset 0 -1px 0 rgba(255,255,255,0.16);
+  backdrop-filter: blur(11px);
+  -webkit-backdrop-filter: blur(11px);
 
   pointer-events:none;
   z-index: 0;
@@ -143,13 +150,15 @@ html.ime-open .bottom-sentinel {
 }
 /* Header (glassmorphism style) */
 .header {
-  background: rgba(255, 105, 180, 0.15);      /* no blur on Android/stable */
+  background: rgba(255, 105, 180, 0.11);      /* lighter shell for a less fused strip feel */
   display: flex;
   align-items: center;
   padding: 12px 20px;
   padding-top: calc(12px + env(safe-area-inset-top));
   z-index: 100;
   flex-wrap: nowrap;
+  border-bottom: 1px solid rgba(255,255,255,0.16);
+  box-shadow: 0 6px 18px rgba(20, 8, 38, 0.08);
 }
 .App.fixed .header {
   position: fixed; top: 0; left: 0; right: 0;
@@ -163,6 +172,10 @@ html.ime-open .bottom-sentinel {
   border-radius: 50%;
   overflow: hidden;
   margin-right: 15px;
+  border: 1px solid rgba(255,255,255,.42);
+  box-shadow:
+    0 8px 18px rgba(20, 8, 38, 0.2),
+    inset 0 1px 0 rgba(255,255,255,.45);
 }
 
 .profile-pic img {
@@ -192,6 +205,22 @@ html.ime-open .bottom-sentinel {
   align-items: center;
   gap: 6px;        /* keeps badge next to name */
   min-width: 0;
+  position: relative;
+  isolation: isolate;
+}
+
+.name-wrap::before {
+  content: "";
+  position: absolute;
+  inset: -4px -6px;
+  border-radius: 999px;
+  background: rgba(255,255,255,.14);
+  border: 1px solid rgba(255,255,255,.30);
+  box-shadow:
+    0 8px 18px rgba(22, 10, 41, 0.14),
+    inset 0 1px 0 rgba(255,255,255,.45);
+  pointer-events: none;
+  z-index: -1;
 }
 
 .username {
@@ -380,38 +409,42 @@ html.ime-open .bottom-sentinel {
   min-width: 0;
   display: flex;
 }
-.footer .input-wrap .chat-composer { padding-left: 60px; }
+.footer .input-wrap .chat-composer { padding-left: 52px; }
 
 /* tiny emoji button inside the input */
 .footer .emoji-inside {
   position: absolute;
-  left: 12px;
+  left: 10px;
   top: 50%;
   transform: translateY(-50%);
   background: transparent;
   border: 0;
-  width: 30px;
-  height: 30px;
+  width: 32px;
+  height: 32px;
   font-size: 0;        /* using SVG, no text metrics */
   line-height: 1;
-  color: #9aa0a6;      /* neutral icon tint */
+  color: #8e95a4;      /* neutral icon tint */
   box-shadow: none;
   cursor: pointer;
+  display: grid;
+  place-items: center;
+  touch-action: manipulation;
 }
 /* Enlarge the drawing inside the button without changing button size */
 .footer .emoji-inside svg {
-  width: 100%;
-  height: 100%;
+  width: 22px;
+  height: 22px;
   display: block;
-  transform: scale(1.5);       /* tweak 1.15–1.35 to taste */
+  transform: none;
   transform-origin: 50% 50%;
 }
 .footer .emoji-inside:active { transform: translateY(-50%) scale(0.96); }
 
 /* compact on very small screens */
 @media (max-width: 360px) {
-  .footer .emoji-inside { left: 12px; width: 28px; height: 28px; }
-  .footer .input-wrap .chat-composer { padding-left: 58px; }
+  .footer .emoji-inside { left: 9px; width: 30px; height: 30px; }
+  .footer .emoji-inside svg { width: 20px; height: 20px; }
+  .footer .input-wrap .chat-composer { padding-left: 50px; }
 }
 
 /* —— Emoji panel that drops above the input —— */
@@ -1452,7 +1485,7 @@ html.first-open-settling .chat-container::before {
   z-index: 100;
   padding: 12px 20px;
   padding-top: calc(12px + env(safe-area-inset-top));
-  background: rgba(255, 105, 180, 0.15);
+  background: rgba(255, 105, 180, 0.11);
 }
 
 /* Footer fixed at bottom (Android stable) */
@@ -1559,6 +1592,7 @@ html:not(.ime-open) .App.stable .footer .mic-btn {
 
   /* let name give up space first so Stranger/Coins/Mode never wrap */
   .name-wrap { flex: 0 1 auto; min-width: 0; }
+  .name-wrap::before { inset: -3px -4px; }
   .username   { font-size: 18px; max-width: 32vw; }
 
   .coin-pill, .role-btn { padding: 3px 7px; font-size: 10px; }
@@ -1959,7 +1993,7 @@ html[data-theme="default"] .App.signed-in{
 }
 
 html[data-theme="default"] .header{
-  background: rgba(255, 105, 180, 0.15);
+  background: rgba(255, 105, 180, 0.11);
 }
 
 html[data-theme="default"] .footer{
@@ -2001,7 +2035,34 @@ html[data-theme="dark"] .App.signed-in{
 /* glass bars */
 html[data-theme="dark"] .header,
 html[data-theme="dark"] .App.stable .header{
-  background: rgba(15, 23, 42, 0.55);
+  background: rgba(15, 23, 42, 0.42);
+}
+
+html[data-theme="dark"] .chat-container::before{
+  background:
+    linear-gradient(180deg, rgba(30,41,59,.58) 0%, rgba(15,23,42,.50) 100%),
+    radial-gradient(120% 65% at 50% 0%, rgba(148,163,184,.20), rgba(148,163,184,0) 60%);
+  border-color: rgba(148,163,184,.26);
+  box-shadow:
+    0 24px 60px rgba(2,6,23,.45),
+    0 5px 16px rgba(2,6,23,.30),
+    inset 0 1px 0 rgba(148,163,184,.22),
+    inset 0 -1px 0 rgba(148,163,184,.12);
+}
+
+html[data-theme="dark"] .name-wrap::before{
+  background: rgba(30,41,59,.42);
+  border-color: rgba(148,163,184,.30);
+  box-shadow:
+    0 8px 18px rgba(2,6,23,.34),
+    inset 0 1px 0 rgba(148,163,184,.20);
+}
+
+html[data-theme="dark"] .profile-pic{
+  border-color: rgba(148,163,184,.42);
+  box-shadow:
+    0 8px 18px rgba(2,6,23,.35),
+    inset 0 1px 0 rgba(148,163,184,.25);
 }
 
 html[data-theme="dark"] .footer,
@@ -2200,7 +2261,12 @@ html[data-theme="ocean"] .App.signed-in{
 
 html[data-theme="ocean"] .header,
 html[data-theme="ocean"] .App.stable .header{
-  background: rgba(2, 132, 199, 0.18);
+  background: rgba(2, 132, 199, 0.14);
+}
+
+html[data-theme="ocean"] .name-wrap::before{
+  background: rgba(6,95,121,.18);
+  border-color: rgba(224,242,254,.34);
 }
 
 html[data-theme="ocean"] .footer,
