@@ -2029,6 +2029,13 @@ useEffect(() => {
   document.addEventListener('keydown', onKey);
   return () => document.removeEventListener('keydown', onKey);
 }, [showAvatarFull]);
+
+// Auto-close DP lightbox after 3 seconds when open
+useEffect(() => {
+  if (!showAvatarFull) return;
+  const closeTimer = window.setTimeout(() => setShowAvatarFull(false), 3000);
+  return () => window.clearTimeout(closeTimer);
+}, [showAvatarFull]);
 const [showRoleMenu, setShowRoleMenu] = useState(false);
 
 const formatPreviewTime24 = (value) => {
