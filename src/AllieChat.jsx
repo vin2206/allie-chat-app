@@ -3630,7 +3630,7 @@ if (!user) {
           </span>
           <span className="role-card-copy">
             <span className="role-card-name">Stranger</span>
-            <span className="role-card-subtitle">Default mode for a fresh neutral chat.</span>
+            <span className="role-card-subtitle">Fresh chat as a stranger.</span>
           </span>
           <span className="role-card-active" aria-hidden="true" />
         </button>
