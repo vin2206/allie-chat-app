@@ -3615,7 +3615,8 @@ if (!user) {
       <div className="role-section">
         <div className="role-section-title">Default</div>
         <button
-          className="role-row"
+          className={`role-row role-card-default ${roleMode === 'stranger' ? 'is-active' : ''}`}
+          aria-pressed={roleMode === 'stranger'}
           onClick={() => {
             openConfirm(
               'Switch to Stranger?',
@@ -3624,14 +3625,22 @@ if (!user) {
             );
           }}
         >
-          Stranger (default)
+          <span className="role-card-avatar" aria-hidden="true">
+            <img src={getAvatarSrc('stranger', null)} alt="" loading="lazy" decoding="async" />
+          </span>
+          <span className="role-card-copy">
+            <span className="role-card-name">Stranger</span>
+            <span className="role-card-subtitle">Default mode for a fresh neutral chat.</span>
+          </span>
+          <span className="role-card-active" aria-hidden="true" />
         </button>
       </div>
 
       <div className="role-section-title">Roleplay</div>
       <div className="role-grid">
         <button
-          className="role-chip"
+          className={`role-chip role-card-role ${roleMode === 'roleplay' && roleType === 'wife' ? 'is-active' : ''}`}
+          aria-pressed={roleMode === 'roleplay' && roleType === 'wife'}
           onClick={() => {
             openConfirm(
               'Start as Shraddha (Wife)?',
@@ -3639,10 +3648,20 @@ if (!user) {
               () => { closeConfirm(); applyRoleChange('roleplay','wife'); }
             );
           }}
-        >Wife</button>
+        >
+          <span className="role-card-avatar" aria-hidden="true">
+            <img src={getAvatarSrc('roleplay', 'wife')} alt="" loading="lazy" decoding="async" />
+          </span>
+          <span className="role-card-copy">
+            <span className="role-card-name">Wife</span>
+            <span className="role-card-subtitle">Warm, caring partner energy.</span>
+          </span>
+          <span className="role-card-active" aria-hidden="true" />
+        </button>
 
         <button
-          className="role-chip"
+          className={`role-chip role-card-role ${roleMode === 'roleplay' && roleType === 'bhabhi' ? 'is-active' : ''}`}
+          aria-pressed={roleMode === 'roleplay' && roleType === 'bhabhi'}
           onClick={() => {
             openConfirm(
               'Start as Shraddha (Bhabhi)?',
@@ -3650,10 +3669,20 @@ if (!user) {
               () => { closeConfirm(); applyRoleChange('roleplay','bhabhi'); }
             );
           }}
-        >Bhabhi</button>
+        >
+          <span className="role-card-avatar" aria-hidden="true">
+            <img src={getAvatarSrc('roleplay', 'bhabhi')} alt="" loading="lazy" decoding="async" />
+          </span>
+          <span className="role-card-copy">
+            <span className="role-card-name">Bhabhi</span>
+            <span className="role-card-subtitle">Playful and confident tone.</span>
+          </span>
+          <span className="role-card-active" aria-hidden="true" />
+        </button>
 
         <button
-          className="role-chip"
+          className={`role-chip role-card-role ${roleMode === 'roleplay' && roleType === 'girlfriend' ? 'is-active' : ''}`}
+          aria-pressed={roleMode === 'roleplay' && roleType === 'girlfriend'}
           onClick={() => {
             openConfirm(
               'Start as Shraddha (Girlfriend)?',
@@ -3661,28 +3690,48 @@ if (!user) {
               () => { closeConfirm(); applyRoleChange('roleplay','girlfriend'); }
             );
           }}
-        >Girlfriend</button>
+        >
+          <span className="role-card-avatar" aria-hidden="true">
+            <img src={getAvatarSrc('roleplay', 'girlfriend')} alt="" loading="lazy" decoding="async" />
+          </span>
+          <span className="role-card-copy">
+            <span className="role-card-name">Girlfriend</span>
+            <span className="role-card-subtitle">Flirty, close, and cheerful.</span>
+          </span>
+          <span className="role-card-active" aria-hidden="true" />
+        </button>
 
         <button
-  className="role-chip"
-  onClick={() => {
-    openConfirm(
-      'Start as Shraddha (Ex-GF)?',
-      'A fresh chat will begin and current messages will be cleared.',
-      () => { closeConfirm(); applyRoleChange('roleplay','exgf'); }
-    );
-  }}
->Ex-GF</button>
+          className={`role-chip role-card-role ${roleMode === 'roleplay' && roleType === 'exgf' ? 'is-active' : ''}`}
+          aria-pressed={roleMode === 'roleplay' && roleType === 'exgf'}
+          onClick={() => {
+            openConfirm(
+              'Start as Shraddha (Ex-GF)?',
+              'A fresh chat will begin and current messages will be cleared.',
+              () => { closeConfirm(); applyRoleChange('roleplay','exgf'); }
+            );
+          }}
+        >
+          <span className="role-card-avatar" aria-hidden="true">
+            <img src={getAvatarSrc('roleplay', 'exgf')} alt="" loading="lazy" decoding="async" />
+          </span>
+          <span className="role-card-copy">
+            <span className="role-card-name">Ex-GF</span>
+            <span className="role-card-subtitle">Familiar, teasing nostalgia.</span>
+          </span>
+          <span className="role-card-active" aria-hidden="true" />
+        </button>
       </div>
 
       {(roleplayNeedsPremium && !isOwner && !(wallet?.expires_at > Date.now())) ? (
   <div className="role-upsell">Roleplay requires recharge.</div>
 ) : null}
       {/* ——— Tiny feedback entry at the bottom of Modes ——— */}
-<div className="role-section" style={{ marginTop: 10 }}>
+<div className="role-section role-actions">
+<div className="role-section-title">Quick Actions</div>
 
 <button
-  className="role-row"
+  className="role-row role-action-row"
   onClick={(e) => {
     e.stopPropagation();
     closeConfirm();       // ensure no confirm overlay
@@ -3695,7 +3744,7 @@ if (!user) {
 </button>
 
 <button
-  className="role-row"
+  className="role-row role-action-row"
   onClick={(e) => {
     e.stopPropagation();
     openPrivacyModal();
@@ -3707,8 +3756,7 @@ if (!user) {
 </button>
 
   <button
-    className="role-row"
-    style={{ color: '#c62828', fontWeight: 700 }}
+    className="role-row role-action-row role-action-danger"
     onClick={() => {
       openConfirm(
         'Sign out?',
