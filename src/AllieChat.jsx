@@ -3669,7 +3669,7 @@ if (!user) {
           </span>
           <span className="role-card-copy">
             <span className="role-card-name">Wife</span>
-            <span className="role-card-subtitle">Loyal warmth, comfort, and private intimacy.</span>
+            <span className="role-card-subtitle">Loyal warmth and private intimacy.</span>
           </span>
           <span className="role-card-active" aria-hidden="true" />
         </button>
@@ -3690,7 +3690,7 @@ if (!user) {
           </span>
           <span className="role-card-copy">
             <span className="role-card-name">Bhabhi</span>
-            <span className="role-card-subtitle">Mature teasing, hidden pull, slow-burn tension.</span>
+            <span className="role-card-subtitle">Mature teasing and hidden pull.</span>
           </span>
           <span className="role-card-active" aria-hidden="true" />
         </button>
@@ -3711,7 +3711,7 @@ if (!user) {
           </span>
           <span className="role-card-copy">
             <span className="role-card-name">Girlfriend</span>
-            <span className="role-card-subtitle">Playful closeness, clingy warmth, eager chemistry.</span>
+            <span className="role-card-subtitle">Playful closeness and eager chemistry.</span>
           </span>
           <span className="role-card-active" aria-hidden="true" />
         </button>
@@ -3732,7 +3732,7 @@ if (!user) {
           </span>
           <span className="role-card-copy">
             <span className="role-card-name">Ex-GF</span>
-            <span className="role-card-subtitle">Old chemistry, regret, and unresolved tension.</span>
+            <span className="role-card-subtitle">Old chemistry and unresolved tension.</span>
           </span>
           <span className="role-card-active" aria-hidden="true" />
         </button>
