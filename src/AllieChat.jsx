@@ -881,17 +881,21 @@ function CharacterPopup({ open, roleMode, roleType, onClose }) {
       : 'Stranger';
 
     // Web (default) — current copy
-  const INSIGHTS_WEB = {
+    const INSIGHTS_WEB = {
     stranger:
-      "A 24-yr girl who loves acting but family doesn't support. She helps her father in a small business and is an introvert who opens up online.",
+      "Soft start, natural curiosity, and light chemistry. She adapts to your vibe — thoughtful if you're deep, warm if you're emotional, teasing if you're playful, and more sensual only when you lead there.",
+
     wife:
-      "A 28-yr housewife, who loves to fulfill her husband's every wish — a little jealous too.",
+      "Loyal, close, and familiar. Romantic style: comforting warmth and lived-in intimacy. Spicy style: private confidence and natural married chemistry. She can be soft, reassuring, thoughtful, or more intimate depending on your mood.",
+
     bhabhi:
-      "A 30-yr woman, unsatisfied in her marriage, witty and affectionate toward her devar; young, fit boys are her weakness.",
+      "Mature warmth with hidden pull. Romantic style: subtle attachment and slow-burn tension. Spicy style: layered teasing, double meaning, and controlled temptation. She stays caring, observant, and emotionally aware while adapting to your energy.",
+
     girlfriend:
-      "A 25-yr possessive girl who loves her boyfriend more than anyone, but her jealousy often causes problems.",
+      "Youthful, playful, and emotionally expressive. Romantic style: clingy warmth, attention, and cute possessiveness. Spicy style: flirty dirty teasing with eager chemistry. She can shift naturally between playful, emotional, romantic, and bold.",
+
     exgf:
-      "A 26-yr spicy girl who gets bored quickly. Confused right now — loves her boyfriend but also likes her ex and chats with him when alone."
+      "Old chemistry, unfinished feelings, and nostalgic pull. Romantic style: regret, memory, and emotional push-pull. Spicy style: familiar tension and unresolved attraction. She feels layered, vulnerable, teasing, and intense when the moment fits."
   };
 
   const INSIGHTS = INSIGHTS_WEB;
@@ -2428,10 +2432,10 @@ const askedForVoice = (text = "") => {
 };
   
 const applyRoleChange = (mode, type) => {
-  // premium gate for roleplay (web)
+    // premium gate for roleplay (web) — align with backend paid_ever logic
   if (mode === 'roleplay' && roleplayNeedsPremium && !isOwner) {
-    const active = (wallet?.expires_at || 0) > Date.now();
-    if (!active) {
+    const hasRoleplayAccess = !!wallet?.paid_ever;
+    if (!hasRoleplayAccess) {
       setShowRoleMenu(false);
       openCoins();
       return;
@@ -3665,7 +3669,7 @@ if (!user) {
           </span>
           <span className="role-card-copy">
             <span className="role-card-name">Wife</span>
-            <span className="role-card-subtitle">Warm, caring partner energy.</span>
+            <span className="role-card-subtitle">Loyal warmth, comfort, and private intimacy.</span>
           </span>
           <span className="role-card-active" aria-hidden="true" />
         </button>
@@ -3686,7 +3690,7 @@ if (!user) {
           </span>
           <span className="role-card-copy">
             <span className="role-card-name">Bhabhi</span>
-            <span className="role-card-subtitle">Playful and confident tone.</span>
+            <span className="role-card-subtitle">Mature teasing, hidden pull, slow-burn tension.</span>
           </span>
           <span className="role-card-active" aria-hidden="true" />
         </button>
@@ -3707,7 +3711,7 @@ if (!user) {
           </span>
           <span className="role-card-copy">
             <span className="role-card-name">Girlfriend</span>
-            <span className="role-card-subtitle">Flirty, close, and cheerful.</span>
+            <span className="role-card-subtitle">Playful closeness, clingy warmth, eager chemistry.</span>
           </span>
           <span className="role-card-active" aria-hidden="true" />
         </button>
@@ -3728,13 +3732,13 @@ if (!user) {
           </span>
           <span className="role-card-copy">
             <span className="role-card-name">Ex-GF</span>
-            <span className="role-card-subtitle">Familiar, teasing nostalgia.</span>
+            <span className="role-card-subtitle">Old chemistry, regret, and unresolved tension.</span>
           </span>
           <span className="role-card-active" aria-hidden="true" />
         </button>
       </div>
 
-      {(roleplayNeedsPremium && !isOwner && !(wallet?.expires_at > Date.now())) ? (
+    {(roleplayNeedsPremium && !isOwner && !wallet?.paid_ever) ? (
   <div className="role-upsell">Roleplay requires recharge.</div>
 ) : null}
       {/* ——— Tiny feedback entry at the bottom of Modes ——— */}
