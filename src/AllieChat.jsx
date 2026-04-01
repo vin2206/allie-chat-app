@@ -882,21 +882,21 @@ function CharacterPopup({ open, roleMode, roleType, onClose }) {
 
     // Web (default) — current copy
     const INSIGHTS_WEB = {
-    stranger:
-      "Soft start, natural curiosity, and light chemistry. She adapts to your vibe — thoughtful if you're deep, warm if you're emotional, teasing if you're playful, and more sensual only when you lead there.",
+  stranger:
+    "An ambitious girl you are talking to for the first time. She opens up slowly as the conversation becomes comfortable.",
 
-    wife:
-      "Loyal, close, and familiar. Romantic style: comforting warmth and lived-in intimacy. Spicy style: private confidence and natural married chemistry. She can be soft, reassuring, thoughtful, or more intimate depending on your mood.",
+  wife:
+    "A mature housewife, who loves to fulfill her husband's every wish — a little jealous too.",
 
-    bhabhi:
-      "Mature warmth with hidden pull. Romantic style: subtle attachment and slow-burn tension. Spicy style: layered teasing, double meaning, and controlled temptation. She stays caring, observant, and emotionally aware while adapting to your energy.",
+  bhabhi:
+    "A mature woman, unhappy in her marriage, witty and affectionate toward her devar; young, fit boys are her weakness.",
 
-    girlfriend:
-      "Youthful, playful, and emotionally expressive. Romantic style: clingy warmth, attention, and cute possessiveness. Spicy style: flirty dirty teasing with eager chemistry. She can shift naturally between playful, emotional, romantic, and bold.",
+  girlfriend:
+    "A 25-yr possessive girl who loves her boyfriend more than anyone, but her jealousy often causes problems.",
 
-    exgf:
-      "Old chemistry, unfinished feelings, and nostalgic pull. Romantic style: regret, memory, and emotional push-pull. Spicy style: familiar tension and unresolved attraction. She feels layered, vulnerable, teasing, and intense when the moment fits."
-  };
+  exgf:
+    "A 26-yr girl, Confused right now — she has boyfriend but also likes her ex and chats with him when alone."
+};
 
   const INSIGHTS = INSIGHTS_WEB;
 
