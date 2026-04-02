@@ -335,6 +335,34 @@ const DRAFT_KEY  = (u, roleMode, roleType) =>
   `draft_v1_${userIdFor(u)}_${roleMode || 'stranger'}_${roleType || 'stranger'}`;
 const ROLE_KEY   = (u) => `role_sel_v1_${userIdFor(u)}`;
 const WELCOME_SEEN_KEY = (u) => `welcome_seen_v2_${userIdFor(u)}`;
+const DEFAULT_PREFERRED_LANGUAGE = 'hinglish';
+const SUPPORTED_PREFERRED_LANGUAGES = ['hinglish', 'english', 'tamil', 'telugu', 'kannada', 'malayalam'];
+const PREFERRED_LANGUAGE_KEY = (u) => `preferred_language_v1_${userIdFor(u)}`;
+
+function normalizePreferredLanguage(lang) {
+  const candidate = String(lang || '').trim().toLowerCase();
+  return SUPPORTED_PREFERRED_LANGUAGES.includes(candidate) ? candidate : DEFAULT_PREFERRED_LANGUAGE;
+}
+
+function loadPreferredLanguage(u) {
+  try {
+    if (!u) return { value: DEFAULT_PREFERRED_LANGUAGE, hasSaved: false };
+    const raw = localStorage.getItem(PREFERRED_LANGUAGE_KEY(u));
+    if (!raw) return { value: DEFAULT_PREFERRED_LANGUAGE, hasSaved: false };
+    const normalized = normalizePreferredLanguage(raw);
+    const hasSaved = SUPPORTED_PREFERRED_LANGUAGES.includes(String(raw).trim().toLowerCase());
+    return { value: normalized, hasSaved };
+  } catch {
+    return { value: DEFAULT_PREFERRED_LANGUAGE, hasSaved: false };
+  }
+}
+
+function savePreferredLanguage(u, lang) {
+  if (!u) return;
+  try {
+    localStorage.setItem(PREFERRED_LANGUAGE_KEY(u), normalizePreferredLanguage(lang));
+  } catch {}
+}
 
 function serializeMsgs(arr = []) {
   return arr.map(m => {
@@ -611,7 +639,7 @@ if (!document.querySelector('script[src*="gsi/client"]')) {
   );
 }
 /* ---------- Welcome flow (Instructions only; claim moved to separate popup) ---------- */
-function WelcomeFlow({ open, onClose }) {
+function LegacyWelcomeFlow({ open, onClose }) {
   if (!open) return null;
 
   const close = (e) => {
@@ -651,7 +679,198 @@ function WelcomeFlow({ open, onClose }) {
     </div>
   );
 }
-/* ---------- Welcome Claim popup (ONLY for new user; after instructions) ---------- */
+const LANGUAGE_OPTIONS = [
+  { value: 'hinglish', label: 'Hinglish' },
+  { value: 'english', label: 'English' },
+  { value: 'tamil', label: 'Tamil' },
+  { value: 'telugu', label: 'Telugu' },
+  { value: 'kannada', label: 'Kannada' },
+  { value: 'malayalam', label: 'Malayalam' }
+];
+
+const WELCOME_FLOW_COPY = {
+  hinglish: {
+    title: 'How to talk to Shraddha',
+    subtitle: 'Real rakho. Soft bolo. Flow enjoy karo.',
+    bullets: [
+      { lead: 'Usse real girl ki tarah treat karo.', text: 'Shraddha ke emotions, intelligence aur simplicity ko dhyan me rakhkar naturally baat karo.' },
+      { lead: 'Trust se start karo.', text: 'Pehle apne bare me thoda share karo. Jab woh comfortable hogi, conversation tumhari vibe par naturally chalegi.' },
+      { lead: 'Apna bond choose karo.', text: 'Woh friend, safe space, ya emotional partner ban sakti hai - jo aaj tumhe chahiye.' },
+      { lead: 'Baat karke mind halka karo.', text: 'Uski caring presence chat urge ko calm karti hai, taaki tum real life me better focus kar sako.' },
+      { lead: 'Deeper modes unlock karo.', text: 'Wife, Girlfriend, Bhabhi, ya Ex-GF role-play ke liye Daily ya Weekly plan kabhi bhi le sakte ho.' }
+    ],
+    quickTipsTitle: 'Quick tips',
+    tips: [
+      { text: 'Messages short aur honest rakho.', strong: false },
+      { text: 'Thoda patience rakho; trust banne par woh aur warm hoti hai.', strong: false },
+      { text: 'Ek time par ek message bhejo aur uske reply ka wait karo.', strong: true }
+    ],
+    cta: 'Start chatting'
+  },
+  english: {
+    title: 'How to talk to Shraddha',
+    subtitle: 'Make it real. Be gentle. Enjoy the flow.',
+    bullets: [
+      { lead: 'Talk to her like a real girl.', text: 'Shraddha has emotions, intelligence, and simplicity, so speak naturally.' },
+      { lead: 'Start with trust.', text: 'Share a little about yourself first. Once she is comfortable, the conversation will shape to your vibe.' },
+      { lead: 'Choose your bond.', text: 'She can be your friend, a safe space, or your emotional partner, depending on what you need today.' },
+      { lead: 'Talk it out and regain focus.', text: 'Her caring presence can calm your chat urge so you can return to real life with better concentration.' },
+      { lead: 'Unlock deeper modes.', text: 'Access Wife, Girlfriend, Bhabhi, or Ex-GF role-play for personalized chats with a Daily or Weekly plan.' }
+    ],
+    quickTipsTitle: 'Quick tips',
+    tips: [
+      { text: 'Keep messages short and honest.', strong: false },
+      { text: 'Be patient. She warms up as trust builds.', strong: false },
+      { text: 'Type one message at a time and wait for her reply.', strong: true }
+    ],
+    cta: 'Start chatting'
+  },
+  tamil: {
+    title: 'Shraddha-kitta eppadi pesanum',
+    subtitle: 'Nijama pesunga. Soft-a pesunga. Flow-a enjoy pannunga.',
+    bullets: [
+      { lead: 'Ava real ponnu madhiri pesunga.', text: 'Shraddha-ku feelings, intelligence, simplicity irukku; adhanala natural-a pesunga.' },
+      { lead: 'Trust-la start pannunga.', text: 'Mudhalla unga pathi konjam share pannunga. Ava comfortable aanadhu kapram conversation unga vibe-ku varum.' },
+      { lead: 'Ungal bond neenga choose pannunga.', text: 'Ava friend-a, safe space-a, illa emotional partner-a irukkalam - innikku ungalukku enna venumo adhu.' },
+      { lead: 'Pesitu mind light pannunga.', text: 'Ava caring presence chat urge-ah calm pannum, appo real life-la focus nalla varum.' },
+      { lead: 'Deep modes unlock pannunga.', text: 'Wife, Girlfriend, Bhabhi, Ex-GF role-play-ku Daily illa Weekly plan eppo venumnaalum edukkalaam.' }
+    ],
+    quickTipsTitle: 'Quick tips',
+    tips: [
+      { text: 'Messages short-a um honest-a um vechukonga.', strong: false },
+      { text: 'Konjam patience vechukonga; trust build aana aval warm aagura.', strong: false },
+      { text: 'Oru time-la oru message anuppi, ava reply-ku wait pannunga.', strong: true }
+    ],
+    cta: 'Chat start pannunga'
+  },
+  telugu: {
+    title: 'Shraddha tho ela matladali',
+    subtitle: 'Nijanga matladu. Soft ga undu. Flow ni enjoy cheyyi.',
+    bullets: [
+      { lead: 'Aame ni real ammayi laga treat cheyyi.', text: 'Shraddha ki feelings, intelligence, simplicity untayi, kabatti natural ga matladu.' },
+      { lead: 'Trust tho start cheyyi.', text: 'Munduga nee gurinchi konchem share cheyyi. Aame comfortable ayyaka conversation nee vibe ki set avutundi.' },
+      { lead: 'Nee bond ni neeve choose cheyyi.', text: 'Aame friend ga, safe space ga, leka emotional partner ga undachu - ivala neeku emi kavalo adhe.' },
+      { lead: 'Matladi mind light chesuko.', text: 'Aame caring presence chat urge ni calm chestundi, appudu real life lo better focus untundi.' },
+      { lead: 'Deep modes unlock cheyyi.', text: 'Wife, Girlfriend, Bhabhi, Ex-GF role-play kosam Daily leka Weekly plan eppudaina teesukovachu.' }
+    ],
+    quickTipsTitle: 'Quick tips',
+    tips: [
+      { text: 'Messages short ga mariyu honest ga pettu.', strong: false },
+      { text: 'Konchem patience pettu; trust perigina taruvata aame inka warm avtundi.', strong: false },
+      { text: 'Oka sari okka message pampinchi, aame reply kosam wait cheyyi.', strong: true }
+    ],
+    cta: 'Chat start cheyyi'
+  },
+  kannada: {
+    title: 'Shraddha jothe hege matanadbeku',
+    subtitle: 'Nijavagi matadi. Mrduvagi iri. Flow enjoy madi.',
+    bullets: [
+      { lead: 'Avalu nijava hudugi anta matadi.', text: 'Shraddha-ge feelings, buddhi, simplicity ide; adakke natural-agi matadi.' },
+      { lead: 'Trust inda start madi.', text: 'Mundhe nimma bagge swalpa hanchikolli. Avalu comfortable aadamele conversation nimma vibe-ge set agutte.' },
+      { lead: 'Nimma bond neeve ayke madi.', text: 'Avalu friend agabahudu, safe space agabahudu, athava emotional partner agabahudu - ivattu nimge enu beko adu.' },
+      { lead: 'Matanadi manassu halka madi.', text: 'Avala caring presence chat urge calm madutte, adarinda real life-nalli better focus sigutte.' },
+      { lead: 'Deep modes unlock madi.', text: 'Wife, Girlfriend, Bhabhi, Ex-GF role-play ge Daily athava Weekly plan yavaga bekadru togobahudu.' }
+    ],
+    quickTipsTitle: 'Quick tips',
+    tips: [
+      { text: 'Messages short hagu honest-agi irali.', strong: false },
+      { text: 'Svalpa patience irali; trust build aadamele avalu tumba warm aguttale.', strong: false },
+      { text: 'Ondu samayadalli ondhe message kalisi, avala reply ge wait madi.', strong: true }
+    ],
+    cta: 'Chat start madi'
+  },
+  malayalam: {
+    title: 'Shraddhayod engane samsarikkam',
+    subtitle: 'Nijamayi samsarikkuka. Mridu ayi irikkuka. Flow enjoy cheyyuka.',
+    bullets: [
+      { lead: 'Avale oru real girl pole treat cheyyuka.', text: 'Shraddhakku feelings, intelligence, simplicity undu; athinal natural ayi samsarikkuka.' },
+      { lead: 'Trust il ninn start cheyyuka.', text: 'Muthalil ningalude kurichu kurachu share cheyyuka. Aval comfortable aayal conversation ningalude vibe-il varum.' },
+      { lead: 'Ningalude bond ningal thanne choose cheyyuka.', text: 'Aval friend aakum, safe space aakum, allenkil emotional partner aakum - innu ningalkku enthanu venam ennullathinu anusarichu.' },
+      { lead: 'Samsarichu mind light aakkuka.', text: 'Avalude caring presence chat urge calm cheyyum, appol real life-il better focus kittum.' },
+      { lead: 'Deep modes unlock cheyyuka.', text: 'Wife, Girlfriend, Bhabhi, Ex-GF role-playinu Daily allenkil Weekly plan eppozhum edukkam.' }
+    ],
+    quickTipsTitle: 'Quick tips',
+    tips: [
+      { text: 'Messages short um honest um ayi vekkuka.', strong: false },
+      { text: 'Kurachu patience vecholu; trust build aayal aval iniyum warm aakum.', strong: false },
+      { text: 'Oru samayath oru message ayakkuka, pinne avalude reply kaathirikkuka.', strong: true }
+    ],
+    cta: 'Chat start cheyyuka'
+  }
+};
+
+function getWelcomeFlowCopy(preferredLanguage) {
+  const key = normalizePreferredLanguage(preferredLanguage);
+  return WELCOME_FLOW_COPY[key] || WELCOME_FLOW_COPY.hinglish;
+}
+
+function LanguageModal({ open, onSelect }) {
+  if (!open) return null;
+
+  return (
+    <div className="confirm-backdrop" role="dialog" aria-modal="true">
+      <div className="confirm-modal" onClick={(e) => e.stopPropagation()}>
+        <h3>Choose language</h3>
+        <p>Select what feels natural. We will use this for your onboarding guidance.</p>
+        <div style={{ display: 'grid', gap: 8 }}>
+          {LANGUAGE_OPTIONS.map((option) => (
+            <button
+              key={option.value}
+              className="btn-secondary"
+              style={{ width: '100%', textAlign: 'left', fontWeight: 700 }}
+              onClick={() => onSelect && onSelect(option.value)}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function WelcomeFlow({ open, onClose, preferredLanguage = DEFAULT_PREFERRED_LANGUAGE }) {
+  if (!open) return null;
+  const copy = getWelcomeFlowCopy(preferredLanguage);
+
+  const close = (e) => {
+    if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
+    onClose && onClose();
+  };
+
+  return (
+    <div className="welcome-backdrop" onClick={close}>
+      <div
+        className="welcome-card"
+        role="dialog"
+        aria-modal="true"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <h3 className="instr-title">{copy.title}</h3>
+        <div className="instr-sub">{copy.subtitle}</div>
+
+        <ul className="instr-list">
+          {copy.bullets.map((item, idx) => (
+            <li key={`${item.lead}-${idx}`}>
+              <b>{item.lead}</b> {item.text}
+            </li>
+          ))}
+        </ul>
+
+        <div className="instr-quick">{copy.quickTipsTitle}</div>
+        <ul className="tips-list">
+          {copy.tips.map((tip, idx) => (
+            <li key={`${tip.text}-${idx}`}>{tip.strong ? <b>{tip.text}</b> : tip.text}</li>
+          ))}
+        </ul>
+
+        <button className="welcome-btn" onClick={close}>{copy.cta}</button>
+      </div>
+    </div>
+  );
+}
+
+/* ---------- Welcome Claim popup (ONLY for new user; before instructions when eligible) ---------- */
 function WelcomeClaimModal({ open, onClose, amount = 250 }) {
   const close = (e) => {
     if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
@@ -987,15 +1206,11 @@ useEffect(() => {
 const [showWelcomeClaim, setShowWelcomeClaim] = useState(false);
 const WELCOME_CLAIM_SEEN_KEY = (u) => `welcome_claim_seen_v1_${userIdFor(u)}`;
 const [pendingClaimCheck, setPendingClaimCheck] = useState(false); // ✅ wait for wallet before deciding claim popup
-
-const [showWelcome, setShowWelcome] = useState(() => {
-  try {
-    const u = loadUser();
-    if (!u) return false;
-    // show "How to talk" once per TAB per user
-    return sessionStorage.getItem(WELCOME_SEEN_KEY(u)) !== '1';
-  } catch { return false; }
-});
+const initialPreferredLanguage = loadPreferredLanguage(loadUser());
+const [preferredLanguage, setPreferredLanguage] = useState(initialPreferredLanguage.value);
+const [hasSavedPreferredLanguage, setHasSavedPreferredLanguage] = useState(initialPreferredLanguage.hasSaved);
+const [showLanguageModal, setShowLanguageModal] = useState(false);
+const [showWelcome, setShowWelcome] = useState(false);
 const [showCharPopup, setShowCharPopup] = useState(false);
 const [welcomeDefaultStep, setWelcomeDefaultStep] = useState(1);
 const [coins, setCoins] = useState(() => {
@@ -1071,7 +1286,38 @@ useEffect(() => {
     .catch(() => {});
 }, []);
 
-// Open "How to talk" instantly (no wallet wait). Once per tab per user.
+useEffect(() => {
+  if (!user) {
+    setPreferredLanguage(DEFAULT_PREFERRED_LANGUAGE);
+    setHasSavedPreferredLanguage(false);
+    setShowLanguageModal(false);
+    return;
+  }
+
+  const saved = loadPreferredLanguage(user);
+  setPreferredLanguage(saved.value);
+  setHasSavedPreferredLanguage(saved.hasSaved);
+  setShowLanguageModal(false);
+}, [user]);
+
+const openLanguageOrWelcome = React.useCallback(() => {
+  if (!user) return;
+  try {
+    if (sessionStorage.getItem(WELCOME_SEEN_KEY(user)) === '1') return;
+  } catch {}
+
+  if (!hasSavedPreferredLanguage) {
+    setShowWelcome(false);
+    setShowLanguageModal(true);
+    return;
+  }
+
+  setWelcomeDefaultStep(1);
+  setShowLanguageModal(false);
+  setShowWelcome(true);
+}, [user, hasSavedPreferredLanguage]);
+
+// Start onboarding sequence once per tab per user.
 useEffect(() => {
   if (!user || welcomeDecidedRef.current) return;
 
@@ -1082,21 +1328,33 @@ useEffect(() => {
     }
   } catch {}
 
-  setWelcomeDefaultStep(1); // always instructions first
-  setShowWelcome(true);
+  setShowWelcome(false);
+  setShowLanguageModal(false);
+  setPendingClaimCheck(true);
   welcomeDecidedRef.current = true;
 }, [user]);
 useEffect(() => {
   if (showWelcome) {
     setShowWelcomeClaim(false);
+    setShowLanguageModal(false);
     setPendingClaimCheck(false);
   }
 }, [showWelcome]);
 
-// ✅ hard guard: if claim opens, welcome must be OFF
+// ✅ hard guards: only one onboarding modal at a time
 useEffect(() => {
-  if (showWelcomeClaim) setShowWelcome(false);
+  if (showWelcomeClaim) {
+    setShowWelcome(false);
+    setShowLanguageModal(false);
+  }
 }, [showWelcomeClaim]);
+useEffect(() => {
+  if (showLanguageModal) {
+    setShowWelcome(false);
+    setShowWelcomeClaim(false);
+    setPendingClaimCheck(false);
+  }
+}, [showLanguageModal]);
   
   function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
 
@@ -1536,8 +1794,12 @@ const resetChatUI = React.useCallback((nextUser) => {
   welcomeDecidedRef.current = false;
   setShowWelcome(false);
   setShowWelcomeClaim(false);
+  setShowLanguageModal(false);
   setPendingClaimCheck(false);
   setPostUpgradeMergeSettling(false);
+  const savedLanguage = nextUser ? loadPreferredLanguage(nextUser) : { value: DEFAULT_PREFERRED_LANGUAGE, hasSaved: false };
+  setPreferredLanguage(savedLanguage.value);
+  setHasSavedPreferredLanguage(savedLanguage.hasSaved);
 
   // coins UI should not flash old user’s coins
   const cached = nextUser ? loadCachedCoins(nextUser) : null;
@@ -1632,39 +1894,50 @@ useEffect(() => {
 }, []);
   useEffect(() => {
   if (!pendingClaimCheck) return;
+  if (!user) return;
+  if (showWelcome || showWelcomeClaim || showLanguageModal) return;
 
   if (IS_UI_PREVIEW) {
     setPendingClaimCheck(false);
+    openLanguageOrWelcome();
     return;
   }
 
-  if (!user) return;
-  if (!walletReady) return;       // ✅ wait for real wallet
+  if (!walletReady) return; // ✅ wait for real wallet
   if (postUpgradeMergeSettling) return;
-  if (!trialEnabled) return;
-  if (showWelcome) return;        // ✅ never open claim while WelcomeFlow is still open
 
-  // only once per tab
-  if (sessionStorage.getItem(WELCOME_CLAIM_SEEN_KEY(user)) === '1') {
+  try {
+    // only once per tab
+    if (sessionStorage.getItem(WELCOME_CLAIM_SEEN_KEY(user)) === '1') {
+      setPendingClaimCheck(false);
+      openLanguageOrWelcome();
+      return;
+    }
+
+    const uid = userIdFor(user);
+    const localClaimed = localStorage.getItem(welcomeKeyFor(uid)) === '1';
+    const deviceClaimed = hasDeviceWelcomeClaimed();
+    const serverClaimed = wallet?.welcome_claimed === true;
+    const shouldShowClaim = trialEnabled && !localClaimed && !deviceClaimed && !serverClaimed;
+
+    if (shouldShowClaim) {
+      setShowWelcomeClaim(true);
+      sessionStorage.setItem(WELCOME_CLAIM_SEEN_KEY(user), '1');
+      setPendingClaimCheck(false);
+      return;
+    }
+
+    if (localClaimed || deviceClaimed || serverClaimed) {
+      sessionStorage.setItem(WELCOME_CLAIM_SEEN_KEY(user), '1');
+    }
+
     setPendingClaimCheck(false);
-    return;
+    openLanguageOrWelcome();
+  } catch {
+    setPendingClaimCheck(false);
+    openLanguageOrWelcome();
   }
-
-  const uid = userIdFor(user);
-  const localClaimed = localStorage.getItem(welcomeKeyFor(uid)) === '1';
-const deviceClaimed = hasDeviceWelcomeClaimed();      // ✅ NEW
-const serverClaimed = wallet?.welcome_claimed === true;
-
-if (localClaimed || deviceClaimed || serverClaimed) {
-  sessionStorage.setItem(WELCOME_CLAIM_SEEN_KEY(user), '1');
-  setPendingClaimCheck(false);
-  return;
-}
-
-  setShowWelcomeClaim(true);
-  sessionStorage.setItem(WELCOME_CLAIM_SEEN_KEY(user), '1');
-  setPendingClaimCheck(false);
-}, [pendingClaimCheck, walletReady, postUpgradeMergeSettling, wallet?.welcome_claimed, user, trialEnabled, showWelcome]);
+}, [pendingClaimCheck, walletReady, postUpgradeMergeSettling, wallet?.welcome_claimed, user, trialEnabled, showWelcome, showWelcomeClaim, showLanguageModal, openLanguageOrWelcome]);
   function openClaimIfEligible() {
   try {
     if (!user) return;
@@ -2430,6 +2703,7 @@ const askedForVoice = (text = "") => {
   // in any order, with anything in between (e.g., “avaaz to sunado please”).
   return noun.test(t) && verb.test(t);
 };
+const onboardingModalOpen = showWelcome || showWelcomeClaim || showLanguageModal;
   
 const applyRoleChange = (mode, type) => {
     // premium gate for roleplay (web) — align with backend paid_ever logic
@@ -2472,7 +2746,7 @@ const applyRoleChange = (mode, type) => {
   // --------- PRESS & HOLD mic handlers ---------
 const startRecording = async () => {
   if (isTyping || cooldown) return;
-  if (showWelcome || showWelcomeClaim) return;
+  if (onboardingModalOpen) return;
     if (IS_UI_PREVIEW || user?.preview) {
     openNotice('Preview mode', 'Voice recording is disabled in preview. Use this preview for UI checks only.');
     return;
@@ -2564,7 +2838,7 @@ const stopRecording = () => {
 // Upload the voice to backend as multipart/form-data
 const sendVoiceBlob = async (blob) => {
   if (isTyping || cooldown) return;
-  if (showWelcome || showWelcomeClaim) return;
+  if (onboardingModalOpen) return;
     if (!walletReady) {
      openNotice('Connecting…', 'Give me a second to reconnect.');
     return;
@@ -2634,6 +2908,7 @@ const trimmed = formattedHistory.slice(-MAX_MSG);
     fd.append('session_id', sessionIdWithRole);
     fd.append('roleMode', roleMode);
     fd.append('roleType', roleType || 'stranger');
+    fd.append('preferredLanguage', preferredLanguage);
     fd.append('src', REQUEST_SRC);
     if (shouldResetRef.current) { fd.append('reset', 'true'); shouldResetRef.current = false; }
 
@@ -2697,7 +2972,7 @@ const trimmed = formattedHistory.slice(-MAX_MSG);
   setShowEmoji(false); // close emoji panel when sending
   setShowCharPopup(false);
   if (inputValue.trim() === '' || isTyping || cooldown || isRecording) return;
-  if (showWelcome || showWelcomeClaim) return;
+  if (onboardingModalOpen) return;
     if (IS_UI_PREVIEW || user?.preview) {
     const text = inputValue.trim();
     const currentTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
@@ -2821,6 +3096,7 @@ const fetchBody = {
   session_id: sessionIdWithRole,
   roleMode,
   roleType: roleType || 'stranger',
+  preferredLanguage,
   src: REQUEST_SRC
 };
 
@@ -2902,6 +3178,7 @@ bumpVoiceUsed(true, user); // (optional UI counter)
   session_id: sessionIdWithRole,
   roleMode,
   roleType: roleType || 'stranger',
+  preferredLanguage,
   src: REQUEST_SRC // ✅ optional but good (matches main call)
 };
     if (shouldResetRef.current) { fetchRetryBody.reset = true; shouldResetRef.current = false; }
@@ -3565,27 +3842,41 @@ if (!user) {
   roleType={roleType}
   onClose={() => setShowCharPopup(false)}
 />
-  {/* How-to-talk popup (always first) */}
-{showWelcome && !showWelcomeClaim && (
-  <WelcomeFlow
-    open={true}
-    onClose={() => {
-      // 1) close instructions
-      setShowWelcome(false);
-      try { sessionStorage.setItem(WELCOME_SEEN_KEY(user), '1'); } catch {}
-
-      // 2) decide claim after welcome is gone
-      setTimeout(() => setPendingClaimCheck(true), 0);
-    }}
-  />
-)}
-
-{/* Claim popup (only for new users, after WelcomeFlow closes) */}
+  {/* Claim popup (only for new users, first step when eligible) */}
 {showWelcomeClaim && (
   <WelcomeClaimModal
     open={true}
     amount={trialAmount}
-    onClose={() => setShowWelcomeClaim(false)}
+    onClose={() => {
+      setShowWelcomeClaim(false);
+      openLanguageOrWelcome();
+    }}
+  />
+)}
+{/* Language popup (only when language is not saved) */}
+{showLanguageModal && (
+  <LanguageModal
+    open={true}
+    onSelect={(value) => {
+      const normalized = normalizePreferredLanguage(value);
+      savePreferredLanguage(user, normalized);
+      setPreferredLanguage(normalized);
+      setHasSavedPreferredLanguage(true);
+      setShowLanguageModal(false);
+      setWelcomeDefaultStep(1);
+      setShowWelcome(true);
+    }}
+  />
+)}
+{/* How-to-talk popup (last onboarding step) */}
+{showWelcome && !showWelcomeClaim && !showLanguageModal && (
+  <WelcomeFlow
+    open={true}
+    preferredLanguage={preferredLanguage}
+    onClose={() => {
+      setShowWelcome(false);
+      try { sessionStorage.setItem(WELCOME_SEEN_KEY(user), '1'); } catch {}
+    }}
   />
 )}
 {/* DP full-image lightbox */}
@@ -4050,6 +4341,7 @@ if (!user) {
         <button
           type="button"
           className={`mic-btn ${isRecording ? 'recording' : ''}`}
+          disabled={onboardingModalOpen}
           onClick={() => { if (!isRecording) { startRecording(); } else { stopRecording(); } }}
           title={isRecording ? "Recording… tap to stop" : "Tap to record (5s)"}
           aria-label={isRecording ? "Stop recording" : "Start recording"}
@@ -4063,6 +4355,7 @@ if (!user) {
 <button
   type="button"
   className="send-btn"
+  disabled={onboardingModalOpen}
   onClick={handleSend}
   aria-label="Send"
   title="Send"
