@@ -1210,6 +1210,7 @@ const initialPreferredLanguage = loadPreferredLanguage(loadUser());
 const [preferredLanguage, setPreferredLanguage] = useState(initialPreferredLanguage.value);
 const [hasSavedPreferredLanguage, setHasSavedPreferredLanguage] = useState(initialPreferredLanguage.hasSaved);
 const [showLanguageModal, setShowLanguageModal] = useState(false);
+const languageModalSourceRef = useRef('onboarding');
 const [showWelcome, setShowWelcome] = useState(false);
 const [showCharPopup, setShowCharPopup] = useState(false);
 const [welcomeDefaultStep, setWelcomeDefaultStep] = useState(1);
@@ -1307,6 +1308,7 @@ const openLanguageOrWelcome = React.useCallback(() => {
   } catch {}
 
   if (!hasSavedPreferredLanguage) {
+    languageModalSourceRef.current = 'onboarding';
     setShowWelcome(false);
     setShowLanguageModal(true);
     return;
@@ -3858,13 +3860,17 @@ if (!user) {
   <LanguageModal
     open={true}
     onSelect={(value) => {
+      const shouldResumeOnboarding = languageModalSourceRef.current === 'onboarding';
       const normalized = normalizePreferredLanguage(value);
       savePreferredLanguage(user, normalized);
       setPreferredLanguage(normalized);
       setHasSavedPreferredLanguage(true);
       setShowLanguageModal(false);
-      setWelcomeDefaultStep(1);
-      setShowWelcome(true);
+      languageModalSourceRef.current = 'onboarding';
+      if (shouldResumeOnboarding) {
+        setWelcomeDefaultStep(1);
+        setShowWelcome(true);
+      }
     }}
   />
 )}
@@ -4047,6 +4053,20 @@ if (!user) {
   title="Theme"
 >
   Theme
+</button>
+
+<button
+  className="role-row role-action-row"
+  onClick={(e) => {
+    e.stopPropagation();
+    closeConfirm();
+    languageModalSourceRef.current = 'settings';
+    setShowLanguageModal(true);
+  }}
+  aria-label="Language"
+  title="Language"
+>
+  Language
 </button>
 
 <button
