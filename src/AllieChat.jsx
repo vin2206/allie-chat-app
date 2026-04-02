@@ -3860,17 +3860,44 @@ if (!user) {
   <LanguageModal
     open={true}
     onSelect={(value) => {
-      const shouldResumeOnboarding = languageModalSourceRef.current === 'onboarding';
+      const source = languageModalSourceRef.current;
       const normalized = normalizePreferredLanguage(value);
-      savePreferredLanguage(user, normalized);
-      setPreferredLanguage(normalized);
-      setHasSavedPreferredLanguage(true);
-      setShowLanguageModal(false);
-      languageModalSourceRef.current = 'onboarding';
-      if (shouldResumeOnboarding) {
+
+      if (source === 'onboarding') {
+        savePreferredLanguage(user, normalized);
+        setPreferredLanguage(normalized);
+        setHasSavedPreferredLanguage(true);
+        setShowLanguageModal(false);
+        languageModalSourceRef.current = 'onboarding';
         setWelcomeDefaultStep(1);
         setShowWelcome(true);
+        return;
       }
+
+      const currentLanguage = normalizePreferredLanguage(preferredLanguage);
+      if (normalized === currentLanguage) {
+        setShowLanguageModal(false);
+        languageModalSourceRef.current = 'onboarding';
+        return;
+      }
+
+      const languageLabel =
+        LANGUAGE_OPTIONS.find((option) => option.value === normalized)?.label || 'Hinglish';
+
+      setShowLanguageModal(false);
+      languageModalSourceRef.current = 'onboarding';
+      openConfirm(
+        `Start chat in ${languageLabel}?`,
+        'A fresh chat will begin and current messages will be cleared.',
+        () => {
+          savePreferredLanguage(user, normalized);
+          setPreferredLanguage(normalized);
+          setHasSavedPreferredLanguage(true);
+          closeConfirm();
+          applyRoleChange('stranger', null);
+          setShowCharPopup(false);
+        }
+      );
     }}
   />
 )}
