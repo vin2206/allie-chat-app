@@ -54,28 +54,12 @@ html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 }
 /* Glass panel behind messages (reversible, no layout impact) */
 .chat-container::before{
-  content:"";
-  position: fixed;
-
-  /* cover almost the full chat lane */
-  top:  calc(var(--hdr-h, 80px) + 2px);
-  bottom: calc(var(--ftr-h, 90px) + 2px);
-  left: 8px;
-  right: 8px;
-
-  border-radius: 18px;
-  background: rgba(255,255,255,0.10);
-  box-shadow: 0 18px 55px rgba(0,0,0,0.16);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-
-  pointer-events:none;
-  z-index: 0;
+  content: none;
 }
 
 /* When keyboard opens, keep glass stopping ABOVE footer+keyboard */
 html.ime-open .chat-container::before{
-  bottom: calc(var(--ftr-h, 90px) + var(--kb-h, 0px) + 2px);
+  content: none;
 }
 
 /* Keep actual chat content above the glass + prevent shrink */
@@ -132,14 +116,13 @@ html.ime-open .bottom-sentinel {
     linear-gradient(180deg, #07060b 0%, #0b0913 54%, #120d1b 100%);
 }
 
-/* Chat screen background — gradient + waves directly on the app */
+/* Chat screen background — neutral fallback, theme blocks below will paint the real wallpaper */
 .App.signed-in{
   background:
-    linear-gradient(to bottom, #ff99cc, #cc66cc, #9966cc),
-    url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"><path fill="%23ff99cc" fill-opacity="0.3" d="M0,64L60,80C120,96,240,128,360,138.7C480,149,600,139,720,133.3C840,128,960,128,1080,117.3C1200,107,1320,85,1380,74.7L1440,64L1440,320L1380,320C1320,320,1200,320,1080,320C960,320,840,320,720,320C600,320,480,320,360,320C240,320,120,320,60,320L0,320Z"/></svg>');
-  background-repeat: no-repeat, no-repeat;
-  background-size: auto, cover;       /* gradient auto; wave covers */
-  background-position: center, center; /* optional: keep centered */
+    linear-gradient(180deg, #f6b7d5 0%, #df9fe0 54%, #b792ea 100%);
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: center;
 }
 /* Header (glassmorphism style) */
 .header {
@@ -2014,17 +1997,18 @@ img[src*="intro/"]{
 /* ---------- DEFAULT (your current look, re-declared so it always wins) ---------- */
 html[data-theme="default"],
 html[data-theme="default"] body {
-  background:
-    linear-gradient(to bottom, #ff99cc, #cc66cc, #9966cc);
+  background: #f3c2dc;
 }
 
 html[data-theme="default"] .App.signed-in{
   background:
-    linear-gradient(to bottom, #ff99cc, #cc66cc, #9966cc),
-    url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"><path fill="%23ff99cc" fill-opacity="0.3" d="M0,64L60,80C120,96,240,128,360,138.7C480,149,600,139,720,133.3C840,128,960,128,1080,117.3C1200,107,1320,85,1380,74.7L1440,64L1440,320L1380,320C1320,320,1200,320,1080,320C960,320,840,320,720,320C600,320,480,320,360,320C240,320,120,320,60,320L0,320Z"/></svg>');
-  background-repeat: no-repeat, no-repeat;
-  background-size: auto, cover;
-  background-position: center, center;
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='320' height='320' viewBox='0 0 260 260'%3E%3Cg fill='none' stroke='%23ffffff' stroke-opacity='0.10' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M56 62c-6-10-22-7-22 6 0 14 22 24 22 24s22-10 22-24c0-13-16-16-22-6z'/%3E%3Cpath d='M178 58c-6-10-22-7-22 6 0 14 22 24 22 24s22-10 22-24c0-13-16-16-22-6z'/%3E%3Cpath d='M72 178c-6-10-22-7-22 6 0 14 22 24 22 24s22-10 22-24c0-13-16-16-22-6z'/%3E%3Cpath d='M186 170c-6-10-22-7-22 6 0 14 22 24 22 24s22-10 22-24c0-13-16-16-22-6z'/%3E%3Cpath d='M126 108c-7-12-26-8-26 7 0 17 26 29 26 29s26-12 26-29c0-15-19-19-26-7z'/%3E%3Cpath d='M34 132q14 10 28 0'/%3E%3Cpath d='M198 120q14 10 28 0'/%3E%3Cpath d='M120 32l6 10 10 6-10 6-6 10-6-10-10-6 10-6z'/%3E%3Cpath d='M214 214l5 8 8 5-8 5-5 8-5-8-8-5 8-5z'/%3E%3Cpath d='M46 216l4 7 7 4-7 4-4 7-4-7-7-4 7-4z'/%3E%3C/g%3E%3Cg fill='none' stroke='%23ffffff' stroke-opacity='0.06' stroke-width='2'%3E%3Cpath d='M92 116q10 6 20 0'/%3E%3Cpath d='M148 196q10 6 20 0'/%3E%3C/g%3E%3C/svg%3E"),
+    radial-gradient(900px 520px at 12% 0%, rgba(255,255,255,.18), rgba(255,255,255,0) 58%),
+    radial-gradient(760px 460px at 88% 100%, rgba(255,255,255,.10), rgba(255,255,255,0) 54%),
+    linear-gradient(180deg, #f7afcf 0%, #dea1e0 54%, #b693ea 100%);
+  background-size: 320px 320px, auto, auto, auto;
+  background-position: 0 0, center, center, center;
+  background-repeat: repeat, no-repeat, no-repeat, no-repeat;
 }
 
 html[data-theme="default"] .header{
@@ -2055,14 +2039,11 @@ html[data-theme="dark"] body{
 /* main chat canvas (Dark) — same base + Telegram doodle pattern (paint-only) */
 html[data-theme="dark"] .App.signed-in{
   background:
-    /* 1) doodle wallpaper (very low contrast) */
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='260' viewBox='0 0 260 260'%3E%3Cg fill='none' stroke='%23ffffff' stroke-opacity='0.06' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M56 62c-6-10-22-7-22 6 0 14 22 24 22 24s22-10 22-24c0-13-16-16-22-6z'/%3E%3Cpath d='M178 58c-6-10-22-7-22 6 0 14 22 24 22 24s22-10 22-24c0-13-16-16-22-6z'/%3E%3Cpath d='M72 178c-6-10-22-7-22 6 0 14 22 24 22 24s22-10 22-24c0-13-16-16-22-6z'/%3E%3Cpath d='M186 170c-6-10-22-7-22 6 0 14 22 24 22 24s22-10 22-24c0-13-16-16-22-6z'/%3E%3Cpath d='M126 108c-7-12-26-8-26 7 0 17 26 29 26 29s26-12 26-29c0-15-19-19-26-7z'/%3E%3Cpath d='M34 132q14 10 28 0'/%3E%3Cpath d='M198 120q14 10 28 0'/%3E%3Cpath d='M120 32l6 10 10 6-10 6-6 10-6-10-10-6 10-6z'/%3E%3Cpath d='M214 214l5 8 8 5-8 5-5 8-5-8-8-5 8-5z'/%3E%3Cpath d='M46 216l4 7 7 4-7 4-4 7-4-7-7-4 7-4z'/%3E%3C/g%3E%3Cg fill='none' stroke='%23ffffff' stroke-opacity='0.035' stroke-width='2'%3E%3Cpath d='M92 116q10 6 20 0'/%3E%3Cpath d='M148 196q10 6 20 0'/%3E%3C/g%3E%3C/svg%3E"),
-    /* 2) your existing premium dark glow (UNCHANGED) */
-    radial-gradient(900px 500px at 10% 0%, rgba(167,139,250,.18), rgba(0,0,0,0) 60%),
-    radial-gradient(900px 500px at 90% 100%, rgba(34,211,238,.10), rgba(0,0,0,0) 55%),
-    linear-gradient(180deg, #0b0b10 0%, #0a0a12 100%);
-
-  background-size: 260px 260px, auto, auto, auto;
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='340' height='340' viewBox='0 0 260 260'%3E%3Cg fill='none' stroke='%23ffffff' stroke-opacity='0.055' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M56 62c-6-10-22-7-22 6 0 14 22 24 22 24s22-10 22-24c0-13-16-16-22-6z'/%3E%3Cpath d='M178 58c-6-10-22-7-22 6 0 14 22 24 22 24s22-10 22-24c0-13-16-16-22-6z'/%3E%3Cpath d='M72 178c-6-10-22-7-22 6 0 14 22 24 22 24s22-10 22-24c0-13-16-16-22-6z'/%3E%3Cpath d='M186 170c-6-10-22-7-22 6 0 14 22 24 22 24s22-10 22-24c0-13-16-16-22-6z'/%3E%3Cpath d='M126 108c-7-12-26-8-26 7 0 17 26 29 26 29s26-12 26-29c0-15-19-19-26-7z'/%3E%3Cpath d='M34 132q14 10 28 0'/%3E%3Cpath d='M198 120q14 10 28 0'/%3E%3Cpath d='M120 32l6 10 10 6-10 6-6 10-6-10-10-6 10-6z'/%3E%3Cpath d='M214 214l5 8 8 5-8 5-5 8-5-8-8-5 8-5z'/%3E%3Cpath d='M46 216l4 7 7 4-7 4-4 7-4-7-7-4 7-4z'/%3E%3C/g%3E%3Cg fill='none' stroke='%23ffffff' stroke-opacity='0.03' stroke-width='2'%3E%3Cpath d='M92 116q10 6 20 0'/%3E%3Cpath d='M148 196q10 6 20 0'/%3E%3C/g%3E%3C/svg%3E"),
+    radial-gradient(900px 500px at 10% 0%, rgba(167,139,250,.16), rgba(0,0,0,0) 60%),
+    radial-gradient(900px 500px at 90% 100%, rgba(34,211,238,.08), rgba(0,0,0,0) 55%),
+    linear-gradient(180deg, #090b12 0%, #0b1020 100%);
+  background-size: 340px 340px, auto, auto, auto;
   background-position: 0 0, center, center, center;
   background-repeat: repeat, no-repeat, no-repeat, no-repeat;
 }
