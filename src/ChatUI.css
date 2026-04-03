@@ -54,12 +54,28 @@ html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 }
 /* Glass panel behind messages (reversible, no layout impact) */
 .chat-container::before{
-  content: none;
+  content:"";
+  position: fixed;
+
+  /* cover almost the full chat lane */
+  top:  calc(var(--hdr-h, 80px) + 2px);
+  bottom: calc(var(--ftr-h, 90px) + 2px);
+  left: 8px;
+  right: 8px;
+
+  border-radius: 18px;
+  background: rgba(255,255,255,0.10);
+  box-shadow: 0 18px 55px rgba(0,0,0,0.16);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+
+  pointer-events:none;
+  z-index: 0;
 }
 
 /* When keyboard opens, keep glass stopping ABOVE footer+keyboard */
 html.ime-open .chat-container::before{
-  content: none;
+  bottom: calc(var(--ftr-h, 90px) + var(--kb-h, 0px) + 2px);
 }
 
 /* Keep actual chat content above the glass + prevent shrink */
@@ -116,13 +132,14 @@ html.ime-open .bottom-sentinel {
     linear-gradient(180deg, #07060b 0%, #0b0913 54%, #120d1b 100%);
 }
 
-/* Chat screen background — neutral fallback, theme blocks below will paint the real wallpaper */
+/* Chat screen background — gradient + waves directly on the app */
 .App.signed-in{
   background:
-    linear-gradient(180deg, #f6b7d5 0%, #df9fe0 54%, #b792ea 100%);
-  background-repeat: no-repeat;
-  background-size: cover;
-  background-position: center;
+    linear-gradient(to bottom, #ff99cc, #cc66cc, #9966cc),
+    url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"><path fill="%23ff99cc" fill-opacity="0.3" d="M0,64L60,80C120,96,240,128,360,138.7C480,149,600,139,720,133.3C840,128,960,128,1080,117.3C1200,107,1320,85,1380,74.7L1440,64L1440,320L1380,320C1320,320,1200,320,1080,320C960,320,840,320,720,320C600,320,480,320,360,320C240,320,120,320,60,320L0,320Z"/></svg>');
+  background-repeat: no-repeat, no-repeat;
+  background-size: auto, cover;       /* gradient auto; wave covers */
+  background-position: center, center; /* optional: keep centered */
 }
 /* Header (glassmorphism style) */
 .header {
@@ -1997,18 +2014,17 @@ img[src*="intro/"]{
 /* ---------- DEFAULT (your current look, re-declared so it always wins) ---------- */
 html[data-theme="default"],
 html[data-theme="default"] body {
-  background: #f3c2dc;
+  background:
+    linear-gradient(to bottom, #ff99cc, #cc66cc, #9966cc);
 }
 
 html[data-theme="default"] .App.signed-in{
   background:
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='460' height='460' viewBox='0 0 460 460'%3E%3Cg fill='none' stroke='%23ffffff' stroke-width='1.2' stroke-linecap='round' stroke-linejoin='round' stroke-opacity='.09'%3E%3Cpath d='M60 36c-3-5-11-4-11 3 0 7 11 12 11 12s11-5 11-12c0-7-8-8-11-3z'/%3E%3Cpath d='M158 28l28 12-9 3-5 11z'/%3E%3Cpath d='M177 43l-8-7'/%3E%3Cpath d='M280 24l3 11 11 3-11 3-3 11-3-11-11-3 11-3z'/%3E%3Cpath d='M386 22v22'/%3E%3Cpath d='M386 22c5-2 14-2 14 3'/%3E%3Cellipse cx='384' cy='44' rx='4' ry='3'/%3E%3Cpath d='M112 85c4-4 8-5 14 0'/%3E%3Cpath d='M112 85c4 5 8 5 14 0'/%3E%3Cpath d='M60 130c-9-9-16-1-10 5l10-5c9-9 16-1 10 5z'/%3E%3Cpath d='M60 135v6'/%3E%3Cpath d='M152 134a8 8 0 0114-6 10 10 0 0118 6z'/%3E%3Crect x='265' y='116' width='28' height='18' rx='3'/%3E%3Cpath d='M265 118l14 10 14-10'/%3E%3Crect x='381' y='126' width='16' height='12' rx='2'/%3E%3Cpath d='M385 126v-5a4 4 0 018 0v5'/%3E%3Ccircle cx='389' cy='133' r='1.5'/%3E%3Cpath d='M340 173c3-3 6-2 6 1s-6 3-6 0z'/%3E%3Cpath d='M336 174c-2-4 4-6 5-2s-5 6-5 2z'/%3E%3Cpath d='M339 176v10'/%3E%3Crect x='44' y='210' width='28' height='18' rx='5'/%3E%3Cpath d='M46 228l-5 6v-6'/%3E%3Cpath d='M52 218h14'/%3E%3Cpath d='M52 222h8'/%3E%3Cpath d='M164 208a13 13 0 100 24c-6 0-10-6-10-12s4-12 10-12z'/%3E%3Cpath d='M268 210h22v16c0 4-5 6-11 6s-11-2-11-6z'/%3E%3Cpath d='M290 214c3 0 6 2 6 5s-3 5-6 5'/%3E%3Crect x='376' y='212' width='26' height='16' rx='2'/%3E%3Cpath d='M376 220h26'/%3E%3Cpath d='M389 212v16'/%3E%3Cpath d='M383 212c-2-6 6-8 6-3'/%3E%3Cpath d='M395 212c2-6-6-8-6-3'/%3E%3Cellipse cx='440' cy='268' rx='9' ry='4.5'/%3E%3Cpath d='M431 265l-4-4'/%3E%3Cpath d='M431 271l-4 4'/%3E%3Cpath d='M449 265l4-4'/%3E%3Cpath d='M449 271l4 4'/%3E%3Ccircle cx='56' cy='310' r='6'/%3E%3Cpath d='M62 310h16'/%3E%3Cpath d='M74 310v4'/%3E%3Cpath d='M70 310v3'/%3E%3Ccircle cx='170' cy='314' r='7'/%3E%3Cpath d='M166 308l4-5 4 5'/%3E%3Ccircle cx='170' cy='303' r='2'/%3E%3Crect x='266' y='300' width='26' height='18' rx='3'/%3E%3Ccircle cx='279' cy='312' r='5.5'/%3E%3Cpath d='M273 300l2-4h10l2 4'/%3E%3Cpath d='M386 298h8l-4 10h8l-12 16 4-10h-7z'/%3E%3Cpath d='M230 352c-2-4-8-3-8 2 0 5 8 9 8 9s8-4 8-9c0-5-6-6-8-2z'/%3E%3Cpath d='M48 392c0 0 10 18 24 18'/%3E%3Cpath d='M72 410c0 0-18-10-18-24'/%3E%3Cpath d='M50 412l2-4'/%3E%3Cpath d='M156 400a14 14 0 0128 0'/%3E%3Cpath d='M170 400v14c0 3-5 3-5 0'/%3E%3Cellipse cx='280' cy='388' rx='8' ry='12'/%3E%3Cpath d='M280 400l-3 12'/%3E%3Cpath d='M390 384l3 9h10l-8 6 3 9-8-6-8 6 3-9-8-6h10z'/%3E%3Cpath d='M115 438l2 6 6 2-6 2-2 6-2-6-6-2 6-2z'/%3E%3C/g%3E%3C/svg%3E"),
-    radial-gradient(900px 520px at 12% 0%, rgba(255,255,255,.18), rgba(255,255,255,0) 58%),
-    radial-gradient(760px 460px at 88% 100%, rgba(255,255,255,.10), rgba(255,255,255,0) 54%),
-    linear-gradient(180deg, #f7afcf 0%, #dea1e0 54%, #b693ea 100%);
-  background-size: 460px 460px, auto, auto, auto;
-  background-position: 0 0, center, center, center;
-  background-repeat: repeat, no-repeat, no-repeat, no-repeat;
+    linear-gradient(to bottom, #ff99cc, #cc66cc, #9966cc),
+    url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"><path fill="%23ff99cc" fill-opacity="0.3" d="M0,64L60,80C120,96,240,128,360,138.7C480,149,600,139,720,133.3C840,128,960,128,1080,117.3C1200,107,1320,85,1380,74.7L1440,64L1440,320L1380,320C1320,320,1200,320,1080,320C960,320,840,320,720,320C600,320,480,320,360,320C240,320,120,320,60,320L0,320Z"/></svg>');
+  background-repeat: no-repeat, no-repeat;
+  background-size: auto, cover;
+  background-position: center, center;
 }
 
 html[data-theme="default"] .header{
@@ -2039,11 +2055,14 @@ html[data-theme="dark"] body{
 /* main chat canvas (Dark) — same base + Telegram doodle pattern (paint-only) */
 html[data-theme="dark"] .App.signed-in{
   background:
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='460' height='460' viewBox='0 0 460 460'%3E%3Cg fill='none' stroke='%23ffffff' stroke-width='1.2' stroke-linecap='round' stroke-linejoin='round' stroke-opacity='.055'%3E%3Cpath d='M60 36c-3-5-11-4-11 3 0 7 11 12 11 12s11-5 11-12c0-7-8-8-11-3z'/%3E%3Cpath d='M158 28l28 12-9 3-5 11z'/%3E%3Cpath d='M177 43l-8-7'/%3E%3Cpath d='M280 24l3 11 11 3-11 3-3 11-3-11-11-3 11-3z'/%3E%3Cpath d='M386 22v22'/%3E%3Cpath d='M386 22c5-2 14-2 14 3'/%3E%3Cellipse cx='384' cy='44' rx='4' ry='3'/%3E%3Cpath d='M112 85c4-4 8-5 14 0'/%3E%3Cpath d='M112 85c4 5 8 5 14 0'/%3E%3Cpath d='M60 130c-9-9-16-1-10 5l10-5c9-9 16-1 10 5z'/%3E%3Cpath d='M60 135v6'/%3E%3Cpath d='M152 134a8 8 0 0114-6 10 10 0 0118 6z'/%3E%3Crect x='265' y='116' width='28' height='18' rx='3'/%3E%3Cpath d='M265 118l14 10 14-10'/%3E%3Crect x='381' y='126' width='16' height='12' rx='2'/%3E%3Cpath d='M385 126v-5a4 4 0 018 0v5'/%3E%3Ccircle cx='389' cy='133' r='1.5'/%3E%3Cpath d='M340 173c3-3 6-2 6 1s-6 3-6 0z'/%3E%3Cpath d='M336 174c-2-4 4-6 5-2s-5 6-5 2z'/%3E%3Cpath d='M339 176v10'/%3E%3Crect x='44' y='210' width='28' height='18' rx='5'/%3E%3Cpath d='M46 228l-5 6v-6'/%3E%3Cpath d='M52 218h14'/%3E%3Cpath d='M52 222h8'/%3E%3Cpath d='M164 208a13 13 0 100 24c-6 0-10-6-10-12s4-12 10-12z'/%3E%3Cpath d='M268 210h22v16c0 4-5 6-11 6s-11-2-11-6z'/%3E%3Cpath d='M290 214c3 0 6 2 6 5s-3 5-6 5'/%3E%3Crect x='376' y='212' width='26' height='16' rx='2'/%3E%3Cpath d='M376 220h26'/%3E%3Cpath d='M389 212v16'/%3E%3Cpath d='M383 212c-2-6 6-8 6-3'/%3E%3Cpath d='M395 212c2-6-6-8-6-3'/%3E%3Cellipse cx='440' cy='268' rx='9' ry='4.5'/%3E%3Cpath d='M431 265l-4-4'/%3E%3Cpath d='M431 271l-4 4'/%3E%3Cpath d='M449 265l4-4'/%3E%3Cpath d='M449 271l4 4'/%3E%3Ccircle cx='56' cy='310' r='6'/%3E%3Cpath d='M62 310h16'/%3E%3Cpath d='M74 310v4'/%3E%3Cpath d='M70 310v3'/%3E%3Ccircle cx='170' cy='314' r='7'/%3E%3Cpath d='M166 308l4-5 4 5'/%3E%3Ccircle cx='170' cy='303' r='2'/%3E%3Crect x='266' y='300' width='26' height='18' rx='3'/%3E%3Ccircle cx='279' cy='312' r='5.5'/%3E%3Cpath d='M273 300l2-4h10l2 4'/%3E%3Cpath d='M386 298h8l-4 10h8l-12 16 4-10h-7z'/%3E%3Cpath d='M230 352c-2-4-8-3-8 2 0 5 8 9 8 9s8-4 8-9c0-5-6-6-8-2z'/%3E%3Cpath d='M48 392c0 0 10 18 24 18'/%3E%3Cpath d='M72 410c0 0-18-10-18-24'/%3E%3Cpath d='M50 412l2-4'/%3E%3Cpath d='M156 400a14 14 0 0128 0'/%3E%3Cpath d='M170 400v14c0 3-5 3-5 0'/%3E%3Cellipse cx='280' cy='388' rx='8' ry='12'/%3E%3Cpath d='M280 400l-3 12'/%3E%3Cpath d='M390 384l3 9h10l-8 6 3 9-8-6-8 6 3-9-8-6h10z'/%3E%3Cpath d='M115 438l2 6 6 2-6 2-2 6-2-6-6-2 6-2z'/%3E%3C/g%3E%3C/svg%3E"),
-    radial-gradient(900px 500px at 10% 0%, rgba(167,139,250,.16), rgba(0,0,0,0) 60%),
-    radial-gradient(900px 500px at 90% 100%, rgba(34,211,238,.08), rgba(0,0,0,0) 55%),
-    linear-gradient(180deg, #090b12 0%, #0b1020 100%);
-  background-size: 460px 460px, auto, auto, auto;
+    /* 1) doodle wallpaper (very low contrast) */
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='260' viewBox='0 0 260 260'%3E%3Cg fill='none' stroke='%23ffffff' stroke-opacity='0.06' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M56 62c-6-10-22-7-22 6 0 14 22 24 22 24s22-10 22-24c0-13-16-16-22-6z'/%3E%3Cpath d='M178 58c-6-10-22-7-22 6 0 14 22 24 22 24s22-10 22-24c0-13-16-16-22-6z'/%3E%3Cpath d='M72 178c-6-10-22-7-22 6 0 14 22 24 22 24s22-10 22-24c0-13-16-16-22-6z'/%3E%3Cpath d='M186 170c-6-10-22-7-22 6 0 14 22 24 22 24s22-10 22-24c0-13-16-16-22-6z'/%3E%3Cpath d='M126 108c-7-12-26-8-26 7 0 17 26 29 26 29s26-12 26-29c0-15-19-19-26-7z'/%3E%3Cpath d='M34 132q14 10 28 0'/%3E%3Cpath d='M198 120q14 10 28 0'/%3E%3Cpath d='M120 32l6 10 10 6-10 6-6 10-6-10-10-6 10-6z'/%3E%3Cpath d='M214 214l5 8 8 5-8 5-5 8-5-8-8-5 8-5z'/%3E%3Cpath d='M46 216l4 7 7 4-7 4-4 7-4-7-7-4 7-4z'/%3E%3C/g%3E%3Cg fill='none' stroke='%23ffffff' stroke-opacity='0.035' stroke-width='2'%3E%3Cpath d='M92 116q10 6 20 0'/%3E%3Cpath d='M148 196q10 6 20 0'/%3E%3C/g%3E%3C/svg%3E"),
+    /* 2) your existing premium dark glow (UNCHANGED) */
+    radial-gradient(900px 500px at 10% 0%, rgba(167,139,250,.18), rgba(0,0,0,0) 60%),
+    radial-gradient(900px 500px at 90% 100%, rgba(34,211,238,.10), rgba(0,0,0,0) 55%),
+    linear-gradient(180deg, #0b0b10 0%, #0a0a12 100%);
+
+  background-size: 260px 260px, auto, auto, auto;
   background-position: 0 0, center, center, center;
   background-repeat: repeat, no-repeat, no-repeat, no-repeat;
 }
