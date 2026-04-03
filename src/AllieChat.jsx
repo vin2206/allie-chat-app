@@ -1147,22 +1147,30 @@ function ThemeModal({ open, onClose, value, onChange }) {
         </p>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-  <button
-    className="btn-secondary"
-    onClick={() => pick('default')}
-    style={{ fontWeight: value === 'default' ? 800 : 600 }}
-  >
-    {value === 'default' ? '✓ ' : ''}Light
-  </button>
+          <button
+            className="btn-secondary"
+            onClick={() => pick('default')}
+            style={{ fontWeight: value === 'default' ? 800 : 600 }}
+          >
+            {value === 'default' ? '✓ ' : ''}Default (Pink)
+          </button>
 
-  <button
-    className="btn-secondary"
-    onClick={() => pick('dark')}
-    style={{ fontWeight: value === 'dark' ? 800 : 600 }}
-  >
-    {value === 'dark' ? '✓ ' : ''}Dark
-  </button>
-</div>
+          <button
+            className="btn-secondary"
+            onClick={() => pick('dark')}
+            style={{ fontWeight: value === 'dark' ? 800 : 600 }}
+          >
+            {value === 'dark' ? '✓ ' : ''}Dark
+          </button>
+
+          <button
+            className="btn-secondary"
+            onClick={() => pick('ocean')}
+            style={{ fontWeight: value === 'ocean' ? 800 : 600 }}
+          >
+            {value === 'ocean' ? '✓ ' : ''}Ocean
+          </button>
+        </div>
 
         <div className="confirm-buttons" style={{ marginTop: 12 }}>
           <button className="btn-secondary" onClick={onClose}>Close</button>
@@ -2327,12 +2335,8 @@ const formatPreviewTime24 = (value) => {
 // =========================
 const THEME_KEY = 'bb_theme_v1';
 const [theme, setTheme] = useState(() => {
-  try {
-    const saved = localStorage.getItem(THEME_KEY) || 'default';
-    return saved === 'dark' ? 'dark' : 'default';
-  } catch {
-    return 'default';
-  }
+  try { return localStorage.getItem(THEME_KEY) || 'default'; }
+  catch { return 'default'; }
 });
 
 // apply theme to <html> so CSS can target: [data-theme="dark"]
