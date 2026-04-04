@@ -3345,12 +3345,6 @@ useEffect(() => {
   if (!header || !container) return;
 
   const apply = () => {
-    if (document.documentElement.classList.contains(FIRST_OPEN_SETTLE_CLASS)) {
-      document.documentElement.classList.remove('legacy-zoom');
-      header.style.removeProperty('--hz-scale');
-      return;
-    }
-
     // check real overflow (allow a few px of jitter)
     const overflowPx = container.scrollWidth - container.clientWidth;
     const overflowing = overflowPx > 2;
@@ -3399,11 +3393,6 @@ useEffect(() => {
   if (!header || !container) return;
 
     const clamp = () => {
-    if (document.documentElement.classList.contains(FIRST_OPEN_SETTLE_CLASS)) {
-      header.classList.remove('narrow', 'tiny');
-      return;
-    }
-
     header.classList.remove('narrow', 'tiny');
     const dist = container.scrollWidth - container.clientWidth; // + = over, - = tight but fits
     // If it’s even a little tight, go “narrow”; if clearly over, go “tiny”
