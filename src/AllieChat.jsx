@@ -3793,12 +3793,7 @@ if (!user) {
     aria-label="Choose mode"
     title="Choose mode"
   >
-    <span className="role-btn-label">Modes</span>
-    <span className="role-btn-lines" aria-hidden="true">
-      <span className="role-btn-line" />
-      <span className="role-btn-line" />
-      <span className="role-btn-line" />
-    </span>
+    <span className="role-btn-text">Modes</span>
   </button>
 </div>
   </div>
