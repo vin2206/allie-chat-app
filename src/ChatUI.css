@@ -1137,26 +1137,46 @@ html.ime-open .bottom-sentinel {
 .role-btn{
   position: relative;
   display: inline-flex;
+  flex-direction: column;
   align-items: center;
-  gap: 6px;
-  padding: 6px 10px;
-  border: 1px solid rgba(255,255,255,.35);
-  border-radius: 999px;
-  background: rgba(255,255,255,.22);
+  justify-content: center;
+  gap: 3px;
+  min-width: 56px;
+  height: 38px;
+  padding: 4px 8px;
+  border: 1px solid rgba(255,255,255,.42);
+  border-radius: 12px;
+  background: linear-gradient(180deg, rgba(255,255,255,.28), rgba(255,255,255,.16));
   color: #fff;
-  font-weight: 700;
-  font-size: 12px;
   line-height: 1;
-  box-shadow: 0 6px 16px rgba(0,0,0,.25);
-  backdrop-filter: blur(6px);
+  box-shadow: 0 6px 16px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.35);
+  backdrop-filter: blur(8px);
   cursor: pointer;
   margin-left: 8px;            /* was auto */
+  -webkit-tap-highlight-color: transparent;
 }
 .role-btn:active { transform: translateY(1px); }
-@media (hover:hover){ .role-btn:hover{ background: rgba(255,255,255,.32); } }
+@media (hover:hover){ .role-btn:hover{ background: linear-gradient(180deg, rgba(255,255,255,.34), rgba(255,255,255,.2)); } }
 
-.role-btn-icon{ font-size: 14px; line-height: 1; }
-.role-btn-text{ letter-spacing: .2px; }
+.role-btn-label{
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: .35px;
+  text-transform: uppercase;
+  opacity: .98;
+}
+.role-btn-lines{
+  width: 22px;
+  display: inline-flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.role-btn-line{
+  height: 2px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #ffd0e7 0%, #ff8ec5 50%, #ffd6ea 100%);
+  box-shadow: 0 0 8px rgba(255, 131, 194, .55);
+}
 
 /* subtle attention ping (runs twice) */
 .role-btn::after{
@@ -1182,10 +1202,10 @@ html.ime-open .bottom-sentinel {
 
 /* pills stay small (same as before) */
 .header.narrow .coin-pill,
-.header.narrow .role-btn { padding: 4px 7px; font-size: 11px; }
+.header.narrow .role-btn { min-width: 52px; height: 34px; padding: 3px 6px; }
 
 .header.tiny .coin-pill,
-.header.tiny .role-btn { padding: 4px 7px; font-size: 10px; }
+.header.tiny .role-btn { min-width: 50px; height: 32px; padding: 3px 6px; }
 
 /* “Stranger” pill just a hair smaller */
 .header.narrow .role-badge { font-size: 11px; padding: 2px 6px; }
